@@ -35,15 +35,16 @@ def generate_launch_description():
             name='world_map_tf_static_pub',
             namespace=launch.substitutions.LaunchConfiguration('robot_name'),
             arguments=['0', '0', '0', '0', '0', '0', '1', 'world', 'map'],
+            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
-        launch_ros.actions.Node(
-            package='tf_exchange',
-            executable='local_to_global_tf_pub',
-            output='screen',
-            name='local_to_global_tf_pub',
-            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
-            parameters=[
-                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
-            remappings=[("tf", "/tf"), ("tf_static", "/tf_static")]
-        ),
+        # launch_ros.actions.Node(
+        #     package='tf_exchange',
+        #     executable='local_to_global_tf_pub',
+        #     output='screen',
+        #     name='local_to_global_tf_pub',
+        #     namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+        #     parameters=[
+        #         {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
+        #     remappings=[("tf", "/tf"), ("tf_static", "/tf_static")]
+        # ),
     ])

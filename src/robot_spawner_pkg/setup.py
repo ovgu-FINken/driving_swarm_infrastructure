@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import setup
 
-package_name = 'tf_exchange'
+package_name = 'robot_spawner_pkg'
 
 setup(
     name=package_name,
@@ -23,9 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'world_map_tf_static_pub = tf_exchange.publisher_member_function:main',
-            'tf_listener = tf_exchange.subscriber_member_function:main',
-            'local_to_global_tf_pub = tf_exchange.subscriber_member_function_copy:main'
+            'spawn_turtlebot = robot_spawner_pkg.spawn_turtlebot:main',
+            'nav2_gazebo_spawner = robot_spawner_pkg.nav2_gazebo_spawner:main',
         ],
     },
 )

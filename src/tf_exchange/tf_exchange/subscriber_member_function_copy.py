@@ -17,7 +17,7 @@ from rclpy.node import Node
 from rclpy.timer import Rate
 from std_msgs.msg import String
 import tf2_ros
-from tf2_py import *
+import tf2_py
 from tf2_msgs.msg import TFMessage
 import subprocess
 import re
@@ -37,41 +37,34 @@ def get_ip_name():
     return name
 
 
-class TFListener(Node):
+class LocalToGlobalTFPub(Node):
     def __init__(self):
         # node
-        super().__init__('tf_listener')
+        super().__init__('local_to_global_tf_pub')
 
         # params
         self.declare_parameter('robot_name', get_ip_name())
         self.robot_name = self.get_parameter('robot_name').value
 
-        # tfTopic = "/" + self.robot_name + "/tf"
-        tfTopic = "/tf_1"
+        tfTopic = "/" + self.robot_name + "/tf"
         self.get_logger().info(tfTopic)
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         # to publish local world->base_footprint transformation as global T<ip>
-        self.publisher_ = self.create_publisher(TransformStamped, tfTopic, 10)
-        TIMER_PERIOD = 0.5  # seconds
-        self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
+        self.publisher_ = self.create_publisher(TFMessage, tfTopic, 10)
+        self.subscription = self.create_subscription(
+            TransformStamped,
+            '/tf_1',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
 
-    def timer_callback(self):
-        tf2Msg = TransformStamped()
-        try:
-            tf2Msg = self.tfBuffer.lookup_transform(
-                "world", "base_link", rclpy.time.Time())
-            tf2Msg.child_frame_id = self.robot_name
-            self.publisher_.publish(tf2Msg)
-            self.get_logger().info(tf2Msg.data)
-        except (LookupException, ExtrapolationException, ConnectivityException) as e:
-            self.get_logger().info(str(e))
-            self.get_logger().info(str(type(e)))
-
+    def listener_callback(self, msg):
+        self.get_logger().info('I heard: "%s"' % msg.data)
+        self.publisher_.publish(msg)
+        
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TFListener()
+    node = LocalToGlobalTFPub()
     rclpy.spin(node)
 
     # Destroy the node explicitly
