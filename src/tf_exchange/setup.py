@@ -23,9 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'world_map_tf_static_pub = tf_exchange.publisher_member_function:main',
-            'tf_listener = tf_exchange.subscriber_member_function:main',
-            'local_to_global_tf_pub = tf_exchange.subscriber_member_function_copy:main'
+            'local_to_global_tf_pub = tf_exchange.local_to_global_tf_pub:main'
         ],
     },
 )

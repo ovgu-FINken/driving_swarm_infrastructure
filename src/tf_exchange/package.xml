@@ -13,6 +13,8 @@
   <exec_depend>tf2_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_py</exec_depend>
+  
 
   <!-- <exec_depend>math</exec_depend>
   <exec_depend>psutil</exec_depend> -->
