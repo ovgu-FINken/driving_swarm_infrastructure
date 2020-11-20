@@ -23,7 +23,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'local_to_global_tf_pub = tf_exchange.local_to_global_tf_pub:main'
+            'local_tf_pub = tf_exchange.local_tf_pub:main',
+            'local_to_global_tf_pub = tf_exchange.local_to_global_tf_pub:main',
+            'global_to_local_tf_pub= tf_exchange.global_to_local_tf_pub:main'
         ],
     },
 )

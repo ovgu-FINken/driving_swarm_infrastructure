@@ -40,9 +40,9 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='tf_exchange',
-            executable='local_to_global_tf_pub',
+            executable='local_tf_pub',
             output='screen',
-            name='local_to_global_tf_pub',
+            name='local_tf_pub',
             namespace=launch.substitutions.LaunchConfiguration('robot_name'),
             parameters=[
                 {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
