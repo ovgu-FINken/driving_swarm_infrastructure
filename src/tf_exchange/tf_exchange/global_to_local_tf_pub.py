@@ -37,45 +37,30 @@ def get_ip_name():
     return name
 
 
-class GlobalToLocalPub(Node):
+class LocalToGlobalTFPub(Node):
     def __init__(self):
         # node
-        super().__init__('global_to_local_tf_pub')
+        super().__init__('local_to_global_tf_pub')
 
         # params
         # self.declare_parameter('robot_name', get_ip_name())
         self.declare_parameter('robot_name')
-        self.robot_name = self.get_parameter('robot_name').value
+        # self.robot_name = self.get_parameter('robot_name').value
+        self.robot_name = 'robot1'
+        self.publisher_ = self.create_publisher(
+            TFMessage, '/' + self.robot_name + '/tf', 100)
+        self.subscription = self.create_subscription(
+            TFMessage, '/tf', self.listener_callback, 100)
+        self.subscription  # prevent unused variable warning
 
-        tfTopic = "/tf"
-        self.get_logger().debug(tfTopic)
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
-
-        # to publish local world->base_footprint transformation as global T<ip>
-        self.publisher_ = self.create_publisher(TFMessage, tfTopic, 10)
-        TIMER_PERIOD = 0.5  # seconds
-        self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
-
-    def timer_callback(self):
-        br = tf2_ros.TransformBroadcaster(self)
-        tf2Msg = TransformStamped()
-
-        try:
-            tf2Msg = self.tfBuffer.lookup_transform(
-                "world", "base_link", rclpy.time.Time())
-            tf2Msg.child_frame_id = self.robot_name
-            br.sendTransform(tf2Msg)
-        # except (LookupException, ExtrapolationException, ConnectivityException) as e:
-        #     self.get_logger().info(str(e))
-        except Exception as e:
-            self.get_logger().info(str(e))
-            self.get_logger().info(str(type(e)))
+    def listener_callback(self, msg):
+        if msg.transforms[0].child_frame_id != self.robot_name:
+            self.publisher_.publish(msg)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = GlobalToLocalPub()
+    node = LocalToGlobalTFPub()
     rclpy.spin(node)
 
     # Destroy the node explicitly

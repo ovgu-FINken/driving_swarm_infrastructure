@@ -23,6 +23,7 @@ import subprocess
 import re
 from datetime import datetime
 from geometry_msgs.msg import TransformStamped
+from rclpy.qos import QoSProfile
 
 
 def get_ip_name():
@@ -49,6 +50,8 @@ class LocalTFPub(Node):
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
+        # qos = QoSProfile(depth=100)
+        # self.pub_tf = self.create_publisher(TFMessage, "/tf", qos)
         TIMER_PERIOD = 0.5  # seconds
         self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
 
@@ -61,6 +64,15 @@ class LocalTFPub(Node):
                 "world", "base_link", rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
             br.sendTransform(tf2Msg)
+
+            # # maybe the tranformation can directly be published to /tf?
+            # if not isinstance(tf2Msg, list):
+            #     if hasattr(tf2Msg, '__iter__'):
+            #         tf2Msg = list(tf2Msg)
+            #     else:
+            #         tf2Msg = [tf2Msg]
+            # self.pub_tf.publish(TFMessage(transforms=tf2Msg))
+
         # except (LookupException, ExtrapolationException, ConnectivityException) as e:
         #     self.get_logger().info(str(e))
         except Exception as e:
