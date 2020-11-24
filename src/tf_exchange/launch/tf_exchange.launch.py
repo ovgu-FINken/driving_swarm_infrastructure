@@ -2,8 +2,10 @@
 # from launch_ros.actions import Node
 import launch
 import launch.actions
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
+                            IncludeLaunchDescription, LogInfo)
 from launch.substitutions import LaunchConfiguration
-import launch_ros.actions
+from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
 
@@ -11,8 +13,17 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     robot_name = LaunchConfiguration('robot_name')
 
+    # TODO how to add a launch argument that is overloaded by configuration if not provided?
+    # namespace = DeclareLaunchArgument(
+    #     'namespace',
+    #     default_value=LaunchConfiguration('namespace'))
+
+    # robot_name = DeclareLaunchArgument(
+    #     'robot_name',
+    #     default_value=LaunchConfiguration('robot_name'))
+
     return launch.LaunchDescription([
-        launch_ros.actions.Node(
+        Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             output='screen',
@@ -21,7 +32,7 @@ def generate_launch_description():
             arguments=['0', '0', '0', '0', '0', '0', '1', 'world', 'map'],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
-        launch_ros.actions.Node(
+        Node(
             package='tf_exchange',
             executable='local_tf_pub',
             output='screen',
@@ -32,7 +43,7 @@ def generate_launch_description():
             ],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
-        launch_ros.actions.Node(
+        Node(
             package='tf_exchange',
             executable='local_to_global_tf_pub',
             output='screen',
@@ -42,7 +53,7 @@ def generate_launch_description():
                 {'robot_name': robot_name}
             ],
         ),
-        launch_ros.actions.Node(
+        Node(
             package='tf_exchange',
             executable='global_to_local_tf_pub',
             output='screen',
