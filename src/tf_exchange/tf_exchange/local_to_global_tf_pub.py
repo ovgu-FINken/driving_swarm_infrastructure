@@ -25,31 +25,17 @@ from datetime import datetime
 from geometry_msgs.msg import TransformStamped
 
 
-def get_ip_name():
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
-
-
 class LocalToGlobalTFPub(Node):
     def __init__(self):
         # node
         super().__init__('local_to_global_tf_pub')
 
         # params
-        # self.declare_parameter('robot_name', get_ip_name())
         self.declare_parameter('robot_name')
-        # self.robot_name = self.get_parameter('robot_name').value
-        self.robot_name = 'robot1'
-        self.publisher_ = self.create_publisher(TFMessage, "/tf", 10)
+        self.robot_name = self.get_parameter('robot_name').value
+        self.publisher_ = self.create_publisher(TFMessage, "/tf", 100)
         self.subscription = self.create_subscription(
-            TFMessage, '/' + self.robot_name + '/tf', self.listener_callback, 10)
+            TFMessage, 'tf', self.listener_callback, 100)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):

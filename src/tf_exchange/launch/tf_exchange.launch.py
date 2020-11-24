@@ -7,7 +7,7 @@ import launch_ros.actions
 import subprocess
 import re
 
-
+# TODO how to make this work for simulation?
 def get_ip_name():
     ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
     ips = re.findall(r'inet\s[0-9.]+', ipa)
@@ -25,7 +25,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             'robot_name',
             default_value=[
-                # get_ip_name()
+                # get_ip_name() # TODO how to make this work for simulation?
                 "robot1"
             ],
             description='Prefix for node names'),
@@ -47,5 +47,23 @@ def generate_launch_description():
             parameters=[
                 {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
+        ),
+        launch_ros.actions.Node(
+            package='tf_exchange',
+            executable='local_to_global_tf_pub',
+            output='screen',
+            name='local_to_global_tf_pub',
+            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            parameters=[
+                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
+        ),
+        launch_ros.actions.Node(
+            package='tf_exchange',
+            executable='global_to_local_tf_pub',
+            output='screen',
+            name='global_to_local_tf_pub',
+            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            parameters=[
+                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
         ),
     ])

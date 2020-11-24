@@ -26,32 +26,17 @@ from geometry_msgs.msg import TransformStamped
 from rclpy.qos import QoSProfile
 
 
-def get_ip_name():
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
-
-
 class LocalTFPub(Node):
     def __init__(self):
         # node
         super().__init__('local_tf_pub')
 
         # params
-        # self.declare_parameter('robot_name', get_ip_name())
         self.declare_parameter('robot_name')
         self.robot_name = self.get_parameter('robot_name').value
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
-        # qos = QoSProfile(depth=100)
-        # self.pub_tf = self.create_publisher(TFMessage, "/tf", qos)
         TIMER_PERIOD = 0.5  # seconds
         self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
 
@@ -64,14 +49,6 @@ class LocalTFPub(Node):
                 "world", "base_link", rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
             br.sendTransform(tf2Msg)
-
-            # # maybe the tranformation can directly be published to /tf?
-            # if not isinstance(tf2Msg, list):
-            #     if hasattr(tf2Msg, '__iter__'):
-            #         tf2Msg = list(tf2Msg)
-            #     else:
-            #         tf2Msg = [tf2Msg]
-            # self.pub_tf.publish(TFMessage(transforms=tf2Msg))
 
         # except (LookupException, ExtrapolationException, ConnectivityException) as e:
         #     self.get_logger().info(str(e))
