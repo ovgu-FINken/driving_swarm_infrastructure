@@ -2,39 +2,22 @@
 # from launch_ros.actions import Node
 import launch
 import launch.actions
-import launch.substitutions
+from launch.substitutions import LaunchConfiguration
 import launch_ros.actions
-import subprocess
-import re
-
-# TODO how to make this work for simulation?
-def get_ip_name():
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
+from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
+    namespace = LaunchConfiguration('namespace')
+    robot_name = LaunchConfiguration('robot_name')
+
     return launch.LaunchDescription([
-        launch.actions.DeclareLaunchArgument(
-            'robot_name',
-            default_value=[
-                # get_ip_name() # TODO how to make this work for simulation?
-                "robot1"
-            ],
-            description='Prefix for node names'),
         launch_ros.actions.Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             output='screen',
             name='world_map_tf_static_pub',
-            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            namespace=namespace,
             arguments=['0', '0', '0', '0', '0', '0', '1', 'world', 'map'],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
@@ -43,9 +26,10 @@ def generate_launch_description():
             executable='local_tf_pub',
             output='screen',
             name='local_tf_pub',
-            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            namespace=namespace,
             parameters=[
-                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
+                {'robot_name': robot_name}
+            ],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
         launch_ros.actions.Node(
@@ -53,17 +37,19 @@ def generate_launch_description():
             executable='local_to_global_tf_pub',
             output='screen',
             name='local_to_global_tf_pub',
-            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            namespace=namespace,
             parameters=[
-                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
+                {'robot_name': robot_name}
+            ],
         ),
         launch_ros.actions.Node(
             package='tf_exchange',
             executable='global_to_local_tf_pub',
             output='screen',
             name='global_to_local_tf_pub',
-            namespace=launch.substitutions.LaunchConfiguration('robot_name'),
+            namespace=namespace,
             parameters=[
-                {'robot_name': launch.substitutions.LaunchConfiguration('robot_name')}],
+                {'robot_name': robot_name}
+            ],
         ),
     ])

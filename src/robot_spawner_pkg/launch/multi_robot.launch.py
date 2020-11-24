@@ -21,6 +21,8 @@ The robots co-exist on a shared environment and are controlled by independent na
 """
 
 import os
+import subprocess
+import re
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -32,11 +34,24 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
 
+def get_ip_name():  # TODO how to make this work for simulation?
+    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
+    ips = re.findall(r'inet\s[0-9.]+', ipa)
+    ips = [ip[5:] for ip in ips]
+    x = [ip.split('.') for ip in ips]
+    name = 'T'
+    for ip in x:
+        if ip[0] != '127':
+            name += ip[-1]
+    return name
+
+
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
     bringup_launch_dir = os.path.join(bringup_dir, 'launch')
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
+    tf_exchange_dir = get_package_share_directory('tf_exchange')
 
     # Names and poses of the robots
     robots = [
@@ -71,17 +86,20 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+        default_value=os.path.join(
+            bringup_dir, 'maps', 'turtlebot3_world.yaml'),
         description='Full path to map file to load')
 
     declare_robot1_params_file_cmd = DeclareLaunchArgument(
         'robot1_params_file',
-        default_value=os.path.join(bringup_dir, 'params', 'nav2_multirobot_params_1.yaml'),
+        default_value=os.path.join(
+            bringup_dir, 'params', 'nav2_multirobot_params_1.yaml'),
         description='Full path to the ROS2 parameters file to use for robot1 launched nodes')
 
     declare_robot2_params_file_cmd = DeclareLaunchArgument(
         'robot2_params_file',
-        default_value=os.path.join(bringup_dir, 'params', 'nav2_multirobot_params_2.yaml'),
+        default_value=os.path.join(
+            bringup_dir, 'params', 'nav2_multirobot_params_2.yaml'),
         description='Full path to the ROS2 parameters file to use for robot2 launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
@@ -97,7 +115,8 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(bringup_dir, 'rviz', 'nav2_namespaced_view.rviz'),
+        default_value=os.path.join(
+            bringup_dir, 'rviz', 'nav2_namespaced_view.rviz'),
         description='Full path to the RVIZ config file to use.')
 
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
@@ -123,12 +142,12 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(os.path.join(spawner_dir,
                                                            'spawn_tb3.launch.py')),
                 launch_arguments={
-                                  'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                                  'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                                  'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                                  'robot_name': robot['name'],
-                                  'turtlebot_type': TextSubstitution(text='burger')
-                                  }.items()))
+                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
+                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
+                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
+                    'robot_name': robot['name'],
+                    'turtlebot_type': TextSubstitution(text='burger')
+                }.items()))
 
     # Define commands for launching the navigation instances
     nav_instances_cmds = []
@@ -138,12 +157,12 @@ def generate_launch_description():
         group = GroupAction([
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                        os.path.join(bringup_launch_dir, 'rviz_launch.py')),
+                    os.path.join(bringup_launch_dir, 'rviz_launch.py')),
                 condition=IfCondition(use_rviz),
                 launch_arguments={
-                                  'namespace': TextSubstitution(text=robot['name']),
-                                  'use_namespace': 'True',
-                                  'rviz_config': rviz_config_file}.items()),
+                    'namespace': TextSubstitution(text=robot['name']),
+                    'use_namespace': 'True',
+                    'rviz_config': rviz_config_file}.items()),
 
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(bringup_dir,
@@ -160,6 +179,17 @@ def generate_launch_description():
                                   'use_simulator': 'False',
                                   'headless': 'False',
                                   'use_robot_state_pub': use_robot_state_pub}.items()),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(tf_exchange_dir, 'tf_exchange.launch.py')),
+                launch_arguments={
+                    'namespace': TextSubstitution(text=robot['name']),
+                    'robot_name': robot['name'],
+                    'params_file': params_file
+                }.items()
+            ),
+
 
             LogInfo(
                 condition=IfCondition(log_settings),

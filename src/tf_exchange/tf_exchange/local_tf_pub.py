@@ -19,11 +19,7 @@ from std_msgs.msg import String
 import tf2_ros
 # from tf2_py import *
 from tf2_msgs.msg import TFMessage
-import subprocess
-import re
-from datetime import datetime
 from geometry_msgs.msg import TransformStamped
-from rclpy.qos import QoSProfile
 
 
 class LocalTFPub(Node):
@@ -62,9 +58,6 @@ def main(args=None):
     node = LocalTFPub()
     rclpy.spin(node)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     node.destroy_node()
     rclpy.shutdown()
 
