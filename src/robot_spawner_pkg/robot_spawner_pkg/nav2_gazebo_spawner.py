@@ -21,10 +21,102 @@ import xml.etree.ElementTree as ET
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
 import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from lifecycle_msgs.msg import TransitionEvent
 
+class Spawner(Node):
+    def __init__(self, args):
+        super().__init__(f'spawner')
+        self.spawn_robot(args)
+        topic = f'{args.robot_namespace}/initialpose'
+        self.pub = self.create_publisher(PoseWithCovarianceStamped, topic, 10)
+        self.sub = self.create_subscription(TransitionEvent, f'{args.robot_namespace}/amcl/transition_event', self.transition_cb, 10)
+
+    def spawn_robot(self, args):
+        # Get input arguments from user
+        # Start self
+        self.get_logger().info(
+            'Creating Service client to connect to `/spawn_entity`')
+        client = self.create_client(SpawnEntity, '/spawn_entity')
+
+        self.get_logger().info('Connecting to `/spawn_entity` service...')
+        if not client.service_is_ready():
+            client.wait_for_service()
+            self.get_logger().info('...connected!')
+
+        self.get_logger().info('spawning `{}` on namespace `{}` at {}, {}, {}'.format(
+            args.robot_name, args.robot_namespace, args.x, args.y, args.z))
+
+        # Get path to the robot's sdf file
+        if args.turtlebot_type is not None:
+            sdf_file_path = os.path.join(
+                get_package_share_directory('turtlebot3_gazebo'), 'models',
+                'turtlebot3_{}'.format(args.turtlebot_type), 'model.sdf')
+        else:
+            sdf_file_path = args.sdf
+
+        # We need to ***remap*** the transform (/tf) topic so each robot has its own.
+        # We do this by adding `ROS argument entries` to the sdf file for
+        # each plugin broadcasting a transform. These argument entries provide the
+        # remapping rule, i.e. /tf -> /<robot_id>/tf
+        tree = ET.parse(sdf_file_path)
+        root = tree.getroot()
+        for plugin in root.iter('plugin'):
+            # TODO(orduno) Handle case if an sdf file from non-turtlebot is provided
+            if 'turtlebot3_diff_drive' in plugin.attrib.values():
+                # The only plugin we care for now is 'diff_drive' which is
+                # broadcasting a transform between`odom` and `base_footprint`
+                break
+
+        ros_params = plugin.find('ros')
+        ros_tf_remap = ET.SubElement(ros_params, 'remapping')
+        ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
+
+        # Set data for request
+        request = SpawnEntity.Request()
+        request.name = args.robot_name
+        request.xml = ET.tostring(root, encoding='unicode')
+        request.robot_namespace = args.robot_namespace
+        request.initial_pose.position.x = float(args.x)
+        request.initial_pose.position.y = float(args.y)
+        request.initial_pose.position.z = float(args.z)
+        request.initial_pose.orientation.x = 0.0
+        request.initial_pose.orientation.y = 0.0
+        request.initial_pose.orientation.z = 0.0
+        request.initial_pose.orientation.w = 1.0
+
+        self.initial_pose = request.initial_pose
+
+        self.get_logger().info('Sending service request to `/spawn_entity`')
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+        if future.result() is not None:
+            print('response: %r' % future.result())
+        else:
+            raise RuntimeError(
+                'exception while calling service: %r' % future.exception())
+
+    def transition_cb(self, transition_event):
+        if transition_event.goal_state.id == 3:
+            self.send_initial_pose()
+
+    def send_initial_pose(self):
+
+        # Send initial pose
+        # geometry_msgs/msg/PoseWithCovarianceStamped
+        self.get_logger().info(f'Sending initial pose')
+        pose = PoseWithCovarianceStamped()
+        pose.header.frame_id = "map"
+        #pose.header.time = self.get_clock().now().stamp()
+        pose.pose.pose = self.initial_pose
+        self.pub.publish(pose)
+
+        self.get_logger().info('Done! Shutting down self.')
+        #self.destroy_self()
+        rclpy.shutdown()
 
 def main():
-    # Get input arguments from user
     parser = argparse.ArgumentParser(description='Spawn Robot into Gazebo with navigation2')
     parser.add_argument('-n', '--robot_name', type=str, default='robot',
                         help='Name of the robot to spawn')
@@ -45,68 +137,9 @@ def main():
 
     args, unknown = parser.parse_known_args()
 
-    # Start node
     rclpy.init()
-    node = rclpy.create_node('entity_spawner')
-
-    node.get_logger().info(
-        'Creating Service client to connect to `/spawn_entity`')
-    client = node.create_client(SpawnEntity, '/spawn_entity')
-
-    node.get_logger().info('Connecting to `/spawn_entity` service...')
-    if not client.service_is_ready():
-        client.wait_for_service()
-        node.get_logger().info('...connected!')
-
-    node.get_logger().info('spawning `{}` on namespace `{}` at {}, {}, {}'.format(
-        args.robot_name, args.robot_namespace, args.x, args.y, args.z))
-
-    # Get path to the robot's sdf file
-    if args.turtlebot_type is not None:
-        sdf_file_path = os.path.join(
-            get_package_share_directory('turtlebot3_gazebo'), 'models',
-            'turtlebot3_{}'.format(args.turtlebot_type), 'model.sdf')
-    else:
-        sdf_file_path = args.sdf
-
-    # We need to ***remap*** the transform (/tf) topic so each robot has its own.
-    # We do this by adding `ROS argument entries` to the sdf file for
-    # each plugin broadcasting a transform. These argument entries provide the
-    # remapping rule, i.e. /tf -> /<robot_id>/tf
-    tree = ET.parse(sdf_file_path)
-    root = tree.getroot()
-    for plugin in root.iter('plugin'):
-        # TODO(orduno) Handle case if an sdf file from non-turtlebot is provided
-        if 'turtlebot3_diff_drive' in plugin.attrib.values():
-            # The only plugin we care for now is 'diff_drive' which is
-            # broadcasting a transform between`odom` and `base_footprint`
-            break
-
-    ros_params = plugin.find('ros')
-    ros_tf_remap = ET.SubElement(ros_params, 'remapping')
-    ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
-
-    # Set data for request
-    request = SpawnEntity.Request()
-    request.name = args.robot_name
-    request.xml = ET.tostring(root, encoding='unicode')
-    request.robot_namespace = args.robot_namespace
-    request.initial_pose.position.x = float(args.x)
-    request.initial_pose.position.y = float(args.y)
-    request.initial_pose.position.z = float(args.z)
-
-    node.get_logger().info('Sending service request to `/spawn_entity`')
-    future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
-    if future.result() is not None:
-        print('response: %r' % future.result())
-    else:
-        raise RuntimeError(
-            'exception while calling service: %r' % future.exception())
-
-    node.get_logger().info('Done! Shutting down node.')
-    node.destroy_node()
-    rclpy.shutdown()
+    node = Spawner(args)
+    rclpy.spin(node)
 
 
 if __name__ == '__main__':

@@ -116,7 +116,7 @@ def generate_launch_description():
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
         default_value=os.path.join(
-            bringup_dir, 'rviz', 'nav2_namespaced_view.rviz'),
+            get_package_share_directory('robot_spawner_pkg'), 'nav2_namespaced_view.rviz'),
         description='Full path to the RVIZ config file to use.')
 
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
