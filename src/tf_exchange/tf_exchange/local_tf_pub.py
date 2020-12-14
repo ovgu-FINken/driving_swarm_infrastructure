@@ -49,8 +49,8 @@ class LocalTFPub(Node):
         # except (LookupException, ExtrapolationException, ConnectivityException) as e:
         #     self.get_logger().info(str(e))
         except Exception as e:
-            self.get_logger().info(str(e))
-            self.get_logger().info(str(type(e)))
+            #self.get_logger().info(str(e))
+            self.get_logger().info(str(type(e)), once=True)
 
 
 def main(args=None):

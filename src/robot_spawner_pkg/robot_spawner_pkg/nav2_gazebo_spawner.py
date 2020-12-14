@@ -24,6 +24,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from lifecycle_msgs.msg import TransitionEvent
+import PyKDL
 
 class Spawner(Node):
     def __init__(self, args):
@@ -78,13 +79,14 @@ class Spawner(Node):
         request.name = args.robot_name
         request.xml = ET.tostring(root, encoding='unicode')
         request.robot_namespace = args.robot_namespace
-        request.initial_pose.position.x = float(args.x)
-        request.initial_pose.position.y = float(args.y)
-        request.initial_pose.position.z = float(args.z)
-        request.initial_pose.orientation.x = 0.0
-        request.initial_pose.orientation.y = 0.0
-        request.initial_pose.orientation.z = 0.0
-        request.initial_pose.orientation.w = 1.0
+        request.initial_pose.position.x = args.x
+        request.initial_pose.position.y = args.y
+        request.initial_pose.position.z = args.z
+        rot = PyKDL.Rotation.RPY(args.yaw, .0, .0).GetQuaternion()
+        request.initial_pose.orientation.x = rot[0]
+        request.initial_pose.orientation.y = rot[1]
+        request.initial_pose.orientation.z = rot[2]
+        request.initial_pose.orientation.w = rot[3]
 
         self.initial_pose = request.initial_pose
 
@@ -122,12 +124,15 @@ def main():
                         help='Name of the robot to spawn')
     parser.add_argument('-ns', '--robot_namespace', type=str, default='robot',
                         help='ROS namespace to apply to the tf and plugins')
-    parser.add_argument('-x', type=float, default=0,
+    parser.add_argument('-x', type=float, default=0.0,
                         help='the x component of the initial position [meters]')
-    parser.add_argument('-y', type=float, default=0,
+    parser.add_argument('-y', type=float, default=0.0,
                         help='the y component of the initial position [meters]')
-    parser.add_argument('-z', type=float, default=0,
+    parser.add_argument('-z', type=float, default=0.0,
                         help='the z component of the initial position [meters]')
+
+    parser.add_argument('-yaw', type=float, default=0.0,
+                        help='rotation of the initial position in [rad]')
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-t', '--turtlebot_type', type=str,
