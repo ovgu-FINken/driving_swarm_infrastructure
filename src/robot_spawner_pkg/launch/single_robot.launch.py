@@ -98,7 +98,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
-    params_file = '/opt/ros/foxy/share/nav2_bringup/params/nav2_multirobot_params_1.yaml'
+    params_file = os.path.join(get_package_share_directory('robot_spawner_pkg'), 'nav2_multirobot_params_1.yaml')
     urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
 
 
