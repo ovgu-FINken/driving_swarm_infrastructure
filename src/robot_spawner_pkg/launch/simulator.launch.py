@@ -27,12 +27,6 @@ def generate_launch_description():
         default_value='gazebo',
         description='The simulator to use (gazebo or gzserver)')
 
-    declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        default_value=os.path.join(
-            bringup_dir, 'maps', 'turtlebot3_world.yaml'),
-        description='Full path to map file to load')
-
     # Start Gazebo with plugin providing the robot spawing service
     start_gazebo_cmd = ExecuteProcess(
         cmd=[simulator, '--verbose', '-s', 'libgazebo_ros_factory.so', world],
@@ -44,7 +38,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_simulator_cmd)
     ld.add_action(declare_world_cmd)
-    ld.add_action(declare_map_yaml_cmd)
+
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(start_gazebo_cmd)
 

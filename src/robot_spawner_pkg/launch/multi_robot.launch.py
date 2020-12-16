@@ -59,10 +59,6 @@ def generate_launch_description():
         {'name': 'robot2', 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01}
     ]
 
-    # Simulation settings
-    world = LaunchConfiguration('world')
-    simulator = LaunchConfiguration('simulator')
-
     # On this example all robots are launched with the same settings
     map_yaml_file = LaunchConfiguration('map')
 
@@ -72,17 +68,6 @@ def generate_launch_description():
     use_robot_state_pub = LaunchConfiguration('use_robot_state_pub')
     use_rviz = LaunchConfiguration('use_rviz')
     log_settings = LaunchConfiguration('log_settings', default='true')
-
-    # Declare the launch arguments
-    declare_world_cmd = DeclareLaunchArgument(
-        'world',
-        default_value=os.path.join(bringup_dir, 'worlds', 'world_only.model'),
-        description='Full path to world file to load')
-
-    declare_simulator_cmd = DeclareLaunchArgument(
-        'simulator',
-        default_value='gazebo',
-        description='The simulator to use (gazebo or gzserver)')
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
@@ -128,11 +113,6 @@ def generate_launch_description():
         'use_rviz',
         default_value='True',
         description='Whether to start RVIZ')
-
-    # Start Gazebo with plugin providing the robot spawing service
-    start_gazebo_cmd = ExecuteProcess(
-        cmd=[simulator, '--verbose', '-s', 'libgazebo_ros_factory.so', world],
-        output='screen')
 
     # Define commands for spawing the robots into Gazebo
     spawn_robots_cmds = []
@@ -216,12 +196,17 @@ def generate_launch_description():
 
         nav_instances_cmds.append(group)
 
+    simulator = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(spawner_dir, 'simulator.launch.py')),
+                launch_arguments={
+                }.items()
+            )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
     # Declare the launch options
-    ld.add_action(declare_simulator_cmd)
-    ld.add_action(declare_world_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot1_params_file_cmd)
     ld.add_action(declare_robot2_params_file_cmd)
@@ -232,7 +217,7 @@ def generate_launch_description():
     ld.add_action(declare_use_robot_state_pub_cmd)
 
     # Add the actions to start gazebo, robots and simulations
-    ld.add_action(start_gazebo_cmd)
+    ld.add_action(simulator)
 
     for spawn_robot_cmd in spawn_robots_cmds:
         ld.add_action(spawn_robot_cmd)

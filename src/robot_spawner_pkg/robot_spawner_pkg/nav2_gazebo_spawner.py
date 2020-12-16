@@ -24,21 +24,23 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from lifecycle_msgs.msg import TransitionEvent
+from lifecycle_msgs.srv import GetState
 import PyKDL
 
 class Spawner(Node):
     def __init__(self, args):
-        super().__init__(f'spawner')
-        self.spawn_robot(args)
+        super().__init__(f'spawner_{args.robot_name}')
+        self.args = args
         topic = f'{args.robot_namespace}/initialpose'
         self.pub = self.create_publisher(PoseWithCovarianceStamped, topic, 10)
-        self.sub = self.create_subscription(TransitionEvent, f'{args.robot_namespace}/amcl/transition_event', self.transition_cb, 10)
+        self.spawn_robot(args)
+        self.wait_for_localization()
 
     def spawn_robot(self, args):
         # Get input arguments from user
         # Start self
-        self.get_logger().info(
-            'Creating Service client to connect to `/spawn_entity`')
+        self.get_logger().info('Creating Service client to connect to `/spawn_entity`')
+        self.get_logger().info(f'args={args}')
         client = self.create_client(SpawnEntity, '/spawn_entity')
 
         self.get_logger().info('Connecting to `/spawn_entity` service...')
@@ -56,6 +58,7 @@ class Spawner(Node):
                 'turtlebot3_{}'.format(args.turtlebot_type), 'model.sdf')
         else:
             sdf_file_path = args.sdf
+        self.get_logger().info(f"sdf: {sdf_file_path}")
 
         # We need to ***remap*** the transform (/tf) topic so each robot has its own.
         # We do this by adding `ROS argument entries` to the sdf file for
@@ -82,7 +85,7 @@ class Spawner(Node):
         request.initial_pose.position.x = args.x
         request.initial_pose.position.y = args.y
         request.initial_pose.position.z = args.z
-        rot = PyKDL.Rotation.RPY(args.yaw, .0, .0).GetQuaternion()
+        rot = PyKDL.Rotation.RPY(.0, .0, args.yaw).GetQuaternion()
         request.initial_pose.orientation.x = rot[0]
         request.initial_pose.orientation.y = rot[1]
         request.initial_pose.orientation.z = rot[2]
@@ -98,6 +101,29 @@ class Spawner(Node):
         else:
             raise RuntimeError(
                 'exception while calling service: %r' % future.exception())
+        self.done = True
+
+    def wait_for_localization(self):
+        request = GetState.Request()
+        topic = f'/{self.args.robot_name}/amcl/get_state'
+        client = self.create_client(GetState, topic)
+        if not client.service_is_ready():
+            self.get_logger().info(f'waiting for service {topic}')
+            client.wait_for_service()
+            self.get_logger().info(f'connected to state service')
+
+        while True:
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(self, future)
+            if future.result() is not None:
+                print('response: %r' % future.result())
+                self.get_logger().info(f'{future.result()}')
+                if future.result().current_state.id == 3:
+                    break
+            else:
+                raise RuntimeError(
+                    'exception while calling service: %r' % future.exception())
+        self.send_initial_pose()
 
     def transition_cb(self, transition_event):
         if transition_event.goal_state.id == 3:
@@ -116,7 +142,8 @@ class Spawner(Node):
 
         self.get_logger().info('Done! Shutting down self.')
         #self.destroy_self()
-        rclpy.shutdown()
+        if self.done:
+            rclpy.shutdown()
 
 def main():
     parser = argparse.ArgumentParser(description='Spawn Robot into Gazebo with navigation2')
@@ -140,7 +167,7 @@ def main():
     group.add_argument('-s', '--sdf', type=str,
                        help="the path to the robot's model file (sdf)")
 
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     rclpy.init()
     node = Spawner(args)
