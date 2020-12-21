@@ -23,31 +23,29 @@ The robots co-exist on a shared environment and are controlled by independent na
 import os
 import subprocess
 import re
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo)
+                            IncludeLaunchDescription, LogInfo, OpaqueFunction)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
-
-def generate_launch_description():
+def initialize_robots(context, *args, **kwargs):
+    """initialize robots"""
     # Names and poses of the robots
-    robots = [
-        {'name': 'robot1', 'x_pose': 0.0, 'y_pose': 0.5, 'z_pose': 0.01},
-        {'name': 'robot2', 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01},
-        #{'name': 'robot3', 'x_pose': 0.5, 'y_pose': 0.0, 'z_pose': 0.01, 'yaw_pose': 1.0},
-        #{'name': 'robot4', 'x_pose': 0.0, 'y_pose': 1.5, 'z_pose': 0.01},
-        #{'name': 'robot5', 'x_pose': 0.5, 'y_pose': 0.5, 'z_pose': 0.01},
-    ]
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
-
-    # Define commands for spawing the robots into Gazebo
+    n_robots = LaunchConfiguration('n_robots').perform(context)
+    robots_file = LaunchConfiguration('robots_file').perform(context)
+    robots = []
+    with open(robots_file, 'r') as stream:
+        robots = yaml.safe_load(stream)
+    
     spawn_robots_cmds = []
-    for robot in robots:
+    for robot in robots[:int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(spawner_dir, "single_robot.launch.py")),
@@ -58,9 +56,23 @@ def generate_launch_description():
                     'robot_name': robot['name'],
                     'turtlebot_type': TextSubstitution(text='burger')
                 }.items()))
+    return spawn_robots_cmds
+
+
+
+def generate_launch_description():
+    spawner_dir = get_package_share_directory('robot_spawner_pkg')
+    declare_n_robots_cmd = DeclareLaunchArgument(
+        'n_robots',
+        default_value='2'
+    )
+
+    declare_robots_file_cmd = DeclareLaunchArgument(
+        'robots_file',
+        default_value = os.path.join(spawner_dir, 'robots.yaml')
+    )
 
     # Define commands for launching the navigation instances
-
     simulator = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(spawner_dir, 'simulator.launch.py')),
@@ -70,11 +82,16 @@ def generate_launch_description():
 
     # Create the launch description and populate
     ld = LaunchDescription()
+    
+    # Add declarations for launch file arguments
+    ld.add_action(declare_n_robots_cmd)
+    ld.add_action(declare_robots_file_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
+    
+    # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
+    ld.add_action(OpaqueFunction(function=initialize_robots))
 
-    for spawn_robot_cmd in spawn_robots_cmds:
-        ld.add_action(spawn_robot_cmd)
 
     return ld
