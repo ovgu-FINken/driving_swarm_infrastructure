@@ -34,26 +34,14 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
 
-def get_ip_name():  # TODO how to make this work for simulation?
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
-
-
 def generate_launch_description():
     # Names and poses of the robots
     robots = [
         {'name': 'robot1', 'x_pose': 0.0, 'y_pose': 0.5, 'z_pose': 0.01},
-        {'name': 'robot4', 'x_pose': 0.0, 'y_pose': 1.5, 'z_pose': 0.01},
-        {'name': 'robot5', 'x_pose': 0.5, 'y_pose': 0.5, 'z_pose': 0.01},
         {'name': 'robot2', 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01},
-        {'name': 'robot3', 'x_pose': 0.5, 'y_pose': 0.0, 'z_pose': 0.01, 'yaw_pose': 1.0},
+        #{'name': 'robot3', 'x_pose': 0.5, 'y_pose': 0.0, 'z_pose': 0.01, 'yaw_pose': 1.0},
+        #{'name': 'robot4', 'x_pose': 0.0, 'y_pose': 1.5, 'z_pose': 0.01},
+        #{'name': 'robot5', 'x_pose': 0.5, 'y_pose': 0.5, 'z_pose': 0.01},
     ]
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
 

@@ -58,6 +58,11 @@ def generate_launch_description():
         'slam',
         default_value='False',
         description='Whether run a SLAM')
+
+    declare_behaviour_cmd = DeclareLaunchArgument(
+        'behaviour',
+        default_value='True',
+        description='Whether run the default behaviour.')
     
     
     
@@ -138,6 +143,7 @@ def generate_launch_description():
     
     drive = launch_ros.actions.Node(
         executable='turtlebot3_drive',
+        condition=IfCondition(LaunchConfiguration('behaviour')),
         package='turtlebot3_gazebo',
         namespace=LaunchConfiguration('robot_name'),
     )
@@ -152,6 +158,7 @@ def generate_launch_description():
     ld.add_action(declare_yaw_pose)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_slam_cmd)
+    ld.add_action(declare_behaviour_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(spawner)
     ld.add_action(rviz)
