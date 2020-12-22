@@ -1,8 +1,6 @@
 from setuptools import setup
-import os
-from glob import glob
 
-package_name = 'goal_provider'
+package_name = 'trajectory_generator'
 
 setup(
     name=package_name,
@@ -12,18 +10,17 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name), glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Sebastian Mai',
+    maintainer='basti',
     maintainer_email='sebastian.mai@ovgu.de',
-    description='TODO: Package description',
+    description='a packge with planners to generate a trajectory',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'simple_goal = goal_provider.simple_goal:main'
+            'vehicle_model_node = trajectory_generator.vehicle_model_node:main'
         ],
     },
 )

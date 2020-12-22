@@ -34,7 +34,6 @@ class Spawner(Node):
         topic = f'{args.robot_namespace}/initialpose'
         self.pub = self.create_publisher(PoseWithCovarianceStamped, topic, 10)
         self.spawn_robot(args)
-        self.wait_for_localization()
 
     def spawn_robot(self, args):
         # Get input arguments from user
@@ -125,10 +124,6 @@ class Spawner(Node):
                     'exception while calling service: %r' % future.exception())
         self.send_initial_pose()
 
-    def transition_cb(self, transition_event):
-        if transition_event.goal_state.id == 3:
-            self.send_initial_pose()
-
     def send_initial_pose(self):
 
         # Send initial pose
@@ -141,7 +136,6 @@ class Spawner(Node):
         self.pub.publish(pose)
 
         self.get_logger().info('Done! Shutting down self.')
-        #self.destroy_self()
         if self.done:
             rclpy.shutdown()
 
@@ -171,7 +165,8 @@ def main():
 
     rclpy.init()
     node = Spawner(args)
-    rclpy.spin(node)
+    node.wait_for_localization()
+    node.destroy_node()
 
 
 if __name__ == '__main__':

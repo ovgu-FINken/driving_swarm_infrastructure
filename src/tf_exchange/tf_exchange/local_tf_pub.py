@@ -56,10 +56,11 @@ class LocalTFPub(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = LocalTFPub()
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info(f'got keyboard interrupt, shutting down')
+        node.destroy_node()
 
 
 if __name__ == '__main__':
