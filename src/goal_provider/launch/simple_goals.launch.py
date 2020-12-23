@@ -35,6 +35,13 @@ def controller_spawning(context, *args, **kwargs):
            #arguments=[],
         ))
         controllers.append(Node(
+           package='trajectory_generator',
+           executable='direct_planner',
+           namespace=robot['name'],
+           output='screen',
+           #arguments=[],
+        ))
+        controllers.append(Node(
            package='trajectory_follower',
            executable='trajectory_follower',
            namespace=robot['name'],

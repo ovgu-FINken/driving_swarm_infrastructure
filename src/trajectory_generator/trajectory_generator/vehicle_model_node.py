@@ -6,12 +6,14 @@ from driving_swarm_messages.srv import VehicleModel
 
 class VehicleModelNode(Node):
     def __init__(self):
-        super().__init__('trajectory_generator')
+        super().__init__('vehicle_model_node')
         self.get_logger().info("Starting")
         self.create_service(VehicleModel, 'nav/vehicle_model', self.vm_callback)
         
-    def vm_callback(self, request):
+    def vm_callback(self, request, response):
         self.get_logger().info(f'got request {request}')
+
+        return response
 
 
 def main():

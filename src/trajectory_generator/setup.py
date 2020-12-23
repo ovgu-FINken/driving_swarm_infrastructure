@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'vehicle_model_node = trajectory_generator.vehicle_model_node:main'
+            'vehicle_model_node = trajectory_generator.vehicle_model_node:main',
+            'direct_planner = trajectory_generator.direct_planner:main'
         ],
     },
 )
