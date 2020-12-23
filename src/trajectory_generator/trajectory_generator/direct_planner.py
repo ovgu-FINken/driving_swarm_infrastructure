@@ -7,20 +7,12 @@ import tf2_kdl
 import tf2_py
 import tf2_geometry_msgs
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Pose2D
+from rclpy.action import ActionClient
+from geometry_msgs.msg import PoseStamped, Pose2D, Quaternion
 from driving_swarm_messages.srv import VehicleModel
+from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path
 
-
-#def pose_stamped_to_transform(pose_stamped):
-#    transform = PyKDL.TransformStamped()
-#    transform = TransformStamped()
-#    transform.header = pose_stamped.header
-#    transform.transform.rotation = pose_stamped.pose.orientation
-#    transform.transform.translation.x = pose_stamped.pose.position.x
-#    transform.transform.translation.y = pose_stamped.pose.position.y
-#    transform.transform.translation.z = pose_stamped.pose.position.z
-#    return transform
 
 class DirectPlanner(Node):
     def __init__(self):
@@ -32,13 +24,16 @@ class DirectPlanner(Node):
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
 
+        self.path_publisher = self.create_publisher(Path, 'nav/path', 9)
+        self.follow_action_client = ActionClient(self, FollowPath, 'nav/follow_path')
         self.client_futures = []
         self.client = self.create_client(VehicleModel, 'nav/vehicle_model')
         self.client.wait_for_service()
         self.get_logger().info('connected to VM service')
+        self.follow_action_client.wait_for_server()
+        self.get_logger().info('connected to trajectory follower service')
         self.goal = None
         self.create_timer(0.1, self.timer_cb)
-        self.path_publisher = self.create_publisher(Path, 'nav/path', 9)
         self.create_subscription(PoseStamped, 'nav/goal', self.goal_cb, 9)
         
     def goal_cb(self, msg):
@@ -66,9 +61,28 @@ class DirectPlanner(Node):
 
     def send_path(self, trajectory):
         # convert trajectory to correct space
+        path = Path()
+        path.header.frame_id = self.reference_frame
+        path.header.stamp = self.get_clock().now().to_msg()
+        for pose in trajectory:
+            pose3d = PoseStamped()
+            pose3d.header.frame_id = self.reference_frame
+            pose3d.header.stamp = self.get_clock().now().to_msg()
+            pose3d.pose.position.x = pose.x
+            pose3d.pose.position.y = pose.y
+            pose3d.pose.position.z = 0.0
+            pose3d.pose.orientation = yaw_to_orientation(pose.theta) 
+            
+            path.poses.append(pose3d)
+
         # publish trajectory
+        self.path_publisher.publish(path) 
+
         # create follow trajectory action goal
-        pass 
+        
+        action_goal = FollowPath.Goal(path=path)
+        
+        self.follow_action_client.send_goal_async(action_goal)
     
     def get_waypoints(self):
         start = Pose2D()
@@ -96,9 +110,13 @@ class DirectPlanner(Node):
         return [start, goal]    
 
 def yaw_from_orientation(orientation):
-    
     rot = PyKDL.Rotation.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
     return rot.GetRPY()[2]
+
+def yaw_to_orientation(yaw):
+    q = PyKDL.Rotation.RPY(0,0,yaw).GetQuaternion()
+    return Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+    
 
 def main():
     rclpy.init()
