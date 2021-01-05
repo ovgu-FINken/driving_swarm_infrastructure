@@ -20,36 +20,55 @@ class DirectPlanner(Node):
         self.get_logger().info('Starting')
         self.own_frame = 'base_link'
         self.reference_frame = 'map'
+        self.current_gh = None
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
 
-        self.path_publisher = self.create_publisher(Path, 'nav/path', 9)
+        self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
         self.follow_action_client = ActionClient(self, FollowPath, 'nav/follow_path')
-        self.client_futures = []
+        self.vm_client_futures = []
+        self.action_client_futures = []
+        self.action_result_futures = []
         self.client = self.create_client(VehicleModel, 'nav/vehicle_model')
         self.client.wait_for_service()
         self.get_logger().info('connected to VM service')
         self.follow_action_client.wait_for_server()
         self.get_logger().info('connected to trajectory follower service')
         self.goal = None
+        f = self.tfBuffer.wait_for_transform_async(self.own_frame, self.reference_frame, rclpy.time.Time().to_msg())
+        self.get_logger().info('waiting for transform map -> baselink')
+        rclpy.spin_until_future_complete(self, f)
         self.create_timer(0.1, self.timer_cb)
         self.create_subscription(PoseStamped, 'nav/goal', self.goal_cb, 9)
+        self.get_logger().info('setup done')
         
     def goal_cb(self, msg):
-        self.get_logger().info(f'got new goal')#: {msg}')
         if self.goal is None or self.goal != msg:
+            self.get_logger().info(f'got new goal')#: {msg}')
             self.goal = msg
             self.create_path_request()
 
     # TODO: it would be much nicer to create a callback attached to the future, however this is not as simple (?) 
     # probably needs a reentrant callback
     def timer_cb(self):
-        for future in self.client_futures:
+        for future in self.vm_client_futures:
             if future.done():
                 self.get_logger().debug(f'finished {future.result()}')
-                self.client_futures.remove(future)
+                self.vm_client_futures.remove(future)
                 self.send_path(future.result().trajectory)
+        for future in self.action_client_futures:
+            if future.done():
+                if self.current_gh is not None:
+                    self.current_gh.cancel_goal()
+                self.action_client_futures.remove(future)
+                self.current_gh = future.result()
+                self.action_result_futures.append(self.current_gh.get_result_async())
+        for future in self.action_result_futures:
+            if future.done():
+                self.get_logger().info('action complete')
+                self.action_result_futures.remove(future)
+                self.current_gh = None
             
     def create_path_request(self):
         request = VehicleModel.Request()
@@ -57,7 +76,7 @@ class DirectPlanner(Node):
         request.speeds = [1.0, 1.0]
         self.get_logger().debug(f"sending request")
         vm_future = self.client.call_async(request)
-        self.client_futures.append(vm_future)
+        self.vm_client_futures.append(vm_future)
 
     def send_path(self, trajectory):
         # convert trajectory to correct space
@@ -77,35 +96,27 @@ class DirectPlanner(Node):
 
         # publish trajectory
         self.path_publisher.publish(path) 
-
+        
         # create follow trajectory action goal
-        
         action_goal = FollowPath.Goal(path=path)
-        
-        self.follow_action_client.send_goal_async(action_goal)
+        self.action_client_futures.append(self.follow_action_client.send_goal_async(action_goal))
     
     def get_waypoints(self):
         start = Pose2D()
         try:
-            trans = self.tfBuffer.lookup_transform(self.own_frame, self.reference_frame, rclpy.time.Time())
+            trans = self.tfBuffer.lookup_transform(self.reference_frame, self.own_frame, rclpy.time.Time().to_msg(), timeout=rclpy.time.Duration(seconds=3.0))
             frame = tf2_kdl.transform_to_kdl(trans)
             start.theta = frame.M.GetRPY()[2]
             start.x = frame.p.x()
             start.y = frame.p.y()
             #self.get_logger().debug(f"got the following for ego position: {start}")
-        except: 
-            self.get_logger().info("Exception in tf transformations")
+        except Exception as e: 
+            self.get_logger().info(f"Exception in tf transformations\n{e}")
             
         goal = Pose2D()
-        try:
-            x = self.tfBuffer.transform(self.goal, self.reference_frame)
-            goal.x = x.pose.position.x
-            goal.y = x.pose.position.y
-            goal.theta = yaw_from_orientation(x.pose.orientation)
-
-            self.get_logger().debug(f"got the following for goal position: {goal}")
-        except Exception as e: 
-            self.get_logger().info(f"Exception in goal transformation {e}")
+        goal.x = self.goal.pose.position.x
+        goal.y = self.goal.pose.position.y
+        goal.theta = yaw_from_orientation(self.goal.pose.orientation)
         
         return [start, goal]    
 

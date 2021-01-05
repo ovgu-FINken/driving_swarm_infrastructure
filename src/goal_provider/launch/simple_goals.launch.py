@@ -6,7 +6,7 @@ import yaml
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, OpaqueFunction
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -16,6 +16,7 @@ def controller_spawning(context, *args, **kwargs):
 
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
+    use_sim_time = TextSubstitution(text='true')
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     
@@ -24,6 +25,12 @@ def controller_spawning(context, *args, **kwargs):
            package='goal_provider',
            executable='simple_goal',
            namespace=robot['name'],
+           parameters=[{
+              'use_sim_time': use_sim_time,
+              'x': [0.0, 0.0],
+              'y': [-1.0, 1.5],
+              'theta': [0.0, 3.1415],
+           }],
            output='screen',
            #arguments=[],
         ))
@@ -31,6 +38,12 @@ def controller_spawning(context, *args, **kwargs):
            package='trajectory_generator',
            executable='vehicle_model_node',
            namespace=robot['name'],
+           parameters=[{
+            'use_sim_time': use_sim_time,
+            'vehicle_model': 1,
+            'turn_radius' : 0.2,
+            'step_size' : 0.2,
+           }],
            output='screen',
            #arguments=[],
         ))
@@ -38,6 +51,7 @@ def controller_spawning(context, *args, **kwargs):
            package='trajectory_generator',
            executable='direct_planner',
            namespace=robot['name'],
+           parameters=[{'use_sim_time': use_sim_time}],
            output='screen',
            #arguments=[],
         ))
@@ -45,6 +59,7 @@ def controller_spawning(context, *args, **kwargs):
            package='trajectory_follower',
            executable='trajectory_follower',
            namespace=robot['name'],
+           parameters=[{'use_sim_time': use_sim_time}],
            output='screen',
            #arguments=[],
         ))
@@ -56,7 +71,9 @@ def generate_launch_description():
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('robot_spawner_pkg'), 'multi_robot.launch.py')),
         launch_arguments={
-           'behaviour': 'false' 
+            'behaviour': 'false',
+            'world' : 'tworooms.world',
+            'map' : os.path.join(get_package_share_directory('robot_spawner_pkg'), 'maps','twoRoomsWorld.yaml'),
         }.items())
 
     ld = LaunchDescription()

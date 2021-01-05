@@ -149,13 +149,19 @@ class VehicleModelNode(Node):
         super().__init__('vehicle_model_node')
         self.get_logger().info("Starting")
         self.create_service(VehicleModel, 'nav/vehicle_model', self.vm_callback)
+        self.declare_parameter('vehicle_model')
+        self.declare_parameter('step_size')
+        self.declare_parameter('turn_radius')
+        self.vehicle = Vehicle(self.get_parameter('vehicle_model').get_parameter_value().integer_value)
+        self.step_size = self.get_parameter('step_size').get_parameter_value().double_value
+        self.turn_radius = self.get_parameter('turn_radius').get_parameter_value().double_value
         
     def vm_callback(self, request, response):
         self.get_logger().info(f'got request {request}')
         waypoints = []
         for wp, v in zip(request.waypoints, request.speeds):
             waypoints.append((wp.x, wp.y, wp.theta, v))
-        path = waypoints_to_path(waypoints)
+        path = waypoints_to_path(waypoints, r=self.turn_radius, step=self.step_size, model=Vehicle(self.vehicle))
         for pose in path:
             xyt = Pose2D()
             xyt.x, xyt.y, xyt.theta = pose
