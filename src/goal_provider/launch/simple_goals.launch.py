@@ -27,9 +27,9 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot['name'],
            parameters=[{
               'use_sim_time': use_sim_time,
-              'x': [0.0, 0.0],
-              'y': [-1.0, 1.5],
-              'theta': [0.0, 3.1415],
+              'x': [-.5, 0.0,  0.0],
+              'y': [-1.3, 0.0, 2.0],
+              'theta': [0.0, 1.5, 3.1415],
            }],
            output='screen',
            #arguments=[],

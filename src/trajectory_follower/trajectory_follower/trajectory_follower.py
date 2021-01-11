@@ -13,6 +13,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.action.server import ActionServer, CancelResponse, GoalResponse
 from nav2_msgs.action import FollowPath
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
+from nav_msgs.msg import Path
 
 
 # for the action server seehttps://github.com/ros2/examples/blob/master/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_queue_goals.py
@@ -35,6 +36,7 @@ class TrajectoryFollower(Node):
         
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = self.create_publisher(PoseStamped, 'nav/desired', 9)
+        self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
 
         self.follow_action_server = ActionServer(self, FollowPath, 'nav/follow_path', 
             handle_accepted_callback=self.handle_accepted_cb,
@@ -75,14 +77,12 @@ class TrajectoryFollower(Node):
             self.get_logger().warn(f'could not transform pose to reference frame \n {e}')
         return pose2d
         
-        
     def handle_accepted_cb(self, goal_handle):
         """start or defer execution of an accepted goal"""
         #we always execute the new goal and abort the previously running goal
-        self.get_logger().info(f'accepting: {goal_handle.goal_id}')
-        self.get_logger().info(f'aborting: {self.current_goal}')
-        self.current_goal = goal_handle.goal_id
-        goal_handle.execute()
+        self.get_logger().info(f'accepting: {goal_handle}')
+        self.current_goal = goal_handle
+        self.trajectory = goal_handle.request.path
             
     def goal_cb(self, goal_request):
         """ Accept or reject client action request """
@@ -92,19 +92,12 @@ class TrajectoryFollower(Node):
         return GoalResponse.ACCEPT
     
     def cancel_cb(self, goal_handle):
-        if goal_handle == self.current_goal:
+        if goal_handle.goal_id == self.current_goal.goal_id:
             self.current_goal = None
             self.trajectory = None
         return CancelResponse.ACCEPT
 
     def execute_cb(self, goal_handle):
-        self.get_logger().info(f'Executing Goal: {goal_handle.goal_id}')
-        self.trajectory = goal_handle.request.path
-        if goal_handle.request.path is None or goal_handle.request.path == []:
-            self.get_logger().warning("path is None")
-        while self.trajectory is not None:
-            rclpy.spin_once(self)
-        self.get_logger().info('goal_completed')
         goal_handle.succeed()
         return FollowPath.Result()
     
@@ -126,7 +119,7 @@ class TrajectoryFollower(Node):
         theta_diff = desired_pose.theta - ego_pose.theta
         
         px = 1.0
-        py = 0.1
+        py = 1.0
         p_theta = 1.0
         
         self.cmd_vel.linear.x = desired_vel.linear.x + x_diff * px
@@ -134,8 +127,14 @@ class TrajectoryFollower(Node):
 
         #self.get_logger().info(f'x={self.cmd_vel.linear.x}, theta={self.cmd_vel.angular.z}')
 
-        self.desired_pose_publisher.publish(self.pose2D_to_PoseStamped(desired_pose))
-        self.cmd_publisher.publish(self.cmd_vel)
+        if self.trajectory is None:
+            self.cmd_vel = Twist()
+            self.cmd_publisher.publish(self.cmd_vel)
+            return
+        else:
+            self.desired_pose_publisher.publish(self.pose2D_to_PoseStamped(desired_pose))
+            self.path_publisher.publish(self.trajectory)
+            self.cmd_publisher.publish(self.cmd_vel)
 
     def get_current_ego_pose(self):
         # this works because reference frame == ego frame
@@ -146,7 +145,7 @@ class TrajectoryFollower(Node):
         NANO = 0.001 ** 3
         current_stamp = self.get_clock().now()
         trajectory_start = rclpy.time.Time.from_msg(self.trajectory.header.stamp)
-        rate = .1
+        rate = .3
         t = (current_stamp - trajectory_start).nanoseconds * NANO * rate
         if t < 0.0:
             self.get_logger().warn('trajectory start is in the future')

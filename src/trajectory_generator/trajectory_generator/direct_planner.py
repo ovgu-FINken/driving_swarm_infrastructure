@@ -25,7 +25,6 @@ class DirectPlanner(Node):
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
 
-        self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
         self.follow_action_client = ActionClient(self, FollowPath, 'nav/follow_path')
         self.vm_client_futures = []
         self.action_client_futures = []
@@ -39,42 +38,65 @@ class DirectPlanner(Node):
         f = self.tfBuffer.wait_for_transform_async(self.own_frame, self.reference_frame, rclpy.time.Time().to_msg())
         self.get_logger().info('waiting for transform map -> baselink')
         rclpy.spin_until_future_complete(self, f)
-        self.create_timer(0.1, self.timer_cb)
         self.create_subscription(PoseStamped, 'nav/goal', self.goal_cb, 9)
+        self.create_timer(0.1, self.timer_cb)
         self.get_logger().info('setup done')
         
     def goal_cb(self, msg):
-        if self.goal is None or self.goal != msg:
-            self.get_logger().info(f'got new goal')#: {msg}')
+        if self.goal is None:
+            self.get_logger().info(f'got goal')#: {msg}')
             self.goal = msg
             self.create_path_request()
+        elif self.goal.pose != msg.pose:
+            self.get_logger().info('got new goal')
+            self.goal = msg
+            self.cancel_all_current_actions()
+            self.create_path_request()
+        else:
+            self.get_logger().debug('got old goal')
+
+    def cancel_all_current_actions(self):
+        self.get_logger().info('cancel current actions')
+        self.vm_client_futures = []
+        self.action_client_futures = []
+        if self.current_gh is not None:
+            self.current_gh.cancel_goal_async()
+        self.action_result_futures = []
 
     # TODO: it would be much nicer to create a callback attached to the future, however this is not as simple (?) 
     # probably needs a reentrant callback
     def timer_cb(self):
+        #self.get_logger().info('timer cb')
         for future in self.vm_client_futures:
             if future.done():
-                self.get_logger().debug(f'finished {future.result()}')
+                self.get_logger().info(f'finished {future.result()}')
                 self.vm_client_futures.remove(future)
                 self.send_path(future.result().trajectory)
         for future in self.action_client_futures:
             if future.done():
+                self.get_logger().info('action submit complete')
                 if self.current_gh is not None:
-                    self.current_gh.cancel_goal()
+                    self.get_logger().info('Cancelling old goal')
+                    self.current_gh.cancel_goal_async()
                 self.action_client_futures.remove(future)
                 self.current_gh = future.result()
+                self.get_logger().info(f'goal accepted: {self.current_gh.accepted}')
                 self.action_result_futures.append(self.current_gh.get_result_async())
         for future in self.action_result_futures:
             if future.done():
                 self.get_logger().info('action complete')
                 self.action_result_futures.remove(future)
                 self.current_gh = None
+                self.create_path_request()
             
     def create_path_request(self):
         request = VehicleModel.Request()
         request.waypoints = self.get_waypoints()
         request.speeds = [1.0, 1.0]
         self.get_logger().debug(f"sending request")
+        if len(self.vm_client_futures) > 0:
+            # if we request a new path, forget about the last one
+            self.vm_client_futures = []
         vm_future = self.client.call_async(request)
         self.vm_client_futures.append(vm_future)
 
@@ -94,11 +116,10 @@ class DirectPlanner(Node):
             
             path.poses.append(pose3d)
 
-        # publish trajectory
-        self.path_publisher.publish(path) 
         
         # create follow trajectory action goal
         action_goal = FollowPath.Goal(path=path)
+        self.get_logger().info('sending path to action server')
         self.action_client_futures.append(self.follow_action_client.send_goal_async(action_goal))
     
     def get_waypoints(self):
@@ -135,6 +156,7 @@ def main():
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
+        node.get_logger().info('Shutting Down')
         node.destroy_node()
 
 if __name__ == '__main__':
