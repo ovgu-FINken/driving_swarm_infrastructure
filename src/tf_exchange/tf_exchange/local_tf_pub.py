@@ -33,7 +33,7 @@ class LocalTFPub(Node):
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
-        TIMER_PERIOD = 0.5  # seconds
+        TIMER_PERIOD = 0.1  # seconds
         self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
 
     def timer_callback(self):

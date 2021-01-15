@@ -6,9 +6,10 @@ import bezier
 import rclpy
 import numpy as np
 from rclpy.node import Node
-from driving_swarm_messages.srv import VehicleModel
+from driving_swarm_messages.srv import VehicleModel as VehicleModelService
 from geometry_msgs.msg import Pose2D
 from enum import IntEnum
+from skimage import io
 
 class Vehicle(IntEnum):
     DUBINS = 1
@@ -143,25 +144,70 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
         path.append(waypoints[-1][0:3])
     return path
 
+class TrajectoryGenerator:
+    def __init__(self, model=Vehicle.DUBINS_ADAPTIVE, r=1, step=0.1):
+        self.model = model
+        self.r = r
+        self.step = step
+        self.costmap = None
+
+    def tuples_to_path(self, waypoints_tuples):
+        return waypoints_to_path(waypoints_tuples, r=self.r, model=self.model, step=self.step)
+
+    def convert_map_data_to_image(self, map_data):
+        image = np.array(map_data.data, dtype=int)
+        image = np.reshape(image, (map_data.info.width, map_data.info.height))
+        image[image < 50] = 0
+        image[image >= 50] = 100
+        return image
+    
+    def metric_to_px_coorditaes(self, x, y):
+        x = (x - self.raw_map.info.origin.position.x ) / self.raw_map.info.resolution
+        y = (y - self.raw_map.info.origin.position.y ) / self.raw_map.info.resolution
+        return int(x), int(y)
+
+    def set_costmap(self, costmap):
+        self.image = self.convert_map_data_to_image(costmap)
+        self.raw_map = costmap
+    
+    def compute_trajectory_objectives(self, trajectory):
+        danger = max([ self.image[self.metric_to_px_coorditaes(x,y)] for x, y, _ in trajectory ])
+        length = 0
+        for p, q in zip(trajectory[:-1], trajectory[1:]):
+            length += np.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
+
+        return {'length':length, 'time': len(trajectory), 'danger': danger}
+    
+    def plot_trajectory_in_costmap(self, trajectory):
+        img = self.image.copy()
+        for x, y, _ in trajectory:
+           img[self.metric_to_px_coorditaes(x,y)] = -100
+
+        io.imshow(img)
+        io.show() 
+    
 
 class VehicleModelNode(Node):
     def __init__(self):
         super().__init__('vehicle_model_node')
         self.get_logger().info("Starting")
-        self.create_service(VehicleModel, 'nav/vehicle_model', self.vm_callback)
+        self.create_service(VehicleModelService, 'nav/vehicle_model', self.vm_callback)
         self.declare_parameter('vehicle_model')
         self.declare_parameter('step_size')
         self.declare_parameter('turn_radius')
-        self.vehicle = Vehicle(self.get_parameter('vehicle_model').get_parameter_value().integer_value)
-        self.step_size = self.get_parameter('step_size').get_parameter_value().double_value
-        self.turn_radius = self.get_parameter('turn_radius').get_parameter_value().double_value
+        self.vm = TrajectoryGenerator(
+            model = Vehicle(self.get_parameter('vehicle_model').get_parameter_value().integer_value),
+            step = self.get_parameter('step_size').get_parameter_value().double_value,
+            r = self.get_parameter('turn_radius').get_parameter_value().double_value
+        )
+        
         
     def vm_callback(self, request, response):
         self.get_logger().info(f'got request {request}')
         waypoints = []
         for wp, v in zip(request.waypoints, request.speeds):
             waypoints.append((wp.x, wp.y, wp.theta, v))
-        path = waypoints_to_path(waypoints, r=self.turn_radius, step=self.step_size, model=Vehicle(self.vehicle))
+        path = self.vm.tuples_to_path(waypoints)
         for pose in path:
             xyt = Pose2D()
             xyt.x, xyt.y, xyt.theta = pose
