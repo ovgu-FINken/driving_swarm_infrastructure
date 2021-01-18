@@ -16,6 +16,8 @@ from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path, OccupancyGrid
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 
+def granularity(x):
+    return int(np.count_nonzero(~np.isnan(x)) / 3)
 
 class DirectPlanner(Node):
     def __init__(self):
@@ -27,7 +29,7 @@ class DirectPlanner(Node):
 
         self.w_time = 1.0
         self.w_length = 0.0
-        self.w_danger = 1.0
+        self.w_danger = 100
 
         self.declare_parameter('vehicle_model')
         self.declare_parameter('step_size')
@@ -48,9 +50,6 @@ class DirectPlanner(Node):
         self.vm_client_futures = []
         self.action_client_futures = []
         self.action_result_futures = []
-        self.client = self.create_client(VehicleModel, 'nav/vehicle_model')
-        self.client.wait_for_service()
-        self.get_logger().info('connected to VM service')
         self.follow_action_client.wait_for_server()
         self.get_logger().info('connected to trajectory follower service')
         self.goal = None
@@ -116,9 +115,121 @@ class DirectPlanner(Node):
             self.w_length * objectives['length']+ \
             self.w_danger * objectives['danger']
 
-    def evaluate_solution(self, wp):
-        trajectory = self.vm.tuples_to_path([self.start_wp, wp, self.goal_wp])
+    def evaluate_solution(self, wps):
+        trajectory = self.vm.tuples_to_path([self.start_wp] +  wps + [self.goal_wp])
         return self.weighted_sum( trajectory )
+    
+    def fitness(self, x):
+        x = x[~np.isnan(x)] 
+        wps = [(x,y,t,1.0) for x,y,t in zip(x[0::3], x[1::3], x[2::3])]
+        return self.evaluate_solution(wps)
+    
+    def mg_pso(self):
+        # Multi-Granularity PSO
+        pop_size = 40
+        n_gen = 200
+        c_social = 1.4
+        c_cognitive = 1.4
+        w = 0.5
+        granularity_0 = 1
+        population = np.random.rand(pop_size, granularity_0*3)
+
+        v_t = np.zeros_like(population)
+        pbest = population.copy()
+        pbest_fitness = []
+        for p in population:
+            pbest_fitness.append(self.fitness(p))
+        gbest_fitness = np.min(pbest_fitness)
+        gbest = pbest[pbest_fitness.index(gbest_fitness)]
+#dfs.append(sol_to_df(pbest, poly, generation=0, ndim))
+        print(gbest_fitness)
+        for _ in range(n_gen):
+            v_cognitive = c_cognitive * np.random.rand(*population.shape) * np.nan_to_num(pbest - population)
+            #print("cognitive:")
+            #print(v_cognitive)
+            v_social = c_social * np.random.rand(*population.shape) * np.nan_to_num(gbest - population)
+            #print("social:")
+            #print(v_social)
+            population_ = w * v_t + v_cognitive + v_social + population #+ 0.001 * (np.random.rand(*population.shape) - 0.5)
+            np.clip(population_, -5.0, 5.0, population_)
+            v_t = np.nan_to_num(population_ - population)
+            #print("v_t:")
+            #print(v_t)
+            population = population_
+
+            # if there is no room for granularity boost, make room
+            if not np.isnan(population).any(axis=1).all():
+                nan_array = np.zeros((pop_size,3))
+                nan_array[:]=np.nan
+                population = np.hstack([population, nan_array])
+                pbest = np.hstack([pbest, nan_array])
+                v_t = np.hstack([v_t,np.zeros((pop_size,3))])
+            
+            p_g_inc = 0.33 - len([1 for p in population if granularity(p) > granularity(gbest)]) / pop_size
+            p_g_inc *= 0.25
+            for i, p in enumerate(population):
+                # if previous best has lower granularity than current state, don't increase granularity
+                if granularity(gbest) < granularity(p):
+                    #if np.random.rand() < 0.01:
+                        #granularity drop
+                    #    x = np.min(np.argwhere(np.isnan(p)).flatten()) - 2
+                    #    if x <= 0:
+                    continue
+                    #    population[i,x] = np.random.rand()
+                    #    population[i,x] = np.random.rand()
+                elif np.random.rand() < p_g_inc or granularity(p) < granularity(gbest):
+                    x = np.min(np.argwhere(np.isnan(p)).flatten())
+                    w = np.random.rand()
+                    cut_off = np.random.randint(x)
+                    cut_off -= cut_off % 3
+                    p_0 = p[:cut_off]
+                    p_1 = p[cut_off:]
+                    p_x = self.start_wp[0]
+                    p_y = self.start_wp[1]
+                    p_t = self.start_wp[2]
+                    if cut_off > 0:
+                        p_x = p_0[-3] * w
+                        p_y = p_0[-2] * w
+                        p_t = p_0[-1] * w
+                    if np.isnan(p_1[0]):
+                        p_x += self.goal_wp[0] * (1 - w)
+                        p_y += self.goal_wp[1] * (1 - w)
+                        p_t += self.goal_wp[2] * (1 - w)
+                    else:
+                        p_x += p_1[0] * (1-w)
+                        p_y += p_1[1] * (1-w)
+                        p_t += p_1[2] * (1-w)
+                    population[i] = np.hstack([p_0, [p_x, p_y, p_t], p_1[:-3]])
+                    q = pbest[i]
+                    q_0 = q[:cut_off]
+                    q_1 = q[cut_off:]
+                    q_x = self.start_wp[0]
+                    q_y = self.start_wp[1]
+                    q_t = self.start_wp[2]
+                    if cut_off > 0:
+                        q_x = q_0[-3] * w
+                        q_y = q_0[-2] * w
+                        q_t = q_0[-1] * w
+                    if np.isnan(q_1[0]):
+                        q_x += self.goal_wp[0] * (1 - w)
+                        q_y += self.goal_wp[1] * (1 - w)
+                        q_t += self.goal_wp[2] * (1 - w)
+                    else:
+                        q_x += q_1[0] * (1-w)
+                        q_y += q_1[1] * (1-w)
+                        q_t += q_1[2] * (1-w)
+                    pbest[i] = np.hstack([q_0, [q_x, q_y, q_t], q_1[:-3]])
+    
+            for i,p in enumerate(population):
+                f = self.fitness(p)
+                if f < pbest_fitness[i]:
+                    pbest_fitness[i] = f
+                    pbest[i] = p
+            gbest_fitness = np.min(pbest_fitness)
+            gbest = pbest[pbest_fitness.index(gbest_fitness)]
+        x = gbest[~np.isnan(gbest)] 
+        wps = [(x,y,t,1.0) for x,y,t in zip(x[0::3], x[1::3], x[2::3])]
+        return wps
 
     def compute_path(self):
         waypoints = self.get_waypoints()
@@ -127,21 +238,22 @@ class DirectPlanner(Node):
         self.start_wp = waypoint_tuples[0]
         self.goal_wp = waypoint_tuples[1]
         
-        opt = optimize.minimize(self.evaluate_solution, [.0, .0, .0, 1.0],method='Nelder-Mead')
-        self.get_logger().info(f'best is: {opt.x}')
-        best = self.vm.tuples_to_path([self.start_wp, opt, self.goal_wp])
+        opt = self.mg_pso()
+        #optimize.minimize(self.evaluate_solution, [.0, .0, .0, 1.0],method='Nelder-Mead')
+        self.get_logger().info(f'best is: {opt}')
+        best = self.vm.tuples_to_path([self.start_wp] + opt + [self.goal_wp])
         # check if better than trivial solution
         if self.weighted_sum(trivial) < self.weighted_sum(best): 
             best = trivial
             self.get_logger().info(f'could not find better solution than trivial.')
+        self.get_logger().info(f'fitness: {self.vm.compute_trajectory_objectives(best)}')
+        #self.vm.plot_trajectory_in_costmap(best)
         self.send_path([Pose2D(x=x, y=y, theta=theta) for x,y,theta in best])
-        #self.vm.plot_trajectory_in_costmap(traj)
 
     def send_path(self, trajectory):
         # convert trajectory to correct space
         path = Path()
         path.header.frame_id = self.reference_frame
-        path.header.stamp = self.get_clock().now().to_msg()
         for pose in trajectory:
             pose3d = PoseStamped()
             pose3d.header.frame_id = self.reference_frame
@@ -155,6 +267,7 @@ class DirectPlanner(Node):
 
         
         # create follow trajectory action goal
+        path.header.stamp = self.get_clock().now().to_msg()
         action_goal = FollowPath.Goal(path=path)
         self.get_logger().info('sending path to action server')
         self.action_client_futures.append(self.follow_action_client.send_goal_async(action_goal))

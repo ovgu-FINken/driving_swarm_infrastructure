@@ -157,8 +157,6 @@ class TrajectoryGenerator:
     def convert_map_data_to_image(self, map_data):
         image = np.array(map_data.data, dtype=int)
         image = np.reshape(image, (map_data.info.width, map_data.info.height))
-        image[image < 50] = 0
-        image[image >= 50] = 100
         return image
     
     def metric_to_px_coorditaes(self, x, y):

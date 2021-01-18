@@ -28,7 +28,7 @@ class InflationNode(Node):
         self.own_frame = 'base_link'
         self.reference_frame = 'map'
         
-        self.safety_dist = 0.15
+        self.safety_dist = 0.20
 
         self.tfBuffer = tf2_ros.Buffer(cache_time=rclpy.time.Duration(seconds=3.0))
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
@@ -104,7 +104,7 @@ class InflationNode(Node):
         other = segmentation.expand_labels(other, distance=2.0 * self.safety_dist/self.raw_map.info.resolution)
         image = segmentation.expand_labels(self.map_image, distance=self.safety_dist/self.raw_map.info.resolution)
         scan_image = segmentation.expand_labels(self.scan_image(), distance=self.safety_dist/self.raw_map.info.resolution)
-        image = gaussian_filter(image + other + scan_image, 3)
+        image = gaussian_filter(image + other + scan_image, 5)
         image[image > 100] = 100
         image[image <= 0] = 0
         return image
