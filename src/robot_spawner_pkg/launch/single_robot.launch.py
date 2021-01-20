@@ -39,6 +39,7 @@ def generate_launch_description():
         description='Full path to map file to load')
     
     declare_robot_name = DeclareLaunchArgument('robot_name', default_value='robot1')
+    declare_base_frame = DeclareLaunchArgument('base_frame', default_value='base_link')
     declare_x_pose = DeclareLaunchArgument('x_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
     declare_y_pose = DeclareLaunchArgument('y_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
     declare_z_pose = DeclareLaunchArgument('z_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
@@ -72,6 +73,7 @@ def generate_launch_description():
                 launch_arguments={
                     'namespace': LaunchConfiguration('robot_name'),
                     'robot_name': LaunchConfiguration('robot_name'),
+                    'base_frame': LaunchConfiguration('base_frame')
                     #'params_file': [LaunchConfiguration('robot_name'), launch.substitutions.TextSubstitution(text='_params_file')]
                 }.items()
             )
@@ -152,6 +154,7 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot_name)
+    ld.add_action(declare_base_frame)
     ld.add_action(declare_x_pose)
     ld.add_action(declare_y_pose)
     ld.add_action(declare_z_pose)

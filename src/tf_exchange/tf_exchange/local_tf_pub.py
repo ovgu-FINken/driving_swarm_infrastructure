@@ -30,6 +30,8 @@ class LocalTFPub(Node):
         # params
         self.declare_parameter('robot_name')
         self.robot_name = self.get_parameter('robot_name').value
+        self.declare_parameter('base_frame')
+        self.base_frame = self.get_parameter('base_frame').value
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
@@ -42,14 +44,14 @@ class LocalTFPub(Node):
 
         try:
             tf2Msg = self.tfBuffer.lookup_transform(
-                "world", "base_link", rclpy.time.Time())
+                "world", self.base_frame, rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
             br.sendTransform(tf2Msg)
 
         # except (LookupException, ExtrapolationException, ConnectivityException) as e:
         #     self.get_logger().info(str(e))
         except Exception as e:
-            #self.get_logger().info(str(e))
+            # self.get_logger().info(str(e))
             self.get_logger().info(str(type(e)), once=True)
 
 

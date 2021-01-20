@@ -12,6 +12,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     robot_name = LaunchConfiguration('robot_name')
+    base_frame = LaunchConfiguration('base_frame')
 
     # TODO how to add a launch argument that is overloaded by configuration if not provided?
     # namespace = DeclareLaunchArgument(
@@ -39,7 +40,8 @@ def generate_launch_description():
             name='local_tf_pub',
             namespace=namespace,
             parameters=[
-                {'robot_name': robot_name}
+                {'robot_name': robot_name},
+                {'base_frame': base_frame}
             ],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
