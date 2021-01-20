@@ -47,6 +47,7 @@ def main(args=None):
     node = IPLogger()
     # main loop
     # rclpy.spin(node)
+    # TODO how to spin for a certain time and not only for one callback?
     rclpy.spin_once(node, timeout_sec=20)
     node.store_ips()
     node.destroy_node()
