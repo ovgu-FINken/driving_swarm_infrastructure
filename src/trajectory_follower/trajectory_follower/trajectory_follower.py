@@ -14,6 +14,7 @@ from rclpy.action.server import ActionServer, CancelResponse, GoalResponse
 from nav2_msgs.action import FollowPath
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from nav_msgs.msg import Path
+from driving_swarm_messages.srv import UpdateTrajectory
 
 
 # for the action server seehttps://github.com/ros2/examples/blob/master/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_queue_goals.py
@@ -26,6 +27,9 @@ class TrajectoryFollower(Node):
         self.reference_frame = 'base_link'
         self.trajectory = None
         self.current_goal = None
+        self.ix = 0
+        self.iy = 0
+        self.itheta = 0
         
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
@@ -36,16 +40,24 @@ class TrajectoryFollower(Node):
         
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = self.create_publisher(PoseStamped, 'nav/desired', 9)
+        self.co0 = self.create_publisher(PoseStamped, 'nav/cutoff_0', 9)
+        self.co1 = self.create_publisher(PoseStamped, 'nav/cutoff_1', 9)
         self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
-
-        self.follow_action_server = ActionServer(self, FollowPath, 'nav/follow_path', 
-            handle_accepted_callback=self.handle_accepted_cb,
-            execute_callback=self.execute_cb, 
-            goal_callback=self.goal_cb,
-            cancel_callback=self.cancel_cb,
-            callback_group=ReentrantCallbackGroup())
+        self.create_service(UpdateTrajectory, 'nav/follow_trajectory', self.update_trajectory_cb)
 
         self.create_timer(0.1, self.timer_cb)
+
+    def update_trajectory_cb(self, request, response):
+        # todo: check if trajectories submitted are valid
+        if self.trajectory is None or request.update_index == 0:
+            self.trajectory = request.trajectory
+        else:
+            self.co0.publish(self.trajectory.poses[request.update_index - 1])
+            self.co1.publish(request.trajectory.poses[0])
+            self.trajectory.poses = self.trajectory.poses[:request.update_index] + request.trajectory.poses
+        response.accepted = True
+        response.trajectory = self.trajectory
+        return response
 
 
     def pose2D_to_PoseStamped(self, pose2d):
@@ -77,26 +89,6 @@ class TrajectoryFollower(Node):
             self.get_logger().warn(f'could not transform pose to reference frame \n {e}')
         return pose2d
         
-    def handle_accepted_cb(self, goal_handle):
-        """start or defer execution of an accepted goal"""
-        #we always execute the new goal and abort the previously running goal
-        self.get_logger().info(f'accepting: {goal_handle}')
-        self.current_goal = goal_handle
-        self.trajectory = goal_handle.request.path
-            
-    def goal_cb(self, goal_request):
-        """ Accept or reject client action request """
-        # TODO: Check if start(?) pose and time are valid
-        #self.get_logger().info(f'got new goal request: {goal_request}')
-        self.get_logger().info(f'got new goal request.')
-        return GoalResponse.ACCEPT
-    
-    def cancel_cb(self, goal_handle):
-        if goal_handle.goal_id == self.current_goal.goal_id:
-            self.current_goal = None
-            self.trajectory = None
-        return CancelResponse.ACCEPT
-
     def execute_cb(self, goal_handle):
         goal_handle.succeed()
         return FollowPath.Result()
@@ -111,19 +103,27 @@ class TrajectoryFollower(Node):
         desired_pose, desired_vel = self.get_current_desired_pose_vel()
         x_diff = desired_pose.x - ego_pose.x
         y_diff = desired_pose.y - ego_pose.y 
+        theta_diff = desired_pose.theta - ego_pose.theta
         if x_diff**2 + y_diff**2 > self.fail_radius**2:
             self.get_logger().info('canceling goal because to far from planned pose')
             self.trajectory = None
             self.cmd_vel = Twist()
             self.cmd_publisher.publish(self.cmd_vel)
-        theta_diff = desired_pose.theta - ego_pose.theta
+
+        self.ix += x_diff
+        self.iy += y_diff
+        self.itheta = theta_diff
         
-        px = 1.0
-        py = 1.0
-        p_theta = 1.0
+        px = 1.5
+        py = 1.5
+        p_theta = 1.5
         
-        self.cmd_vel.linear.x = desired_vel.linear.x + x_diff * px
-        self.cmd_vel.angular.z = desired_vel.angular.z + y_diff * py + theta_diff * p_theta
+        pi_x = 0.1
+        pi_y = 0.1
+        pi_theta = 0.1
+        
+        self.cmd_vel.linear.x = desired_vel.linear.x + x_diff * px + pi_x * self.ix
+        self.cmd_vel.angular.z = desired_vel.angular.z + y_diff * py + pi_y * self.iy + theta_diff * p_theta + pi_theta * self.itheta
 
         #self.get_logger().info(f'x={self.cmd_vel.linear.x}, theta={self.cmd_vel.angular.z}')
 
@@ -145,7 +145,7 @@ class TrajectoryFollower(Node):
         NANO = 0.001 ** 3
         current_stamp = self.get_clock().now()
         trajectory_start = rclpy.time.Time.from_msg(self.trajectory.header.stamp)
-        rate = .3
+        rate = 1.0
         t = (current_stamp - trajectory_start).nanoseconds * NANO * rate
         if t < 0.0:
             self.get_logger().warn('trajectory start is in the future')

@@ -169,7 +169,7 @@ class TrajectoryGenerator:
         self.raw_map = costmap
     
     def compute_trajectory_objectives(self, trajectory):
-        danger = max([ self.image[self.metric_to_px_coorditaes(x,y)] for x, y, _ in trajectory ])
+        danger = np.max([ self.image[self.metric_to_px_coorditaes(x,y)] * 20 / (i + 20) for i, (x, y, _) in enumerate(trajectory) ])
         length = 0
         for p, q in zip(trajectory[:-1], trajectory[1:]):
             length += np.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )

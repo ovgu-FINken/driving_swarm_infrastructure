@@ -23,6 +23,7 @@ setup(
             'vehicle_model_node = trajectory_generator.vehicle_model_node:main',
             'direct_planner = trajectory_generator.direct_planner:main',
             'pso_planner = trajectory_generator.pso_planner:main',
+            'continuous_planner = trajectory_generator.continuous_planner:main',
             'obstacle_inflation = trajectory_generator.obstacle_inflation:main',
         ],
     },

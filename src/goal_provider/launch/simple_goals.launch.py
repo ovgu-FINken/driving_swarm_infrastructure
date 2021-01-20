@@ -36,13 +36,13 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_generator',
-           executable='pso_planner',
+           executable='continuous_planner',
            namespace=robot['name'],
            parameters=[{
             'use_sim_time': use_sim_time,
             'vehicle_model': 1,
             'turn_radius' : 0.2,
-            'step_size' : 0.1
+            'step_size' : 0.05
             }],
            output='screen',
            #arguments=[],

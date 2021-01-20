@@ -27,6 +27,7 @@ set(msg_files
 
 set(srv_files
   "srv/VehicleModel.srv"
+  "srv/UpdateTrajectory.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

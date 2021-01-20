@@ -19,7 +19,7 @@ from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 def granularity(x):
     return int(np.count_nonzero(~np.isnan(x)) / 3)
 
-class DirectPlanner(Node):
+class PSOPlanner(Node):
     def __init__(self):
         super().__init__('pso_planner')
         self.get_logger().info('Starting')
@@ -309,7 +309,7 @@ def yaw_to_orientation(yaw):
 
 def main():
     rclpy.init()
-    node = DirectPlanner()
+    node = PSOPlanner()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
