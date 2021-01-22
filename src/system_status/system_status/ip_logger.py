@@ -28,11 +28,10 @@ class IPLogger(Node):
         self.sub = self.create_subscription(
             SystemStatus, '/system_status',  self.system_status_callback, qos.qos_profile_system_default)
         self.local_ips_ = []
+        self.done_ = False
 
     def store_ips(self):
-        dict_file = [{'local_ips': self.local_ips_}]
-        # base_path = Path(__file__).parent
-        # file_path = (base_path / "../log/local_ips.yaml").resolve()
+        dict_file = [{'local_ips': list(set(self.local_ips_))}]
         cwd = os.getcwd()
         with open(os.path.join(cwd, 'local_ips.yaml'), 'w+') as file:
             documents = yaml.dump(dict_file, file)
@@ -40,35 +39,26 @@ class IPLogger(Node):
     def system_status_callback(self, msg):
         local_ip = extract_local_ip(msg.ip)
         self.local_ips_.append(local_ip)
+        # self.local_ips_.add(local_ip)
+
+    def break_loop(self):
+        self.done_ = True
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = IPLogger()
-    # main loop
-    # rclpy.spin(node)
-    # TODO how to spin for a certain time and not only for one callback?
-    rclpy.spin_once(node, timeout_sec=20)
+    # spin for a certain time
+    node.create_timer(30.0, node.break_loop)
+    while rclpy.ok():
+        rclpy.spin_once(node)
+        if node.done_:
+            break
+
     node.store_ips()
     node.destroy_node()
     rclpy.shutdown()
 
-    # example from tf2_tool view_frames.py
-    #  rospy.init_node('view_frames')
-    #  # listen to tf for 5 seconds
-    #  rospy.loginfo('Listening to tf data during 5 seconds...')
-    #  rospy.sleep(0.00001)
-    #  buffer = tf2_ros.Buffer()
-    #  listener = tf2_ros.TransformListener(buffer)
-    #  rospy.sleep(5.0)
-
-    #  rospy.loginfo('Generating graph in frames.pdf file...')
-    #  rospy.wait_for_service('~tf2_frames')
-    #  srv = rospy.ServiceProxy('~tf2_frames', FrameGraph)
-    #  data = yaml.safe_load(srv().frame_yaml)
-    #  with open('frames.gv', 'w') as f:
-    #      f.write(generate_dot(data))
-    #  subprocess.Popen('dot -Tpdf frames.gv -o frames.pdf'.split(' ')).communicate()
 
 
 if __name__ == '__main__':
