@@ -19,3 +19,11 @@ repositories:
     type: git
     url: https://github.com/ROBOTIS-GIT/hls_lfcd_lds_driver.git
     version: ros2
+  geometry2:
+    type: git
+    url:  https://github.com/bastinat0r/geometry2.git
+    version: ros2
+  map2gazebo:
+    type: git
+    url: https://github.com/bastinat0r/map2gazebo.git
+    version: ros2
