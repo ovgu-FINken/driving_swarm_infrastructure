@@ -27,9 +27,9 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot['name'],
            parameters=[{
               'use_sim_time': use_sim_time,
-              'x': [-.5, 0.0,  0.0],
-              'y': [-1.3, 0.0, 2.0],
-              'theta': [0.0, 1.5, 3.1415],
+              'x': robot['goals']['x'],
+              'y': robot['goals']['y'],
+              'theta': robot['goals']['theta'],
            }],
            output='screen',
            #arguments=[],
@@ -72,8 +72,8 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('robot_spawner_pkg'), 'multi_robot.launch.py')),
         launch_arguments={
             'behaviour': 'false',
-            'world' : 'tworooms.world',
-            'map' : os.path.join(get_package_share_directory('robot_spawner_pkg'), 'maps','twoRoomsWorld.yaml'),
+            'world' : 'face.world',
+            'map' : os.path.join(get_package_share_directory('robot_spawner_pkg'), 'maps','face.yaml'),
         }.items())
 
     ld = LaunchDescription()
