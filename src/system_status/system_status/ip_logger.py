@@ -49,7 +49,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = IPLogger()
     # spin for a certain time
-    node.create_timer(30.0, node.break_loop)
+    node.create_timer(20.0, node.break_loop)
     while rclpy.ok():
         rclpy.spin_once(node)
         if node.done_:

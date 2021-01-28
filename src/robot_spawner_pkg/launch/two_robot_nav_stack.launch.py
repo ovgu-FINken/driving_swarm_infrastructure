@@ -69,6 +69,8 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     log_settings = LaunchConfiguration('log_settings', default='true')
 
+    declare_base_frame = DeclareLaunchArgument('base_frame', default_value='base_link')
+
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         default_value=os.path.join(
@@ -166,7 +168,8 @@ def generate_launch_description():
                 launch_arguments={
                     'namespace': TextSubstitution(text=robot['name']),
                     'robot_name': robot['name'],
-                    'params_file': params_file
+                    'base_frame': LaunchConfiguration('base_frame')
+                    # 'params_file': params_file
                 }.items()
             ),
 
@@ -207,6 +210,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # Declare the launch options
+    ld.add_action(declare_base_frame)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot1_params_file_cmd)
     ld.add_action(declare_robot2_params_file_cmd)
