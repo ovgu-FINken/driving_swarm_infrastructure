@@ -29,6 +29,7 @@ from launch_ros.actions import Node
 import subprocess
 import re
 import yaml
+import ast
 
 
 def getip(prefix):
@@ -44,15 +45,16 @@ def getip(prefix):
 
 
 def edit_param_file_namespace(param_file_dir):
-    with open(param_file_dir, 'rU') as f:
+    with open(param_file_dir, 'r') as f:
         data = yaml.safe_load(f)
-
-    ns = getip('robot')
-    data[ns] = data['robot1']
-    del data['robot1']
+        name = getip('robot') + "':"
+        # for every robotXXX you find in the data, replace with the name
+        replaced = re.sub(r'robot[^\s]*', name, str(data))
+        # str->dict
+        replaced = ast.literal_eval(replaced)
 
     with open(param_file_dir, 'w') as f:
-        yaml.dump(data, f)
+        yaml.dump(replaced, f)
 
 
 def generate_launch_description():
@@ -67,7 +69,7 @@ def generate_launch_description():
         default=default_param_dir
     )
     # ATTENTION: this is editing the parameter file's content!
-    # edit_param_file_namespace(default_param_dir)
+    edit_param_file_namespace(default_param_dir)
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')

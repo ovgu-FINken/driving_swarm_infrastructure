@@ -1,4 +1,4 @@
-robot245:
+robot1:
   turtlebot3_node:
     ros__parameters:
 
@@ -28,7 +28,6 @@ robot245:
 
         sonar: false
 
-robot245:
   diff_drive_controller:
     ros__parameters:
 
