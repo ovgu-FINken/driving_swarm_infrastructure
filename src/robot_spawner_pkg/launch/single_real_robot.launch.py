@@ -26,6 +26,7 @@ import launch_ros.actions
 
 
 def generate_launch_description():
+
     tf_exchange_dir = get_package_share_directory('tf_exchange')
     #rviz_config_file = LaunchConfiguration('rviz_config')
     #map_yaml_file = LaunchConfiguration('map')
@@ -40,10 +41,10 @@ def generate_launch_description():
     
     declare_robot_name = DeclareLaunchArgument('robot_name', default_value='robot1')
     declare_base_frame = DeclareLaunchArgument('base_frame', default_value='base_link')
-    declare_x_pose = DeclareLaunchArgument('x_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    declare_y_pose = DeclareLaunchArgument('y_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    declare_z_pose = DeclareLaunchArgument('z_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    declare_yaw_pose = DeclareLaunchArgument('yaw_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    # declare_x_pose = DeclareLaunchArgument('x_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    # declare_y_pose = DeclareLaunchArgument('y_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    # declare_z_pose = DeclareLaunchArgument('z_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    # declare_yaw_pose = DeclareLaunchArgument('yaw_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
         default_value='True',
@@ -74,29 +75,30 @@ def generate_launch_description():
                     'namespace': LaunchConfiguration('robot_name'),
                     'robot_name': LaunchConfiguration('robot_name'),
                     'base_frame': LaunchConfiguration('base_frame')
-                    #'params_file': [LaunchConfiguration('robot_name'), launch.substitutions.TextSubstitution(text='_params_file')]
                 }.items()
             )
     
 
     rviz = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(bringup_dir, 'launch', 'rviz_launch.py')),
+                    os.path.join(bringup_dir, 'launch', 'rviz_launch.py')
+                ),
                 condition=IfCondition(LaunchConfiguration('use_rviz')),
                 launch_arguments={
                     'namespace': LaunchConfiguration('robot_name'),
                     'use_namespace': 'true',
-                    'use_sim_time': 'true'}.items())#,
-                    #'rviz_config': rviz_config_file}.items())
+                    'use_sim_time': 'true'}.items()
+            )
 
-    # TODO 
-    # nav = IncludeLaunchDescription()
-    # fix autostart.bash 
-    # start robot in namespace
-    # when stopping the program, or if the cmd vel didn't change for a long time --> then cmd_vel=(0/0) will be send to all robots
-    # fixed starting positions --> to /robot1/initial_pose topic (PoseWithCovarianceStamped)
-    # reinitialize localisation service --> drive a bit 
-
+    # TODO:
+    # watchdog_node 
+    # --> check, if a new message is sent regularly to the topic /cmd_vel (at least every every 200ms)
+    # re-localisation node 
+    # --> call the reinitialize_global_localisation service (amcl)
+    # --> let the robot drive a bit 
+    # --> stop this node
+    # run the nav_node
+    # https://navigation.ros.org/configuration/packages/bt-plugins/actions/ReinitializeGlobalLocalization.html?highlight=service
 
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
@@ -141,10 +143,10 @@ def generate_launch_description():
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot_name)
     ld.add_action(declare_base_frame)
-    ld.add_action(declare_x_pose)
-    ld.add_action(declare_y_pose)
-    ld.add_action(declare_z_pose)
-    ld.add_action(declare_yaw_pose)
+    # ld.add_action(declare_x_pose)
+    # ld.add_action(declare_y_pose)
+    # ld.add_action(declare_z_pose)
+    # ld.add_action(declare_yaw_pose)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_slam_cmd)
     ld.add_action(declare_behaviour_cmd)

@@ -10,6 +10,7 @@ import yaml
 import os
 from glob import glob
 from pathlib import Path
+from ament_index_python.packages import get_package_share_directory
 
 
 def extract_local_ip(full_ip):
@@ -32,9 +33,9 @@ class IPLogger(Node):
 
     def store_ips(self):
         dict_file = [{'local_ips': list(set(self.local_ips_))}]
-        cwd = os.getcwd()
-        with open(os.path.join(cwd, 'local_ips.yaml'), 'w+') as file:
-            documents = yaml.dump(dict_file, file)
+        pkg_share_dir = get_package_share_directory('system_status')
+        with open(os.path.join(pkg_share_dir, 'local_ips.yaml'), 'w+') as file:
+            yaml.dump(dict_file, file)
 
     def system_status_callback(self, msg):
         local_ip = extract_local_ip(msg.ip)
