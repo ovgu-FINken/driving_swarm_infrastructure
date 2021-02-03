@@ -93,7 +93,9 @@ def generate_launch_description():
     # TODO:
     # watchdog_node 
     # --> check, if a new message is sent regularly to the topic /cmd_vel (at least every every 200ms)
-    # re-localisation node 
+    # choose via launch argument, if fixed position or dynamic
+    # for experiments fixed positions
+    # else re-localisation node 
     # --> call the reinitialize_global_localisation service (amcl)
     # --> let the robot drive a bit 
     # --> stop this node
@@ -138,6 +140,12 @@ def generate_launch_description():
         namespace=LaunchConfiguration('robot_name'),
     )
     
+    # #TODO: as extra process!!
+    # watchdog = launch_ros.actions.Node(
+    #     package='robot_spawner_pkg',
+    #     executable='watchdog',
+    #     namespace=LaunchConfiguration('robot_name'),
+    # )
     
     ld = LaunchDescription()
     ld.add_action(declare_map_yaml_cmd)
@@ -155,4 +163,5 @@ def generate_launch_description():
     ld.add_action(bringup_cmd_group)
     ld.add_action(tf_exchange)
     ld.add_action(drive)
+    # ld.add_action(watchdog)
     return ld 

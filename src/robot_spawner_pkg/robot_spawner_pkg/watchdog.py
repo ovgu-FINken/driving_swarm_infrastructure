@@ -6,32 +6,41 @@ import psutil
 from geometry_msgs.msg import Twist, Vector3
 from rclpy import qos
 
+# ros2 run robot_spawner_pkg watchdog --ros-args -r __ns:=/robot245
 
 class Watchdog(Node):
     def __init__(self):
-        super().__init__('status_publisher')
+        super().__init__('watchdog')
         self.cmd_vel_sub = self.create_subscription(
-            Twist, 'cmd_vel', self.store_vel_callback, qos.qos_profile_system_default)
+            Twist, 'cmd_vel', self.vel_callback, qos.qos_profile_system_default)
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 1)
-        WATCH_RATE = 0.2  # s
+        WATCH_RATE = 0.3  # s
         self.timer = self.create_timer(WATCH_RATE, self.watch_callback)
-        self.latest_timestamp = 0
-        self.previous_timestamp = 0
+        self.latest_timestamp_vel = 0
+        self.latest_timestamp_wd = 0
         self.first_cb = True
 
-    def store_vel_callback(self, msg):
+    def vel_callback(self, msg):
+        print('vel_callback')
         if self.first_cb:
-            self.previous_timestamp = self.get_clock().now().nanoseconds
+            self.latest_timestamp_wd = self.get_clock().now().nanoseconds # latest_ts: 111, prev_ts: 0
             self.first_cb = False
+            print('first_cb')
         else:
-            self.latest_timestamp = self.get_clock().now().nanoseconds
+            # self.previous_timestamp = self.latest_timestamp_vel # latest_ts: 111, prev_ts: 111
+            self.latest_timestamp_vel = self.get_clock().now().nanoseconds # latest_ts: 222, prev_ts: 111
+            print('other_cb')
 
     def watch_callback(self):
-        if (not self.latest_timestamp == 0) and (not self.previous_timestamp == 0):
-            if self.latest_timestamp == self.previous_timestamp:
+        if (not self.latest_timestamp_vel == 0) and (not self.latest_timestamp_wd == 0):
+            print(self.latest_timestamp_wd)
+            print(self.latest_timestamp_vel)
+            if self.latest_timestamp_vel == self.latest_timestamp_wd:
                 self.publish_stop_cmd()
+            self.latest_timestamp_wd = self.latest_timestamp_vel 
 
     def publish_stop_cmd(self):
+        print('pub')
         angular = Vector3(x=0.0, y=0.0, z=0.0)
         linear = Vector3(x=0.0, y=0.0, z=0.0)
         msg = Twist(linear=linear, angular=angular)

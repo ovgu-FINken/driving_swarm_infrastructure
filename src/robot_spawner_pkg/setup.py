@@ -29,6 +29,7 @@ setup(
         'console_scripts': [
             'spawn_turtlebot = robot_spawner_pkg.spawn_turtlebot:main',
             'nav2_gazebo_spawner = robot_spawner_pkg.nav2_gazebo_spawner:main',
+            'watchdog = robot_spawner_pkg.watchdog:main',
         ],
     },
 )
