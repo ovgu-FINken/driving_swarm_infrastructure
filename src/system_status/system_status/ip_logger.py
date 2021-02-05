@@ -11,16 +11,7 @@ import os
 from glob import glob
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
-
-
-def extract_local_ip(full_ip):
-    x = [full_ip.split('.')]
-    local_ip = ''
-    for ip in x:
-        # print(ip) # e.g. ['127', '0', '0', '1, 10', '61', '10', '245']
-        if ip[0] == '127':
-            local_ip += ip[-1]
-    return local_ip
+from system_status import utils
 
 
 class IPLogger(Node):
@@ -38,9 +29,8 @@ class IPLogger(Node):
             yaml.dump(dict_file, file)
 
     def system_status_callback(self, msg):
-        local_ip = extract_local_ip(msg.ip)
+        local_ip = utils.get_robot_name_from_msg(msg.ip)
         self.local_ips_.append(local_ip)
-        # self.local_ips_.add(local_ip)
 
     def break_loop(self):
         self.done_ = True

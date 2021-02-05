@@ -56,6 +56,7 @@ def initialize_robots(context, *args, **kwargs):
                     'x_pose': TextSubstitution(text=str(robot['x_pose'])),
                     'y_pose': TextSubstitution(text=str(robot['y_pose'])),
                     'z_pose': TextSubstitution(text=str(robot['z_pose'])),
+                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
                     'robot_name': robot['name'],
                     'base_frame': TextSubstitution(text=base_frame),
                     'turtlebot_type': TextSubstitution(text='burger')

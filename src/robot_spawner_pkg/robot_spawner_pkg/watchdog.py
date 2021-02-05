@@ -21,30 +21,25 @@ class Watchdog(Node):
         self.first_cb = True
 
     def vel_callback(self, msg):
-        print('vel_callback')
         if self.first_cb:
-            self.latest_timestamp_wd = self.get_clock().now().nanoseconds # latest_ts: 111, prev_ts: 0
+            self.latest_timestamp_wd = self.get_clock().now().nanoseconds
             self.first_cb = False
-            print('first_cb')
         else:
-            # self.previous_timestamp = self.latest_timestamp_vel # latest_ts: 111, prev_ts: 111
-            self.latest_timestamp_vel = self.get_clock().now().nanoseconds # latest_ts: 222, prev_ts: 111
-            print('other_cb')
+            self.latest_timestamp_vel = self.get_clock().now().nanoseconds
 
     def watch_callback(self):
+        #TODO: cover the case where the cmd_vel was only send once, i.e. latest_timestamp_vel is still 0 --> maybe with a timer
         if (not self.latest_timestamp_vel == 0) and (not self.latest_timestamp_wd == 0):
-            print(self.latest_timestamp_wd)
-            print(self.latest_timestamp_vel)
             if self.latest_timestamp_vel == self.latest_timestamp_wd:
                 self.publish_stop_cmd()
             self.latest_timestamp_wd = self.latest_timestamp_vel 
 
     def publish_stop_cmd(self):
-        print('pub')
         angular = Vector3(x=0.0, y=0.0, z=0.0)
         linear = Vector3(x=0.0, y=0.0, z=0.0)
         msg = Twist(linear=linear, angular=angular)
         self.cmd_vel_pub.publish(msg)
+        self.get_logger().info("Stopping robot due to missed control loop.")
 
 
 def main(args=None):

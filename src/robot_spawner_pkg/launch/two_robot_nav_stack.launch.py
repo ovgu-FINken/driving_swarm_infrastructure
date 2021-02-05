@@ -33,19 +33,6 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
-
-def get_ip_name():  # TODO how to make this work for simulation?
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
-
-
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')

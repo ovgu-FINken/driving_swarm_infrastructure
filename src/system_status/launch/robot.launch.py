@@ -30,24 +30,13 @@ import subprocess
 import re
 import yaml
 import ast
-
-
-def getip(prefix):
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = prefix
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
+from system_status import utils
 
 
 def edit_param_file_namespace(param_file_dir):
     with open(param_file_dir, 'r') as f:
         data = yaml.safe_load(f)
-        name = getip('robot') + "':"
+        name = utils.get_robot_name('robot') + "':"
         # for every robotXXX you find in the data, replace with the name
         replaced = re.sub(r'robot[^\s]*', name, str(data))
         # str->dict
@@ -73,7 +62,7 @@ def generate_launch_description():
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    robot_name = LaunchConfiguration('robot_name', default=getip('robot'))
+    robot_name = LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
 
     return LaunchDescription([
         DeclareLaunchArgument(

@@ -25,23 +25,13 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import subprocess
 import re
-
-def getip(prefix):
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = prefix
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
+from system_status import utils
 
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     urdf_file_name = 'turtlebot3_burger.urdf'
-    robot_name =  LaunchConfiguration('robot_name', default=getip('robot'))
+    robot_name =  LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
 
     print("urdf_file_name : {}".format(urdf_file_name))
 
