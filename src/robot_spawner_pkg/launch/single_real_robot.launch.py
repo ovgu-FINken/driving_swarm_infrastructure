@@ -32,19 +32,25 @@ def generate_launch_description():
     #map_yaml_file = LaunchConfiguration('map')
     bringup_dir = get_package_share_directory('nav2_bringup')
     slam = LaunchConfiguration('slam')
-    
+    this_pkg_dir = get_package_share_directory("robot_spawner_pkg")
+
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         default_value=os.path.join(
-        bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+            this_pkg_dir, 'maps', 'swarmlab_arena.yaml'),
         description='Full path to map file to load')
-    
-    declare_robot_name = DeclareLaunchArgument('robot_name', default_value='robot1')
-    declare_base_frame = DeclareLaunchArgument('base_frame', default_value='base_link')
-    # declare_x_pose = DeclareLaunchArgument('x_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    # declare_y_pose = DeclareLaunchArgument('y_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    # declare_z_pose = DeclareLaunchArgument('z_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
-    # declare_yaw_pose = DeclareLaunchArgument('yaw_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+
+    declare_robot_name = DeclareLaunchArgument('robot_name')
+    declare_base_frame = DeclareLaunchArgument(
+        'base_frame', default_value='base_footprint')
+    declare_x_pose = DeclareLaunchArgument(
+        'x_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    declare_y_pose = DeclareLaunchArgument(
+        'y_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    declare_z_pose = DeclareLaunchArgument(
+        'z_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
+    declare_yaw_pose = DeclareLaunchArgument(
+        'yaw_pose', default_value=launch.substitutions.TextSubstitution(text='0.0'))
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
         default_value='True',
@@ -55,7 +61,7 @@ def generate_launch_description():
         default_value=os.path.join(
             get_package_share_directory('robot_spawner_pkg'), 'custom.rviz'),
         description='Full path to the RVIZ config file to use.')
-    
+
     declare_slam_cmd = DeclareLaunchArgument(
         'slam',
         default_value='False',
@@ -65,39 +71,58 @@ def generate_launch_description():
         'behaviour',
         default_value='True',
         description='Whether run the default behaviour.')
-    
-    
-    
+
+##########################################################################
+
     tf_exchange = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(tf_exchange_dir, 'tf_exchange.launch.py')),
-                launch_arguments={
-                    'namespace': LaunchConfiguration('robot_name'),
-                    'robot_name': LaunchConfiguration('robot_name'),
-                    'base_frame': LaunchConfiguration('base_frame')
-                }.items()
-            )
-    
+        PythonLaunchDescriptionSource(
+            os.path.join(tf_exchange_dir, 'tf_exchange.launch.py')),
+        launch_arguments={
+            'namespace': LaunchConfiguration('robot_name'),
+            'robot_name': LaunchConfiguration('robot_name'),
+            'base_frame': LaunchConfiguration('base_frame')
+        }.items()
+    )
+
+    # print("-----------------LAUNCH ARGUMENTS--------------")
+    # print(LaunchConfiguration('robot_name'))
+    # print(LaunchConfiguration('x_pose'))
+    # print(LaunchConfiguration('y_pose'))
+    # print(LaunchConfiguration('z_pose'))
+    # print(LaunchConfiguration('yaw_pose'))
+    # print("-------------------------------")
+
+    initial_pose = launch_ros.actions.Node(
+        package='robot_spawner_pkg',
+        executable='initial_pose_pub',
+        output='screen',
+        arguments=[
+            '--robot_name', LaunchConfiguration('robot_name'),
+            '--robot_namespace', LaunchConfiguration('robot_name'),
+            '--turtlebot_type', launch.substitutions.EnvironmentVariable('TURTLEBOT3_MODEL'),
+            '-x', LaunchConfiguration('x_pose'),
+            '-y', LaunchConfiguration('y_pose'),
+            '-z', LaunchConfiguration('z_pose'),
+            '-yaw', LaunchConfiguration('yaw_pose'),
+        ])
 
     rviz = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(bringup_dir, 'launch', 'rviz_launch.py')
-                ),
-                condition=IfCondition(LaunchConfiguration('use_rviz')),
-                launch_arguments={
-                    'namespace': LaunchConfiguration('robot_name'),
-                    'use_namespace': 'true',
-                    'use_sim_time': 'true'}.items()
-            )
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_dir, 'launch', 'rviz_launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_rviz')),
+        launch_arguments={
+            'namespace': LaunchConfiguration('robot_name'),
+            'use_namespace': 'true',
+            'use_sim_time': 'true'}.items()
+    )
 
     # TODO:
-    # watchdog_node 
-    # --> check, if a new message is sent regularly to the topic /cmd_vel (at least every every 200ms)
     # choose via launch argument, if fixed position or dynamic
     # for experiments fixed positions
-    # else re-localisation node 
+    # else re-localisation node
     # --> call the reinitialize_global_localisation service (amcl)
-    # --> let the robot drive a bit 
+    # --> let the robot drive a bit
     # --> stop this node
     # run the nav_node
     # https://navigation.ros.org/configuration/packages/bt-plugins/actions/ReinitializeGlobalLocalization.html?highlight=service
@@ -105,22 +130,26 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
-    params_file = os.path.join(get_package_share_directory('robot_spawner_pkg'), 'nav2_multirobot_params_1.yaml')
-    urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
-
+    params_file = os.path.join(get_package_share_directory(
+        'robot_spawner_pkg'), 'nav2_multirobot_params_1.yaml')
+    urdf = os.path.join(get_package_share_directory(
+        'turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
 
     bringup_cmd_group = GroupAction([
         launch_ros.actions.PushRosNamespace(
             namespace=namespace),
 
+        # launching the map server
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'slam_launch.py')),
+            PythonLaunchDescriptionSource(os.path.join(
+                bringup_dir, 'launch', 'slam_launch.py')),
             condition=IfCondition(slam),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file}.items()),
 
+        # launching amcl
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch',
                                                        'localization_launch.py')),
@@ -132,36 +161,33 @@ def generate_launch_description():
                               'params_file': params_file,
                               'use_lifecycle_mgr': 'false'}.items())
     ])
-    
+
+
+#################################################
+
     drive = launch_ros.actions.Node(
+        package='turtlebot3_gazebo',
         executable='turtlebot3_drive',
         condition=IfCondition(LaunchConfiguration('behaviour')),
-        package='turtlebot3_gazebo',
         namespace=LaunchConfiguration('robot_name'),
     )
-    
-    # #TODO: as extra process!!
-    # watchdog = launch_ros.actions.Node(
-    #     package='robot_spawner_pkg',
-    #     executable='watchdog',
-    #     namespace=LaunchConfiguration('robot_name'),
-    # )
-    
+
     ld = LaunchDescription()
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot_name)
     ld.add_action(declare_base_frame)
-    # ld.add_action(declare_x_pose)
-    # ld.add_action(declare_y_pose)
-    # ld.add_action(declare_z_pose)
-    # ld.add_action(declare_yaw_pose)
+    ld.add_action(declare_x_pose)
+    ld.add_action(declare_y_pose)
+    ld.add_action(declare_z_pose)
+    ld.add_action(declare_yaw_pose)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_slam_cmd)
     ld.add_action(declare_behaviour_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
+    ld.add_action(initial_pose)
     ld.add_action(rviz)
     ld.add_action(bringup_cmd_group)
     ld.add_action(tf_exchange)
     ld.add_action(drive)
     # ld.add_action(watchdog)
-    return ld 
+    return ld

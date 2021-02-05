@@ -13,6 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name), glob('mapping_launch/*.launch.py')),
         (os.path.join('share', package_name), glob('params/*')),
         (os.path.join('share', package_name), glob('rviz/*.rviz')),
         (os.path.join('share', package_name, 'maps'), glob('maps/*')),
@@ -30,6 +31,7 @@ setup(
             'spawn_turtlebot = robot_spawner_pkg.spawn_turtlebot:main',
             'nav2_gazebo_spawner = robot_spawner_pkg.nav2_gazebo_spawner:main',
             'watchdog = robot_spawner_pkg.watchdog:main',
+            'initial_pose_pub = robot_spawner_pkg.initial_pose_pub:main',
         ],
     },
 )

@@ -38,25 +38,26 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaun
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     base_frame = LaunchConfiguration('base_frame').perform(context)
-    robot_name_list = []
-    robot_name_list_dir = os.path.join(
-        get_package_share_directory('system_status'), 'local_ips.yaml')
+    robots_file = LaunchConfiguration('robots_file').perform(context)
+    spawner_dir = get_package_share_directory("robot_spawner_pkg")
 
-    with open(robot_name_list_dir, 'r') as f:
-        data = yaml.safe_load(f)
-        robot_name_list = data[0]['local_ips']
+    with open(robots_file, 'r') as stream:
+        robots = yaml.safe_load(stream)
 
     nav_bringup_cmds = []
-    for robot_name in robot_name_list:
-        robot_name = 'robot'+robot_name
+    for robot in robots:
         nav_bringup_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([
-                    ThisLaunchFileDir(),
-                    "/single_real_robot.launch.py"
-                ]),
+                PythonLaunchDescriptionSource(os.path.join(
+                    spawner_dir,
+                    "single_real_robot.launch.py"
+                )),
                 launch_arguments={
-                    'robot_name': TextSubstitution(text=robot_name),
+                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
+                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
+                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
+                    'robot_name': TextSubstitution(text=str(robot['name'])),
+                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
                     'base_frame': TextSubstitution(text=base_frame),
                     # 'turtlebot_type': TextSubstitution(text='burger')
                 }.items()
@@ -69,7 +70,7 @@ def generate_launch_description():
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'robots.yaml')
+        default_value=os.path.join(spawner_dir, 'tb3_swarmlab_arena.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
