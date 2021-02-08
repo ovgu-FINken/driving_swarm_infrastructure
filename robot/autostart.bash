@@ -1,7 +1,15 @@
 #!/usr/bin/bash
 source ~/.bashrc
-source /opt/ros/foxy/setup.bash
-source /home/turtle/driving_swarm_infrastructure/install/setup.bash
-source /home/turtle/turtlebot3/install/setup.bash
-export TURTLEBOT3_MODEL=burger
-ros2 launch system_status robot_system_bringup.launch.py
+
+git fetch
+HEADHASH=$(git rev-parse HEAD)
+UPSTREAMHASH=$(git rev-parse robot-release@{upstream})
+
+if [ "$HEADHASH" != "$UPSTREAMHASH"  ]
+then
+    # new changes
+    git pull
+    sh /home/turtle/driving_swarm_infrastructure/robot/install.sh
+fi
+
+sh /home/turtle/driving_swarm_infrastructure/robot/run.sh
