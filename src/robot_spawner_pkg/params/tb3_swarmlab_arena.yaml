@@ -1,9 +1,9 @@
-- name: 'robot251'
+- name: 'robot204'
   x_pose: 1.1
   y_pose: 0.0
   z_pose: 0.0
   yaw_pose : 3.0
-- name: 'robot201'
+- name: 'robot210'
   x_pose: 1.1
   y_pose: 0.6
   z_pose: 0.0
@@ -13,6 +13,3 @@
   y_pose: 0.6
   z_pose: 0.0
   yaw_pose : -1.5
-
-
-#[amcl-14] [INFO 1612518534.999109027] [robot241.amcl]: Setting pose (0.000000): -3399860361287836661777635541678928413090972334907901383584120710197411840.000 -2012384723486962665342425396249116072407688065873885100102221617724129280.000 -1.500 (handleInitialPose() at /home/traichel/DrivingSwarm/ros2_tb3_essentials/src/navigation2/nav2_amcl/src/amcl_node.cpp:597)

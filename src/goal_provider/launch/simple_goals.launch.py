@@ -68,12 +68,13 @@ def controller_spawning(context, *args, **kwargs):
 
 
 def generate_launch_description():
+    spawner_dir = get_package_share_directory('robot_spawner_pkg')
     multi_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('robot_spawner_pkg'), 'multi_robot.launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(spawner_dir, 'launch', 'multi_robot.launch.py')),
         launch_arguments={
             'behaviour': 'false',
-            'world' : 'face.world',
-            'map' : os.path.join(get_package_share_directory('robot_spawner_pkg'), 'maps','face.yaml'),
+            'world' : os.path.join(spawner_dir, 'worlds', 'face.world'),
+            'map' : os.path.join(spawner_dir, 'maps', 'face.yaml'),
         }.items())
 
     ld = LaunchDescription()

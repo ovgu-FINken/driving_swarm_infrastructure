@@ -49,7 +49,7 @@ def edit_param_file_namespace(param_file_dir):
 def generate_launch_description():
     default_param_dir = os.path.join(
         get_package_share_directory('system_status'),
-        'param',
+        'params',
         'burger.yaml'
     )
 

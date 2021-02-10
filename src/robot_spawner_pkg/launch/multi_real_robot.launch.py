@@ -69,7 +69,7 @@ def generate_launch_description():
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'robots.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
