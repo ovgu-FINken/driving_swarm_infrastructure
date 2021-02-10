@@ -22,7 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'fixed_trajectory_supervisor = experiment_supervisor.fixed_trajectory_supervisor:main'
+            'fixed_trajectory_supervisor = experiment_supervisor.fixed_trajectory_supervisor:main',
+            'rosbag2df = experiment_supervisor.rosbag2df:main',
         ],
     },
 )
