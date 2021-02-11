@@ -10,18 +10,7 @@ from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
 import subprocess
 import re
-
-
-def get_ip_name():
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
+from system_status import utils
 
 
 def main():
@@ -32,7 +21,7 @@ def main():
     # Start node
     rclpy.init()
     node = rclpy.create_node("entity_spawner", cli_args=[
-                            #  '--ros-args -r /tf:=/' + get_ip_name() + '/tf'])
+                            #  '--ros-args -r /tf:=/' + utils.get_robot_name('T') + '/tf'])
                              '--ros-args -r __ns=/T206 /tf:=tf'])
 
     node.get_logger().info(
@@ -51,9 +40,9 @@ def main():
 
     # Set data for request
     request = SpawnEntity.Request()
-    request.name = get_ip_name()
+    request.name = utils.get_robot_name('T')
     request.xml = open(sdf_file_path, 'r').read()
-    request.robot_namespace = get_ip_name()
+    request.robot_namespace =utils.get_robot_name('T')
     request.initial_pose.position.x = float(argv[0])
     request.initial_pose.position.y = float(argv[1])
     request.initial_pose.position.z = float(argv[2])

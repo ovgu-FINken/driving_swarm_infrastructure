@@ -5,20 +5,14 @@ from datetime import datetime
 import psutil
 import subprocess
 import re
-
-def getip():
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    return ", ".join(ips)
-
+from system_status import utils
 
 class StatusPublisher(Node):
     def __init__(self):
         super().__init__('status_publisher')
         self.pub = self.create_publisher(SystemStatus, '/system_status', 10)
         self.timer = self.create_timer(10.0, self.timer_cb)
-        self.ip = getip()
+        self.ip = utils.get_ip()
 
 
     def timer_cb(self):

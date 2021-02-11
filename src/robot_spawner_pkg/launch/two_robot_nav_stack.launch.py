@@ -33,19 +33,6 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
-
-def get_ip_name():  # TODO how to make this work for simulation?
-    ipa = subprocess.check_output(['ip', 'a']).decode('ascii')
-    ips = re.findall(r'inet\s[0-9.]+', ipa)
-    ips = [ip[5:] for ip in ips]
-    x = [ip.split('.') for ip in ips]
-    name = 'T'
-    for ip in x:
-        if ip[0] != '127':
-            name += ip[-1]
-    return name
-
-
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
@@ -102,8 +89,7 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(
-            get_package_share_directory('robot_spawner_pkg'), 'nav2_namespaced_view.rviz'),
+        default_value=os.path.join(spawner_dir, 'rviz', 'nav2_namespaced_view.rviz'),
         description='Full path to the RVIZ config file to use.')
 
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
@@ -121,7 +107,7 @@ def generate_launch_description():
     for robot in robots:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(spawner_dir,
+                PythonLaunchDescriptionSource(os.path.join(spawner_dir, 'launch',
                                                            'spawn_tb3.launch.py')),
                 launch_arguments={
                     'x_pose': TextSubstitution(text=str(robot['x_pose'])),
@@ -164,7 +150,7 @@ def generate_launch_description():
 
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(tf_exchange_dir, 'tf_exchange.launch.py')),
+                    os.path.join(tf_exchange_dir, 'launch', 'tf_exchange.launch.py')),
                 launch_arguments={
                     'namespace': TextSubstitution(text=robot['name']),
                     'robot_name': robot['name'],
@@ -201,7 +187,7 @@ def generate_launch_description():
 
     simulator = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(spawner_dir, 'simulator.launch.py')),
+                    os.path.join(spawner_dir, 'launch', 'simulator.launch.py')),
                 launch_arguments={
                 }.items()
             )

@@ -32,73 +32,56 @@ from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
                             IncludeLaunchDescription, LogInfo, OpaqueFunction)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaunchFileDir
 
 
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
-    # Names and poses of the robots
-    spawner_dir = get_package_share_directory('robot_spawner_pkg')
-    n_robots = LaunchConfiguration('n_robots').perform(context)
-    robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
-    robots = []
-    with open(robots_file, 'r') as stream:
-        robots = yaml.safe_load(stream)
+    robot_name_list = []
+    robot_name_list_dir = os.path.join(
+        get_package_share_directory('system_status'), 'local_ips.yaml')
 
-    spawn_robots_cmds = []
-    for robot in robots[:int(n_robots)]:
-        spawn_robots_cmds.append(
+    with open(robot_name_list_dir, 'r') as f:
+        data = yaml.safe_load(f)
+        robot_name_list = data[0]['local_ips']
+
+    nav_bringup_cmds = []
+    for robot_name in robot_name_list:
+        robot_name = 'robot'+robot_name
+        nav_bringup_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(
-                    spawner_dir, 'launch', "single_robot.launch.py")),
+                PythonLaunchDescriptionSource([
+                    ThisLaunchFileDir(),
+                    "/single_real_robot.launch.py"
+                ]),
                 launch_arguments={
-                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
-                    'robot_name': robot['name'],
+                    'robot_name': TextSubstitution(text=robot_name),
                     'base_frame': TextSubstitution(text=base_frame),
-                    'turtlebot_type': TextSubstitution(text='burger')
-                }.items()))
-    return spawn_robots_cmds
+                    # 'turtlebot_type': TextSubstitution(text='burger')
+                }.items()
+            )
+        )
+    return nav_bringup_cmds
 
 
 def generate_launch_description():
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
-    declare_n_robots_cmd = DeclareLaunchArgument(
-        'n_robots',
-        default_value='2'
-    )
-
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
         default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
     )
-
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
-        default_value='base_link'
-    )
-
-    # Define commands for launching the navigation instances
-    simulator = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(spawner_dir, 'launch', 'simulator.launch.py')),
-        launch_arguments={
-        }.items()
+        default_value='base_footprint'
     )
 
     # Create the launch description and populate
     ld = LaunchDescription()
 
     # Add declarations for launch file arguments
-    ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
-
-    # Add the actions to start gazebo, robots and simulations
-    ld.add_action(simulator)
 
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))

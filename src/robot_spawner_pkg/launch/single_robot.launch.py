@@ -27,10 +27,10 @@ import launch_ros.actions
 
 def generate_launch_description():
     tf_exchange_dir = get_package_share_directory('tf_exchange')
-    #rviz_config_file = LaunchConfiguration('rviz_config')
-    #map_yaml_file = LaunchConfiguration('map')
     bringup_dir = get_package_share_directory('nav2_bringup')
+    spawner_dir = get_package_share_directory('robot_spawner_pkg')
     slam = LaunchConfiguration('slam')
+
     
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
@@ -51,8 +51,7 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(
-            get_package_share_directory('robot_spawner_pkg'), 'custom.rviz'),
+        default_value=os.path.join(spawner_dir, 'rviz', 'custom.rviz'),
         description='Full path to the RVIZ config file to use.')
     
     declare_slam_cmd = DeclareLaunchArgument(
@@ -69,7 +68,7 @@ def generate_launch_description():
     
     tf_exchange = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(tf_exchange_dir, 'tf_exchange.launch.py')),
+                    os.path.join(tf_exchange_dir, 'launch', 'tf_exchange.launch.py')),
                 launch_arguments={
                     'namespace': LaunchConfiguration('robot_name'),
                     'robot_name': LaunchConfiguration('robot_name'),
@@ -105,7 +104,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
-    params_file = os.path.join(get_package_share_directory('robot_spawner_pkg'), 'nav2_multirobot_params_1.yaml')
+    params_file = os.path.join(spawner_dir, 'params', 'nav2_multirobot_params_1.yaml')
     urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
 
 
