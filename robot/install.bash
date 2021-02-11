@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 # Executes after driving_swarm_infrastructure_update
+source ~/.bashrc
+source /opt/ros/foxy/setup.bash
 
 cd /home/turtle/driving_swarm_infrastructure
 
