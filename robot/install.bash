@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Executes after driving_swarm_infrastructure_update
 
-cd $HOME/drving_swarm_infrastructure
+cd $HOME/driving_swarm_infrastructure
 
 sudo rm -r build/ install/ log/
 
