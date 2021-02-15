@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'experiment_supervisor'
+package_name = 'experiment_measurement'
 
 setup(
     name=package_name,
@@ -12,17 +12,18 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Sebastian Mai',
-    maintainer_email='sebastian.mai@ovgu.de',
+    maintainer='traichel',
+    maintainer_email='nele.traichel@ovgu.de',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'fixed_trajectory_supervisor = experiment_supervisor.fixed_trajectory_supervisor:main',
+            'rosbag2df = experiment_measurement.rosbag2df:main',
         ],
     },
 )
