@@ -39,10 +39,15 @@ def generate_launch_description():
 
     rviz_config_dir = os.path.join(get_package_share_directory('turtlebot3_cartographer'),
                                    'rviz', 'tb3_cartographer.rviz')
-
-    robot_name = "robot251"
+    
+    # robot_name = LaunchConfiguration('robot_name')
+    robot_name = 'robot220'
 
     return LaunchDescription([
+        # DeclareLaunchArgument(
+        #     'robot_name',
+        #     default_value='robot251'
+        # ),
         DeclareLaunchArgument(
             'cartographer_config_dir',
             default_value=cartographer_config_dir,
@@ -78,9 +83,10 @@ def generate_launch_description():
             description='OccupancyGrid publishing period'),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
+            PythonLaunchDescriptionSource(
+                [ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
             launch_arguments={
-                'use_sim_time': use_sim_time, 
+                'use_sim_time': use_sim_time,
                 'resolution': resolution,
                 'publish_period_sec': publish_period_sec,
                 'namespace': robot_name
@@ -95,6 +101,6 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen',
             namespace=robot_name,
-            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
-            ),
+            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static'), ('/map', 'map')]
+        ),
     ])

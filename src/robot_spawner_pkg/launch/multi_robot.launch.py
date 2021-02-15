@@ -51,7 +51,7 @@ def initialize_robots(context, *args, **kwargs):
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(
-                    spawner_dir, "single_robot.launch.py")),
+                    spawner_dir, 'launch', "single_robot.launch.py")),
                 launch_arguments={
                     'x_pose': TextSubstitution(text=str(robot['x_pose'])),
                     'y_pose': TextSubstitution(text=str(robot['y_pose'])),
@@ -73,7 +73,7 @@ def generate_launch_description():
 
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'robots.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
     )
 
     declare_base_frame_cmd = DeclareLaunchArgument(
@@ -84,7 +84,7 @@ def generate_launch_description():
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(spawner_dir, 'simulator.launch.py')),
+            os.path.join(spawner_dir, 'launch', 'simulator.launch.py')),
         launch_arguments={
         }.items()
     )

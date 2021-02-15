@@ -50,6 +50,7 @@ def initialize_robots(context, *args, **kwargs):
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(
                     spawner_dir,
+                    'launch',
                     "single_real_robot.launch.py"
                 )),
                 launch_arguments={
@@ -70,7 +71,7 @@ def generate_launch_description():
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'tb3_swarmlab_arena.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'tb3_swarmlab_arena.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
