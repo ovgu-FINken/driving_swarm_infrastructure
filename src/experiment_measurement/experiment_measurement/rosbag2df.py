@@ -27,33 +27,6 @@ class Rosbag2Df(Node):
             print("Please, set a value for db_file_path parameter.")
             raise KeyboardInterrupt
 
-
-    ##############################################################################
-        # topic_name = '/name'
-
-        # ### connect to the database
-        # conn, c = bag.read_bag.connect(db_file_path)
-
-        # ### get all topics names and types
-        # topic_names = bag.read_bag.get_all_topics_names(c, print_out=False)
-        # topic_types = bag.read_bag.get_all_msgs_types(c, print_out=False)
-
-        # # Create a map for quicker lookup
-        # type_map = {topic_names[i]:topic_types[i] for i in range(len(topic_types))}
-
-        # ### get all timestamps and all messages
-        # t, msgs = bag.read_bag.get_all_msgs_from_topic(c, topic_name, print_out=False)
-
-        ## >>> deserialization
-        # msg_type = get_message(type_map[topic_name])
-        # x = deserialize_message(msgs[1], msg_type)
-        # print(x)
-
-
-        ### close connection to the database
-        # bag.read_bag.close(conn)
-
-    ##############################################################################
         # get the data from the database
         cnx = sqlite3.connect(db_file_path)
         df_topics = pd.read_sql_query("SELECT * FROM topics", cnx)
