@@ -12,7 +12,7 @@ from rosidl_runtime_py.utilities import get_message
 from rclpy.serialization import deserialize_message
 
 
-def read_rosbag(db_file_path):
+def read_rosbag_per_topic(db_file_path):
     """
     @brief: read the data from a rosbag file, i.e. a sqlite3 database file created by rosbag2 while recording
     @args: db_file_path: absolute path to the sqlite3 database file to load
@@ -40,6 +40,31 @@ def read_rosbag(db_file_path):
             df_msgs['data'] = pd.Series(msgs)
             del df_msgs['data_bytes']
             dict_df[f'{topic_name}'] = df_msgs
+
+    return dict_df
+
+def read_rosbag_all_in_one(db_file_path):
+    """
+    @brief: read the data from a rosbag file, i.e. a sqlite3 database file created by rosbag2 while recording
+    @args: db_file_path: absolute path to the sqlite3 database file to load
+    @returns: a dataframe containing all messages with topic name and serialized data
+    """
+
+    # get the data from the database
+    cnx = sqlite3.connect(db_file_path)
+    df = pd.read_sql_query("SELECT messages.*, topics.name, topics.type FROM messages JOIN topics ON messages.topic_id==topics.id", cnx)
+    dict_df = {}
+
+    # for each topic in the db-file create a csv-file named after the topic plus the timestamp
+    msgs = []
+    for _, row in df.iterrows():
+        msg_type = get_message(row['type'])
+        # deserialize and rename columns
+        msgs.append(deserialize_message(row['data'], msg_type))
+    df = df.rename(columns={"data": "data_bytes"})
+    df['data'] = pd.Series(msgs)
+    del df['data_bytes']
+    dict_df['rosbag'] = df
 
     return dict_df
 
@@ -78,13 +103,17 @@ class Rosbag2Df(Node):
         os.makedirs(file_dir)
 
         # read the data from the rosbag file
-        dict_df = read_rosbag(db_file_path)
+        dict_df = read_rosbag_per_topic(db_file_path)
+        dict_rosbag = read_rosbag_all_in_one(db_file_path)
 
         # save as csv files
         for topic_name in dict_df:
             file_name = f'{ts}_{topic_name.replace("/", "_")}.csv'
             path = file_dir + '/' + file_name
             dict_df[topic_name].to_csv(path, sep=",")
+        file_name = f'{ts}_all_topics.csv'
+        path = file_dir + '/' + file_name
+        dict_rosbag['rosbag'].to_csv(path, sep=",")
 
         self.get_logger().info(f'All csv files stored in {file_dir}.')
 
