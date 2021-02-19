@@ -32,7 +32,7 @@ def calculate_travelled_distance(data, t):
     data = data[data['timestamp'] <= t].copy()
     data['x'] = data['data'].map(lambda x: x.pose.pose.position.x)
     data['y'] = data['data'].map(lambda x: x.pose.pose.position.y)
-    print(data)
+
     data = data.filter(['x', 'y'])
     data_shifted = data.shift(1)
     data = data.subtract(data_shifted)
