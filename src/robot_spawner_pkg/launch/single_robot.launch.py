@@ -61,7 +61,7 @@ def generate_launch_description():
 
     declare_behaviour_cmd = DeclareLaunchArgument(
         'behaviour',
-        default_value='True',
+        default_value='False',
         description='Whether run the default behaviour.')
     
     
