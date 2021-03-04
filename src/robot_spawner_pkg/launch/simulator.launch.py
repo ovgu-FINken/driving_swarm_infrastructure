@@ -10,6 +10,7 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution
 
 
 def generate_launch_description():
+
     bringup_dir = get_package_share_directory('nav2_bringup')
 
     # Simulation settings
@@ -25,7 +26,7 @@ def generate_launch_description():
     declare_simulator_cmd = DeclareLaunchArgument(
         'simulator',
         default_value='gazebo',
-        description='The simulator to use (gazebo or gzserver)')
+        description='The simulator to use (gazebo or gzserver, i.e. with or without GUI)')
 
     # Start Gazebo with plugin providing the robot spawing service
     start_gazebo_cmd = ExecuteProcess(

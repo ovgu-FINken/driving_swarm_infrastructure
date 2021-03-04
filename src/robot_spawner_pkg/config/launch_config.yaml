@@ -1,0 +1,7 @@
+world: "/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/worlds/swarmlab_3_gaps.world"
+map: "/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/maps/swarmlab_3_gaps.yaml"
+robots_file: "/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/swarmlab_3_gaps.yaml"
+rviz_config_file: "/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/rviz/flocking_ns.rviz"
+simulator: "gzserver"
+n_robots: 3
+#navigation: "att_rep_forces" ?

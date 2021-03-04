@@ -49,9 +49,11 @@ def generate_launch_description():
         default_value='True',
         description='Whether to start RVIZ')
 
+    rviz_config_file = LaunchConfiguration('rviz_config_file', default=os.path.join(spawner_dir, 'rviz', 'custom.rviz'))
+
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(spawner_dir, 'rviz', 'custom.rviz'),
+        default_value=rviz_config_file,
         description='Full path to the RVIZ config file to use.')
     
     declare_slam_cmd = DeclareLaunchArgument(
@@ -98,8 +100,10 @@ def generate_launch_description():
                 launch_arguments={
                     'namespace': LaunchConfiguration('robot_name'),
                     'use_namespace': 'true',
-                    'use_sim_time': 'true'}.items())#,
-                    #'rviz_config': rviz_config_file}.items())
+                    'use_sim_time': 'true',
+                    'rviz_config': rviz_config_file
+                }.items()
+            )
 
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')

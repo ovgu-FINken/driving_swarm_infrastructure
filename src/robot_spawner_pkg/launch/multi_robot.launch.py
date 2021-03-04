@@ -65,7 +65,19 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
+    #TODO: 
+    # * get the launch_config.yaml contents
+    # * set the arguments/configs to the specified value and pass them
+
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
+
+    declare_use_rosbag_cmd = DeclareLaunchArgument(
+        'use_rosbag',
+        default_value='False',
+        description='Whether to start Rosbag recording'
+    )
+    rosbag_topics = LaunchConfiguration("rosbag_topics", default="-a")
+
     declare_n_robots_cmd = DeclareLaunchArgument(
         'n_robots',
         default_value='2'
@@ -89,6 +101,12 @@ def generate_launch_description():
         }.items()
     )
 
+    start_rosbag_cmd = ExecuteProcess(
+        condition=IfCondition(LaunchConfiguration('use_rosbag')),
+        cmd=["ros2 bag record", rosbag_topics],
+        output='screen'
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -96,9 +114,11 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
+    ld.add_action(declare_use_rosbag_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
+    ld.add_action(start_rosbag_cmd)
 
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))
