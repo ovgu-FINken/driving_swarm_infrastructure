@@ -8,7 +8,7 @@ table_column         ::= ( topic, table_column_name, func )
 
 topic                ::= string
 table_column_name    ::= string
-func                 ::= message_dataframe, time -> Object
+func                 ::= TableConfig -> Object
 
 message_dataframe    ::= pd.Series      # All messages to one topic and robot
 time                 ::= number
