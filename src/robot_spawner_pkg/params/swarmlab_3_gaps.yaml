@@ -1,0 +1,45 @@
+- name: 'robot1'
+  x_pose: -0.07
+  y_pose: 1.1
+  z_pose: 0.0
+  yaw_pose : 3.0
+- name: 'robot2'
+  x_pose: -0.08
+  y_pose: 0.8
+  z_pose: 0.0
+  yaw_pose : -2.36
+- name: 'robot3'
+  x_pose: 0.44
+  y_pose: 0.8
+  z_pose: 0.0
+  yaw_pose : -1.5
+- name: 'robot4'
+  x_pose: -0.17
+  y_pose: 0.17
+  z_pose: 0.0
+  yaw_pose : 3.0
+- name: 'robot5'
+  x_pose: 0.56
+  y_pose: 0.0
+  z_pose: 0.0
+  yaw_pose : -2.36
+- name: 'robot6'
+  x_pose: 0.1
+  y_pose: -0.55
+  z_pose: 0.0
+  yaw_pose : -1.5
+- name: 'robot7'
+  x_pose: 0.14
+  y_pose: -1.2
+  z_pose: 0.0
+  yaw_pose : 3.0
+- name: 'robot8'
+  x_pose: 1.25
+  y_pose: -1.1
+  z_pose: 0.0
+  yaw_pose : -2.36
+- name: 'robot9'
+  x_pose: 1.25
+  y_pose: 1.1
+  z_pose: 0.0
+  yaw_pose : -1.5

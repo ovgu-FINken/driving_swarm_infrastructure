@@ -43,6 +43,7 @@ class MapConverter(Node):
 
         # Export as STL or DAE
         mesh_type = 'dae' #rclpy.get_param("~mesh_type", "stl")
+        # TODO: adjust export directory to a more useful one
         export_dir = '/tmp/' #rclpy.get_param("~export_dir")
         if mesh_type == "stl":
             with open(export_dir + "/map.stl", 'wb') as f:
