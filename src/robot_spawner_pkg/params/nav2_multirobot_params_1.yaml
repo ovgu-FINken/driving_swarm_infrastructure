@@ -164,7 +164,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         scan:
-          topic: /robot1/scan
+          topic: <robot_namespace>/scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -187,7 +187,7 @@ global_costmap:
       obstacle_layer:
         enabled: True
         scan:
-          topic: /robot1/scan
+          topic: <robot_namespace>/scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True

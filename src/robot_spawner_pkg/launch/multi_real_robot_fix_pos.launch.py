@@ -37,38 +37,57 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaun
 
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
-    base_frame = LaunchConfiguration('base_frame').perform(context)
-    robots_file = LaunchConfiguration('robots_file').perform(context)
+    # Names and poses of the robots
     spawner_dir = get_package_share_directory("robot_spawner_pkg")
+    n_robots = LaunchConfiguration('n_robots').perform(context)
+    robots_file = LaunchConfiguration('robots_file').perform(context)
+    base_frame = LaunchConfiguration('base_frame').perform(context)
+    robots = []
 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
 
     nav_bringup_cmds = []
+    i = 1
     for robot in robots:
-        nav_bringup_cmds.append(
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(
-                    spawner_dir,
-                    'launch',
-                    "single_real_robot.launch.py"
-                )),
-                launch_arguments={
-                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                    'robot_name': TextSubstitution(text=str(robot['name'])),
-                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
-                    'base_frame': TextSubstitution(text=base_frame),
-                    # 'turtlebot_type': TextSubstitution(text='burger')
-                }.items()
+        if i <= int(n_robots):
+            nav_bringup_cmds.append(
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(os.path.join(
+                        spawner_dir,
+                        'launch',
+                        "single_real_robot.launch.py"
+                    )),
+                    launch_arguments={
+                        'x_pose': TextSubstitution(text=str(robot['x_pose'])),
+                        'y_pose': TextSubstitution(text=str(robot['y_pose'])),
+                        'z_pose': TextSubstitution(text=str(robot['z_pose'])),
+                        'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
+                        'robot_name': TextSubstitution(text=str(robot['name'])),
+                        'base_frame': TextSubstitution(text=base_frame),
+                        'n_robots': n_robots
+                        # 'turtlebot_type': TextSubstitution(text='burger')
+                    }.items()
+                )
             )
-        )
+            i += 1
     return nav_bringup_cmds
 
 
 def generate_launch_description():
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
+    
+    declare_use_rosbag_cmd = DeclareLaunchArgument(
+        'use_rosbag',
+        default_value='False',
+        description='Whether to start Rosbag recording'
+    )
+    rosbag_topics = LaunchConfiguration("rosbag_topics", default="-a")
+
+    declare_n_robots_cmd = DeclareLaunchArgument(
+        'n_robots',
+        default_value='2'
+    )
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
         default_value=os.path.join(spawner_dir, 'params', 'tb3_swarmlab_arena.yaml')
@@ -78,12 +97,23 @@ def generate_launch_description():
         default_value='base_footprint'
     )
 
+    start_rosbag_cmd = ExecuteProcess(
+        condition=IfCondition(LaunchConfiguration('use_rosbag')),
+        cmd=["ros2 bag record", rosbag_topics],
+        output='screen'
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
     # Add declarations for launch file arguments
+    ld.add_action(declare_use_rosbag_cmd)
+    ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
+
+    # Add the actions to start gazebo, robots and simulations
+    ld.add_action(start_rosbag_cmd)
 
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))

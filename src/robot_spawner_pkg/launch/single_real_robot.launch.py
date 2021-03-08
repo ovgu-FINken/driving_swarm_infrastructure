@@ -29,8 +29,12 @@ def generate_launch_description():
 
     tf_exchange_dir = get_package_share_directory('tf_exchange')
     bringup_dir = get_package_share_directory('nav2_bringup')
-    slam = LaunchConfiguration('slam')
     spawner_dir = get_package_share_directory("robot_spawner_pkg")
+
+    slam = LaunchConfiguration('slam', default=False)
+    namespace =  LaunchConfiguration('robot_name')
+    # n_robots = LaunchConfiguration('n_robots')
+    n_robots = 3
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
@@ -38,7 +42,10 @@ def generate_launch_description():
             spawner_dir, 'maps', 'swarmlab_arena.yaml'),
         description='Full path to map file to load')
 
-    declare_robot_name = DeclareLaunchArgument('robot_name')
+    declare_robot_name = DeclareLaunchArgument(
+        'robot_name', 
+        default_value=namespace
+    )
     declare_base_frame = DeclareLaunchArgument(
         'base_frame', default_value='base_footprint')
     declare_x_pose = DeclareLaunchArgument(
@@ -54,9 +61,11 @@ def generate_launch_description():
         default_value='True',
         description='Whether to start RVIZ')
 
+    rviz_config_file = LaunchConfiguration('rviz_config_file', default=os.path.join(spawner_dir, 'rviz', 'custom.rviz'))
+
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(spawner_dir, 'rviz', 'custom.rviz'),
+        default_value=rviz_config_file,
         description='Full path to the RVIZ config file to use.')
 
     declare_slam_cmd = DeclareLaunchArgument(
@@ -75,14 +84,14 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(tf_exchange_dir, 'launch', 'tf_exchange.launch.py')),
         launch_arguments={
-            'namespace': LaunchConfiguration('robot_name'),
-            'robot_name': LaunchConfiguration('robot_name'),
+            'namespace': namespace,
+            'robot_name': namespace,
             'base_frame': LaunchConfiguration('base_frame')
         }.items()
     )
 
     # print("-----------------LAUNCH ARGUMENTS--------------")
-    # print(LaunchConfiguration('robot_name'))
+    # print(namespace)
     # print(LaunchConfiguration('x_pose'))
     # print(LaunchConfiguration('y_pose'))
     # print(LaunchConfiguration('z_pose'))
@@ -94,8 +103,8 @@ def generate_launch_description():
         executable='initial_pose_pub',
         output='screen',
         arguments=[
-            '--robot_name', LaunchConfiguration('robot_name'),
-            '--robot_namespace', LaunchConfiguration('robot_name'),
+            '--robot_name', namespace,
+            '--robot_namespace', namespace,
             '--turtlebot_type', launch.substitutions.EnvironmentVariable('TURTLEBOT3_MODEL'),
             '-x', LaunchConfiguration('x_pose'),
             '-y', LaunchConfiguration('y_pose'),
@@ -109,19 +118,31 @@ def generate_launch_description():
         ),
         condition=IfCondition(LaunchConfiguration('use_rviz')),
         launch_arguments={
-            'namespace': LaunchConfiguration('robot_name'),
+            'namespace': namespace,
             'use_namespace': 'true',
-            'use_sim_time': 'true'}.items()
+            'use_sim_time': 'true',
+            'rviz_config': rviz_config_file
+        }.items()
     )
 
-    namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
     params_file = os.path.join(spawner_dir, 'params', 'nav2_multirobot_params_1.yaml')
+    urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
 
     bringup_cmd_group = GroupAction([
         launch_ros.actions.PushRosNamespace(
             namespace=namespace),
+
+        launch_ros.actions.Node(package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            # namespace=namespace,
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+            arguments=[urdf],
+            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
+        ),
 
         # launching the map server
         IncludeLaunchDescription(
@@ -131,7 +152,8 @@ def generate_launch_description():
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
-                              'params_file': params_file}.items()),
+                              'params_file': params_file
+            }.items()),
 
 
         # TODO:
@@ -154,32 +176,10 @@ def generate_launch_description():
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
-                              'use_lifecycle_mgr': 'false'}.items())
+                              'use_lifecycle_mgr': 'false'
+                            }.items())
     ])
 
-    nav_cmd_group = GroupAction([
-        launch_ros.actions.Node(
-            package='context_steering',
-            executable='context_map',
-            output='screen',
-            name='context_map',
-            namespace=namespace,
-            parameters=[
-                {'robot_name': namespace}
-            ],
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-        ),
-        launch_ros.actions.Node(
-            package='context_steering',
-            executable='decision_making',
-            output='screen',
-            name='decision_making',
-            namespace=namespace,
-            parameters=[
-                {'robot_name': namespace}
-            ],
-        ),
-    ])
 
 #################################################
 
@@ -187,7 +187,7 @@ def generate_launch_description():
     #     package='turtlebot3_gazebo',
     #     executable='turtlebot3_drive',
     #     condition=IfCondition(LaunchConfiguration('behaviour')),
-    #     namespace=LaunchConfiguration('robot_name'),
+    #     namespace=namespace,
     # )
 
 
@@ -210,5 +210,4 @@ def generate_launch_description():
     ld.add_action(bringup_cmd_group)
     ld.add_action(tf_exchange)
     # ld.add_action(drive)
-    ld.add_action(nav_cmd_group)
     return ld

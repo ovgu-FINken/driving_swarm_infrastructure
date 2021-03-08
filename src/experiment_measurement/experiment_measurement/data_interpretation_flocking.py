@@ -10,8 +10,7 @@
 # * mean number of neighbors: n_neighbors
 
 ### Navigation to Target
-# * __target distance__, i.e. distance of swarm center (mean of the robots' positions) from target: x_pose, y_pose
+# * target distance, i.e. distance of swarm center (mean of the robots' positions) from target: x_pose, y_pose
 # * Travelled distance of the swarm center: x_pose, y_pose (approximation over time)
-# * accuracy, i.e. difference between avg direction of robots and __target direction__
-# * Time until target reached ???
-
+# * NO: accuracy, i.e. difference between avg direction of robots and __target direction__
+# * NO: Time until target reached
