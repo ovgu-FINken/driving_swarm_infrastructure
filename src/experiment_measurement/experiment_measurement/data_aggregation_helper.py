@@ -5,7 +5,7 @@ import pandas as pd
 
 from transformations import euler_from_quaternion
 
-from rosbag2df import read_rosbag_all_in_one
+from experiment_measurement.rosbag2df import read_rosbag_all_in_one
 
 
 class TableConfig:

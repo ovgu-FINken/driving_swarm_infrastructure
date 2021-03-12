@@ -8,8 +8,11 @@ import pandas as pd
 
 from transformations import euler_from_quaternion
 
-from rosbag2df import read_rosbag_all_in_one
-import data_aggregation_helper
+# from rosbag2df import read_rosbag_all_in_one
+# import data_aggregation_helper
+
+from experiment_measurement.rosbag2df import read_rosbag_all_in_one
+from experiment_measurement import data_aggregation_helper
 
 
 def aggregate_tables(df, table_column_config, step_size):

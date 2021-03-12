@@ -3,6 +3,7 @@
 ### Obstacle Avoidance
 # * (min, average, max) inter-robot distance: x_pose, y_pose
 # * (min, average, max) minimum distance to scan point, i.e. can be another robot or wall: min_obstacle_dist
+# * time until collision
 
 ### Flock Formation
 # * cohesion, i.e. deviation of robots' positions: x_pose, y_pose

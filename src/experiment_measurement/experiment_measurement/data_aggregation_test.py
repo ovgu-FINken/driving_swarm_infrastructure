@@ -7,8 +7,8 @@ from pandas.testing import assert_series_equal
 
 import geometry_msgs.msg
 
-from data_aggregation import aggregate_tables
-import data_aggregation_basti
+from experiment_measurement.data_aggregation import aggregate_tables
+from experiment_measurement import data_aggregation_basti
 
 
 class Test(unittest.TestCase):

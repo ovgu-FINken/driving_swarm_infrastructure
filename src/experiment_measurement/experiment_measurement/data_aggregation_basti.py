@@ -1,5 +1,5 @@
 """Aggregate the data to one table."""
-import data_aggregation_helper
+from experiment_measurement import data_aggregation_helper
 
 
 """
