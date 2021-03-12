@@ -45,6 +45,7 @@ def filter_tf_child_frame_id(conf):
     ]
     return conf_copy
 
+
 def quaternion_to_euler(data):
     """Calculate the euler representation of a quaternion."""
     quaternion = [
@@ -56,14 +57,30 @@ def quaternion_to_euler(data):
     return euler_from_quaternion(quaternion)
 
 
+def amcl_calc_x_and_y(conf):
+    """Extract x and y position of amcl data."""
+    conf_copy = copy.copy(conf)
+    conf_copy.df = conf.df.copy()
+    conf_copy.df['x'] = conf_copy.df['data'].map(lambda x: x.pose.pose.position.x)
+    conf_copy.df['y'] = conf_copy.df['data'].map(lambda x: x.pose.pose.position.y)
+    return conf_copy
+
+
+def tf_calc_x_and_y(conf):
+    """Extract x and y position of tf data."""
+    conf_copy = copy.copy(conf)
+    conf_copy.df = conf.df.copy()
+    conf_copy.df['x'] = conf_copy.df['data'].map(lambda x: x.transforms[0].transform.translation.x)
+    conf_copy.df['y'] = conf_copy.df['data'].map(lambda x: x.transforms[0].transform.translation.x)
+    return conf_copy
+
+
 def calculate_travelled_distance(conf):
     """Calculate the travelled distance of the robot basef on the position.
 
     Interpolate the points with linear funcitons.
     """
-    df = conf.df[conf.df['timestamp'] <= conf.t].copy()
-    df['x'] = df['data'].map(lambda x: x.pose.pose.position.x)
-    df['y'] = df['data'].map(lambda x: x.pose.pose.position.y)
+    df = conf.df[conf.df['timestamp'] <= conf.t]
 
     df = df.filter(['x', 'y'])
     df_shifted = df.shift(1)

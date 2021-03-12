@@ -78,8 +78,19 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         'amcl_pose',
-        'traveled_distance',
-        lambda conf: data_aggregation_helper.calculate_travelled_distance(conf),
+        'amcl_traveled_distance',
+        lambda conf: data_aggregation_helper.calculate_travelled_distance(
+            data_aggregation_helper.amcl_calc_x_and_y(conf)
+        ),
+    ),
+    data_aggregation_helper.TableColumn(
+        '/tf',
+        'tf_traveled_distance',
+        lambda conf: data_aggregation_helper.calculate_travelled_distance(
+            data_aggregation_helper.tf_calc_x_and_y(
+                data_aggregation_helper.filter_tf_child_frame_id(conf)
+            )
+        ),
     ),
     data_aggregation_helper.TableColumn(
         'scan',
