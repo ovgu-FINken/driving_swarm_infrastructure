@@ -2,6 +2,7 @@
 - '/clock'
 - '/tf'
 # for namespaced topics, WITHOUT leading slash
+- 'tf'
 - 'amcl_pose' 
 - 'cmd_vel' 
 - 'initialpose'

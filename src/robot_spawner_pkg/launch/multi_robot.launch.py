@@ -91,7 +91,6 @@ def start_rosbag(context, *args, **kwargs):
             if topic.startswith('/'):
                 rosbag_topics.append(topic.strip())
             else:
-                print("else")
                 for robot in robots[:int(n_robots)]:
                     rosbag_topics.append('/' + str(robot['name']) + '/' + topic.strip())
 
