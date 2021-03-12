@@ -23,6 +23,7 @@ find_package(nav_msgs REQUIRED)
 
 set(msg_files
   "msg/SystemStatus.msg"
+  "msg/FloatArray.msg"
 )
 
 set(srv_files
