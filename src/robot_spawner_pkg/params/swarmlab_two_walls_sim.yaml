@@ -14,10 +14,10 @@
   z_pose: 0.0
   yaw_pose: -1.5
 - name: "robot4"
-  x_pose: -0.17
-  y_pose: 0.17
+  x_pose: 0.14
+  y_pose: -1.2
   z_pose: 0.0
-  yaw_pose: 3.0
+  yaw_pose: 0.5
 - name: "robot5"
   x_pose: 0.56
   y_pose: 0.0
@@ -27,19 +27,19 @@
   x_pose: 0.1
   y_pose: -0.55
   z_pose: 0.0
-  yaw_pose: -1.5
+  yaw_pose: -0.5
 - name: "robot7"
-  x_pose: 0.14
-  y_pose: -1.2
+  x_pose: 0.05
+  y_pose: 0.17
   z_pose: 0.0
-  yaw_pose: 3.0
+  yaw_pose: -1.0
 - name: "robot8"
   x_pose: 1.25
   y_pose: -1.1
   z_pose: 0.0
-  yaw_pose: -2.36
+  yaw_pose: 2.36
 - name: "robot9"
   x_pose: 1.25
   y_pose: 1.1
   z_pose: 0.0
-  yaw_pose: -1.5
+  yaw_pose: 0.0

@@ -1,3 +1,4 @@
+# tested
 - name: "robot201"
   x_pose: 0.15
   y_pose: 1.05
@@ -13,13 +14,12 @@
   y_pose: 0.8
   z_pose: 0.0
   yaw_pose: -1.5
-# TODO:
-# not tested 
 - name: "robot222"
-  x_pose: -0.17
-  y_pose: 0.17
+  x_pose: 0.14
+  y_pose: -1.2
   z_pose: 0.0
-  yaw_pose: 3.0
+  yaw_pose: 0.5
+# not tested
 - name: "robot232"
   x_pose: 0.56
   y_pose: 0.0
@@ -29,19 +29,19 @@
   x_pose: 0.1
   y_pose: -0.55
   z_pose: 0.0
-  yaw_pose: -1.5
+  yaw_pose: -0.5
 - name: "robot247"
-  x_pose: 0.14
-  y_pose: -1.2
+  x_pose: 0.05
+  y_pose: 0.17
   z_pose: 0.0
-  yaw_pose: 3.0
+  yaw_pose: -1.0
 - name: "robot251"
   x_pose: 1.25
   y_pose: -1.1
   z_pose: 0.0
-  yaw_pose: -2.36
+  yaw_pose: 2.36
 - name: "robot254"
   x_pose: 1.25
   y_pose: 1.1
   z_pose: 0.0
-  yaw_pose: -1.5
+  yaw_pose: 0.0
