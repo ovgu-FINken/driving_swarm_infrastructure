@@ -71,7 +71,7 @@ def tf_calc_x_and_y(conf):
     conf_copy = copy.copy(conf)
     conf_copy.df = conf.df.copy()
     conf_copy.df['x'] = conf_copy.df['data'].map(lambda x: x.transforms[0].transform.translation.x)
-    conf_copy.df['y'] = conf_copy.df['data'].map(lambda x: x.transforms[0].transform.translation.x)
+    conf_copy.df['y'] = conf_copy.df['data'].map(lambda x: x.transforms[0].transform.translation.y)
     return conf_copy
 
 
