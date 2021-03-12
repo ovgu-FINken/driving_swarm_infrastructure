@@ -40,14 +40,13 @@ def generate_launch_description():
     rviz_config_dir = os.path.join(get_package_share_directory('turtlebot3_cartographer'),
                                    'rviz', 'tb3_cartographer.rviz')
     
-    # robot_name = LaunchConfiguration('robot_name')
-    robot_name = 'robot220'
+    robot_name = LaunchConfiguration('robot_name')
 
     return LaunchDescription([
-        # DeclareLaunchArgument(
-        #     'robot_name',
-        #     default_value='robot251'
-        # ),
+        DeclareLaunchArgument(
+            'robot_name',
+            default_value=robot_name
+        ),
         DeclareLaunchArgument(
             'cartographer_config_dir',
             default_value=cartographer_config_dir,
