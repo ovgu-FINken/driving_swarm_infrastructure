@@ -32,7 +32,7 @@ def aggregate_tables(df, table_column_config, step_size):
             tmp_col = []
 
             if topic.topic_name.startswith('/'):
-                robot_df_topic = robot_df[
+                robot_df_topic = df[
                     df['name'].str.match(topic.topic_name)
                 ]
             else:
