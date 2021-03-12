@@ -1,4 +1,5 @@
 """Aggregate the data to one table."""
+import copy
 import math
 
 import pandas as pd
@@ -9,7 +10,8 @@ from experiment_measurement.rosbag2df import read_rosbag_all_in_one
 
 
 class TableConfig:
-    def __init__(self, df, t, t_prev):
+    def __init__(self, robot_name, df, t, t_prev):
+        self.robot_name = robot_name
         self.df = df
         self.t = t
         self.t_prev = t_prev
@@ -33,13 +35,23 @@ def get_latest_in_interval(conf):
     ].iloc[-1]
 
 
+def filter_tf_child_frame_id(conf):
+    """Filter the tf data for a specific topic (robot)."""
+    conf_copy = copy.copy(conf)
+    mask = conf.df['data'].map(lambda x: x.transforms[0].child_frame_id == conf.robot_name)
+
+    conf_copy.df = conf.df[
+        mask
+    ]
+    return conf_copy
+
 def quaternion_to_euler(data):
     """Calculate the euler representation of a quaternion."""
     quaternion = [
-        data.pose.pose.orientation.w,
-        data.pose.pose.orientation.x,
-        data.pose.pose.orientation.y,
-        data.pose.pose.orientation.z,
+        data.w,
+        data.x,
+        data.y,
+        data.z,
     ]
     return euler_from_quaternion(quaternion)
 

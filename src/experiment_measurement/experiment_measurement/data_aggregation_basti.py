@@ -30,23 +30,50 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         'amcl_pose',
-        'pose_x',
+        'amcl_pose_x',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
             'data'
         ].pose.pose.position.x,
     ),
     data_aggregation_helper.TableColumn(
         'amcl_pose',
-        'pose_y',
+        'amcl_pose_y',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
             'data'
         ].pose.pose.position.y,
     ),
     data_aggregation_helper.TableColumn(
         'amcl_pose',
-        'pose_theta',
+        'amcl_pose_theta',
         lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval(conf)['data']
+            data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.pose.orientation
+        )[2],
+    ),
+    data_aggregation_helper.TableColumn(
+        'tf',
+        'tf_pose_x',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(
+            data_aggregation_helper.filter_tf_child_frame_id(conf)
+        )[
+            'data'
+        ].transforms[0].transform.translation.x,
+    ),
+    data_aggregation_helper.TableColumn(
+        'tf',
+        'tf_pose_y',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(
+            data_aggregation_helper.filter_tf_child_frame_id(conf)
+        )[
+            'data'
+        ].transforms[0].transform.translation.y,
+    ),
+    data_aggregation_helper.TableColumn(
+        'tf',
+        'tf_pose_theta',
+        lambda conf: data_aggregation_helper.quaternion_to_euler(
+            data_aggregation_helper.get_latest_in_interval(
+                data_aggregation_helper.filter_tf_child_frame_id(conf)
+            )['data'].transforms[0].transform.rotation
         )[2],
     ),
     data_aggregation_helper.TableColumn(
