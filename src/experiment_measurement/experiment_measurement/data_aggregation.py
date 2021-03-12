@@ -30,13 +30,19 @@ def aggregate_tables(df, table_column_config, step_size):
 
         for topic in table_column_config:
             tmp_col = []
-            
-            robot_df_topic = robot_df[
-                robot_df['name'].str.match(r'\/.*\/{}'.format(topic.topic_name))
-            ]
+
+            if topic.topic_name.startswith('/'):
+                robot_df_topic = robot_df[
+                    df['name'].str.match(topic.topic_name)
+                ]
+            else:
+                robot_df_topic = robot_df[
+                    robot_df['name'].str.match(r'\/.*\/{}'.format(topic.topic_name))
+                ]
 
             for t in range(xmin, xmax, step_size):
                 conf = data_aggregation_helper.TableConfig(
+                    robot,
                     robot_df_topic,
                     t,
                     t - step_size
