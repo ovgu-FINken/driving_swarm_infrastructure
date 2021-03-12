@@ -1,0 +1,13 @@
+# for topics without namespace, WITH leading slash
+- '/clock'
+- '/tf'
+# for namespaced topics, WITHOUT leading slash
+- 'amcl_pose' 
+- 'cmd_vel' 
+- 'initialpose'
+- 'scan'
+- 'measurement/inter_robot_dist'
+- 'measurement/n_neighbors'
+- 'measurement/target'
+- 'measurement/tf_error'
+- 'measurement/forces'
