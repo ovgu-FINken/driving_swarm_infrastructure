@@ -1,6 +1,8 @@
 """Aggregate the data to one table."""
 import argparse
+import datetime
 import os
+import time
 
 import math
 
@@ -76,9 +78,6 @@ def main():
                            metavar='output_folder',
                            type=str,
                            help='path to the directory to store the exported csv files')
-    my_parser.add_argument('--force',
-                           action='store_true',
-                           help='don\'t ask for approval if a file would be overwritten')
     my_parser.add_argument('--step_size',
                            type=int,
                            help='step size in nanoseconds, default in 1 second',
@@ -90,7 +89,6 @@ def main():
     input_db_path        = args.db_file
     config               = args.config
     output_folder_path   = args.of
-    force                = args.force
     try:
         step_size        = int(args.step_size)
     except ValueError:
@@ -115,15 +113,20 @@ def main():
         data_aggregation.table_column_config,
         step_size
     )
+    export_path_prefix = datetime.datetime.fromtimestamp(int(time.time())).isoformat()
+
     for robot, r_data in data.items():
         if not output_folder_path:
             print(robot + ":")
             print(r_data)
         else:
-            csv_output_path = os.path.join(output_folder_path, robot + ".csv")
-            if os.path.exists(csv_output_path) and not force:
+            csv_output_path = os.path.join(output_folder_path, export_path_prefix + "_" + robot + ".csv")
+            if os.path.exists(csv_output_path):
                 raise Exception("File {} exists!".format(csv_output_path))
             r_data.to_csv(csv_output_path)
+
+    if output_folder_path:
+        print("Wrote {} files!".format(len(data)))
 
 if __name__ == '__main__':
     main()
