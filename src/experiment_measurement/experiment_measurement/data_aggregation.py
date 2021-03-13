@@ -22,8 +22,7 @@ def aggregate_tables(df, table_column_config, step_size):
     xmax = df['timestamp'].iloc[-1] + step_size
 
     robots = {
-        itm[0]
-        for itm in df['name'].str.findall(r'\/([^\/]*)\/') if len(itm) > 0
+        itm[0] for itm in df['name'].str.findall(r'\/([^\/]*)\/') if len(itm) > 0
     }
     for robot in robots:
         robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
@@ -67,12 +66,12 @@ def main():
         description = 'Aggregates the turtlebot data to one table'
     )
 
-    my_parser.add_argument('input_config',
-                           type=str,
-                           help='configuration to use, e.g. data_aggregation_basti')
-    my_parser.add_argument('input_file',
+    my_parser.add_argument('db_file',
                            type=str,
                            help='path to the db3 database file')
+    my_parser.add_argument('config',
+                           type=str,
+                           help='configuration to use inside the config folder, e.g. basti')
     my_parser.add_argument('--of',
                            metavar='output_folder',
                            type=str,
@@ -88,8 +87,8 @@ def main():
 
     args = my_parser.parse_args()
 
-    input_config_path    = args.input_config
-    input_file_path      = args.input_file
+    input_db_path        = args.db_file
+    config               = args.config
     output_folder_path   = args.of
     force                = args.force
     try:
@@ -98,19 +97,19 @@ def main():
         raise ValueError("Step Size could not be converted to int!")
 
 
-    assert os.path.isfile(input_file_path),\
-        'The input file path specified does not exist'
+    assert os.path.isfile(input_db_path),\
+        'The input db file path specified does not exist'
 
     if output_folder_path and not os.path.exists(output_folder_path):
         os.makedirs(output_folder_path)
 
     try:
-        data_aggregation = __import__(input_config_path)
+        data_aggregation = __import__("config." + config, fromlist=[None])
     except ModuleNotFoundError:
-        raise ModuleNotFoundError("The configuraiton {} does not exist. Please specify a valid configuration file relative to the data_aggregation.py script without the .py extension.".format(input_config_path))
+        raise ModuleNotFoundError("The configuraiton {} does not exist. Please specify a valid configuration file inside the config folder without the .py extension.".format(config))
 
 
-    data_dict = read_rosbag_all_in_one(input_file_path)
+    data_dict = read_rosbag_all_in_one(input_db_path)
     data = aggregate_tables(
         data_dict['rosbag'],
         data_aggregation.table_column_config,
