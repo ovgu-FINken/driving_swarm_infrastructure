@@ -1,5 +1,6 @@
 """Aggregate the data to one table."""
-import data_aggregation_helper
+from experiment_measurement import data_aggregation_helper
+import numpy as np
 
 
 """
@@ -51,8 +52,10 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         'amcl_pose',
-        'traveled_distance',
-        lambda conf: data_aggregation_helper.calculate_travelled_distance(conf),
+        'amcl_traveled_distance',
+        lambda conf: data_aggregation_helper.calculate_travelled_distance(
+            data_aggregation_helper.amcl_calc_x_and_y(conf)
+        ),
     ),
     data_aggregation_helper.TableColumn(
         'scan',
@@ -61,35 +64,84 @@ table_column_config = [
             data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
         ),
     ),
-    # TODO: create topics in node
+    data_aggregation_helper.TableColumn(
+        'measurement/n_neighbors',
+        'n_neighbors',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
+    data_aggregation_helper.TableColumn(
+        'measurement/target',
+        'target_x',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].x
+    ),
+    data_aggregation_helper.TableColumn(
+        'measurement/target',
+        'target_y',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].y
+    ),
+    data_aggregation_helper.TableColumn(
+        'measurement/tf_error',
+        'tf_error',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
     # data_aggregation_helper.TableColumn(
-    #     'n_neighbors',
-    #     'n_neighbors',
+    #     'inter_robot_dist',
+    #     'inter_robot_dist',
     #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     # ),
+    data_aggregation_helper.TableColumn(
+        'measurement/inter_robot_dist',
+        'min_inter_robot_dist',
+        lambda conf: min(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
+    ),
+    data_aggregation_helper.TableColumn(
+        'measurement/inter_robot_dist',
+        'max_inter_robot_dist',
+        lambda conf: max(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
+    ),    
     # data_aggregation_helper.TableColumn(
-    #     'target',
-    #     'target_x',
-    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.position.x,
-    # ),
-    # data_aggregation_helper.TableColumn(
-    #     'target',
-    #     'target_y',
-    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.position.y,
-    # ),
-    # data_aggregation_helper.TableColumn(
-    #     'inter_robot_dist',
-    #     'min_inter_robot_dist',
-    #     lambda conf: min(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
-    # ),    
-    # data_aggregation_helper.TableColumn(
-    #     'inter_robot_dist',
-    #     'max_inter_robot_dist',
-    #     lambda conf: max(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
-    # ),    
-    # data_aggregation_helper.TableColumn(
-    #     'inter_robot_dist',
+    #     'measurement/inter_robot_dist',
     #     'avg_inter_robot_dist',
     #     lambda conf: np.mean(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
-    # ),    
-]
+    # ),
+    # data_aggregation_helper.TableColumn(
+    #     'measurement/forces',
+    #     'forces',
+    #     lambda conf: np.mean(data_aggregation_helper.get_latest_in_interval(conf)['data'].data),
+    # ),
+    data_aggregation_helper.TableColumn(
+        '/tf',
+        'tf_pose_x',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(
+            data_aggregation_helper.filter_tf_child_frame_id(conf)
+        )[
+            'data'
+        ].transforms[0].transform.translation.x,
+    ),
+    data_aggregation_helper.TableColumn(
+        '/tf',
+        'tf_pose_y',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(
+            data_aggregation_helper.filter_tf_child_frame_id(conf)
+        )[
+            'data'
+        ].transforms[0].transform.translation.y,
+    ),
+    data_aggregation_helper.TableColumn(
+        '/tf',
+        'tf_pose_theta',
+        lambda conf: data_aggregation_helper.quaternion_to_euler(
+            data_aggregation_helper.get_latest_in_interval(
+                data_aggregation_helper.filter_tf_child_frame_id(conf)
+            )['data'].transforms[0].transform.rotation
+        )[2],
+    ),
+    data_aggregation_helper.TableColumn(
+        '/tf',
+        'tf_traveled_distance',
+        lambda conf: data_aggregation_helper.calculate_travelled_distance(
+            data_aggregation_helper.tf_calc_x_and_y(
+                data_aggregation_helper.filter_tf_child_frame_id(conf)
+            )
+        ),
+    ),]
