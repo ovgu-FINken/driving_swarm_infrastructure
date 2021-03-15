@@ -71,24 +71,24 @@ def main():
     my_parser.add_argument('db_file',
                            type=str,
                            help='path to the db3 database file')
-    my_parser.add_argument('config',
+    my_parser.add_argument('config_file',
                            type=str,
-                           help='configuration to use inside the config folder, e.g. basti')
-    my_parser.add_argument('--of',
+                           help='configuration to use inside the config folder without \'py\' ending, e.g. basti')
+    my_parser.add_argument('--out',
                            metavar='output_folder',
                            type=str,
                            help='path to the directory to store the exported csv files')
     my_parser.add_argument('--step_size',
                            type=int,
-                           help='step size in nanoseconds, default in 1 second',
+                           help='step size in nanoseconds, default: 1 second',
                            default=10**9)
 
 
     args = my_parser.parse_args()
 
     input_db_path        = args.db_file
-    config               = args.config
-    output_folder_path   = args.of
+    config               = args.config_file
+    output_folder_path   = args.out
     try:
         step_size        = int(args.step_size)
     except ValueError:
@@ -126,7 +126,7 @@ def main():
             r_data.to_csv(csv_output_path)
 
     if output_folder_path:
-        print("Wrote {} files!".format(len(data)))
+        print("Wrote {} files!".format(len(data))) # TODO: add export_path_prefix to printout info
 
 if __name__ == '__main__':
     main()

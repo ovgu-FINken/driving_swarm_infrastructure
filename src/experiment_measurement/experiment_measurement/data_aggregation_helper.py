@@ -1,13 +1,12 @@
 """Aggregate the data to one table."""
 import copy
 import math
-
 import pandas as pd
+import numpy as np
 
 from transformations import euler_from_quaternion
-
 from experiment_measurement.rosbag2df import read_rosbag_all_in_one
-
+from att_rep_controller.utils import __cart2pol
 
 class TableConfig:
     def __init__(self, robot_name, df, t, t_prev):
@@ -95,3 +94,18 @@ def calculate_reached_goals(conf):
     df = df['data']
     df_shifted = df.shift(1)
     return (df != df_shifted).sum()
+
+def filter_force_id(conf, ident):
+    conf_copy = copy.copy(conf)
+    mask = conf.df['data'].map(lambda x: x.id == ident)
+
+    conf_copy.df = conf.df[
+        mask
+    ]
+    return conf_copy
+
+def get_vector_length(point):
+    (r, theta) = __cart2pol(point.x, point.y)
+    if theta < 0.0:
+        r *= -1
+    return r
