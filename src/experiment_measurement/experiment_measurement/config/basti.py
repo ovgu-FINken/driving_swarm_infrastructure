@@ -1,6 +1,6 @@
 """Aggregate the data to one table."""
-from experiment_measurement import data_aggregation_helper
-
+# from experiment_measurement import data_aggregation_helper
+import data_aggregation_helper
 
 """
 table_column_config  ::= table_column, [ df_aggregated_topics ]
