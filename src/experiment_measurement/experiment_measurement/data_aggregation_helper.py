@@ -96,6 +96,7 @@ def calculate_reached_goals(conf):
     return (df != df_shifted).sum()
 
 def filter_force_id(conf, ident):
+    """Filter the forces (rviz arrow marker) by the id to get the specified force"""
     conf_copy = copy.copy(conf)
     mask = conf.df['data'].map(lambda x: x.id == ident)
 
@@ -105,7 +106,8 @@ def filter_force_id(conf, ident):
     return conf_copy
 
 def get_vector_length(point):
+    """Calculate the length of the arrow/vector, negate if it is a repulsion, i.e. the vector shows in backward direction (ego-perpective)"""
     (r, theta) = __cart2pol(point.x, point.y)
-    if theta < 0.0:
+    if abs(theta) > (np.pi/2):
         r *= -1
     return r
