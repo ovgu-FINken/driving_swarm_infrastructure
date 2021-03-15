@@ -53,14 +53,19 @@ def initialize_robots(context, *args, **kwargs):
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
+    single_robot_launch_file = LaunchConfiguration(
+        'single_robot_launch_file', 
+        default=os.path.join(spawner_dir, 'launch', "single_robot.launch.py")
+        ).perform(context)
     robots = get_robot_config(robots_file)
 
     spawn_robots_cmds = []
     for robot in robots[:int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(
-                    spawner_dir, 'launch', "single_robot.launch.py")),
+                PythonLaunchDescriptionSource(
+                    single_robot_launch_file
+                ),
                 launch_arguments={
                     'x_pose': TextSubstitution(text=str(robot['x_pose'])),
                     'y_pose': TextSubstitution(text=str(robot['y_pose'])),
@@ -69,7 +74,9 @@ def initialize_robots(context, *args, **kwargs):
                     'robot_name': robot['name'],
                     'base_frame': TextSubstitution(text=base_frame),
                     'turtlebot_type': TextSubstitution(text='burger')
-                }.items()))
+                }.items()
+            )
+        )
     return spawn_robots_cmds
 
 def start_rosbag(context, *args, **kwargs):

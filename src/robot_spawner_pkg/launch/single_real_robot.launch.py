@@ -33,8 +33,6 @@ def generate_launch_description():
 
     slam = LaunchConfiguration('slam', default=False)
     namespace =  LaunchConfiguration('robot_name')
-    # n_robots = LaunchConfiguration('n_robots')
-    n_robots = 3
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
@@ -90,14 +88,6 @@ def generate_launch_description():
         }.items()
     )
 
-    # print("-----------------LAUNCH ARGUMENTS--------------")
-    # print(namespace)
-    # print(LaunchConfiguration('x_pose'))
-    # print(LaunchConfiguration('y_pose'))
-    # print(LaunchConfiguration('z_pose'))
-    # print(LaunchConfiguration('yaw_pose'))
-    # print("-------------------------------")
-
     initial_pose = launch_ros.actions.Node(
         package='robot_spawner_pkg',
         executable='initial_pose_pub',
@@ -120,12 +110,12 @@ def generate_launch_description():
         launch_arguments={
             'namespace': namespace,
             'use_namespace': 'true',
-            'use_sim_time': 'true',
+            'use_sim_time': 'false',
             'rviz_config': rviz_config_file
         }.items()
     )
 
-    use_sim_time = TextSubstitution(text='True')
+    use_sim_time = TextSubstitution(text='False')
     autostart = 'True'
     params_file = os.path.join(spawner_dir, 'params', 'nav2_multirobot_params_1.yaml')
     urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')

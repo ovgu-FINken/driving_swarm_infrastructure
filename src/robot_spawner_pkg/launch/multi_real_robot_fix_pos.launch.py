@@ -34,18 +34,34 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaunchFileDir
 
+def get_robot_config(robots_file):
+    robots = []
+    with open(robots_file, 'r') as stream:
+        robots = yaml.safe_load(stream)
+    return robots
+
+def get_rosbag_config(rosbag_topics_file):
+    rosbag_config = []
+    with open(rosbag_topics_file, 'r') as stream:
+        rosbag_config = yaml.safe_load(stream)
+    return rosbag_config
 
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
-    spawner_dir = get_package_share_directory("robot_spawner_pkg")
+    spawner_dir = get_package_share_directory('robot_spawner_pkg')
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
-    robots = []
-
-    with open(robots_file, 'r') as stream:
-        robots = yaml.safe_load(stream)
+    single_robot_launch_file = LaunchConfiguration(
+        'single_robot_launch_file', 
+        default=os.path.join(
+            spawner_dir, 
+            'launch', 
+            'single_real_robot.launch.py'
+            )
+        ).perform(context)
+    robots = get_robot_config(robots_file)
 
     nav_bringup_cmds = []
     i = 1
@@ -53,11 +69,9 @@ def initialize_robots(context, *args, **kwargs):
         if i <= int(n_robots):
             nav_bringup_cmds.append(
                 IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource(os.path.join(
-                        spawner_dir,
-                        'launch',
-                        "single_real_robot.launch.py"
-                    )),
+                    PythonLaunchDescriptionSource(
+                        single_robot_launch_file
+                    ),
                     launch_arguments={
                         'x_pose': TextSubstitution(text=str(robot['x_pose'])),
                         'y_pose': TextSubstitution(text=str(robot['y_pose'])),
@@ -65,24 +79,65 @@ def initialize_robots(context, *args, **kwargs):
                         'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
                         'robot_name': TextSubstitution(text=str(robot['name'])),
                         'base_frame': TextSubstitution(text=base_frame),
+                        'turtlebot_type': TextSubstitution(text='burger'),
                         'n_robots': n_robots
-                        # 'turtlebot_type': TextSubstitution(text='burger')
                     }.items()
                 )
             )
             i += 1
     return nav_bringup_cmds
 
+def start_rosbag(context, *args, **kwargs):
+    start_rosbag_cmd = []
+    #TODO: -a einbinden
+    rosbag_topics_file = LaunchConfiguration("rosbag_topics_file", default=None).perform(context)
+    #/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/qos_override.yaml
+    qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
+
+    if not rosbag_topics_file is None:
+        robots_file = LaunchConfiguration('robots_file').perform(context)
+        n_robots = LaunchConfiguration('n_robots').perform(context)
+
+        rosbag_topics = []
+        robots = get_robot_config(robots_file)
+        rosbag_config = get_rosbag_config(rosbag_topics_file)
+
+        for topic in rosbag_config:
+            if topic.startswith('/'):
+                rosbag_topics.append(topic.strip())
+            else:
+                for robot in robots[:int(n_robots)]:
+                    rosbag_topics.append('/' + str(robot['name']) + '/' + topic.strip())
+
+            # TODO: 
+            # * create an ad-hoc qos override file, including the scan topic for each robot namespace
+            # * pass it as qos_override_file
+
+
+        # cmd syntax: https://github.com/ros2/launch/issues/263
+        if not qos_override_file is None:
+            start_rosbag_cmd.append(
+                ExecuteProcess(
+                    cmd=['ros2', 'bag', 'record'] + rosbag_topics + ['--qos-profile-overrides-path', str(qos_override_file)],
+                    output='screen',
+                )
+            )
+        else:
+            start_rosbag_cmd.append(
+                ExecuteProcess(
+                    cmd=['ros2', 'bag', 'record'] + rosbag_topics,
+                    output='screen',
+                )
+            )
+    return start_rosbag_cmd
+
 
 def generate_launch_description():
+    #TODO: 
+    # * get the launch_config.yaml contents
+    # * set the arguments/configs to the specified value and pass them
+
     spawner_dir = get_package_share_directory('robot_spawner_pkg')
-    
-    declare_use_rosbag_cmd = DeclareLaunchArgument(
-        'use_rosbag',
-        default_value='False',
-        description='Whether to start Rosbag recording'
-    )
-    rosbag_topics = LaunchConfiguration("rosbag_topics", default="-a")
 
     declare_n_robots_cmd = DeclareLaunchArgument(
         'n_robots',
@@ -90,32 +145,24 @@ def generate_launch_description():
     )
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'tb3_swarmlab_arena.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'swarmlab_two_walls_real.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
         default_value='base_footprint'
     )
 
-    start_rosbag_cmd = ExecuteProcess(
-        condition=IfCondition(LaunchConfiguration('use_rosbag')),
-        cmd=["ros2 bag record", rosbag_topics],
-        output='screen'
-    )
 
     # Create the launch description and populate
     ld = LaunchDescription()
 
     # Add declarations for launch file arguments
-    ld.add_action(declare_use_rosbag_cmd)
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
 
-    # Add the actions to start gazebo, robots and simulations
-    ld.add_action(start_rosbag_cmd)
-
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
+    ld.add_action(OpaqueFunction(function=start_rosbag))
     ld.add_action(OpaqueFunction(function=initialize_robots))
 
     return ld
