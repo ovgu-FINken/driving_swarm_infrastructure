@@ -33,6 +33,7 @@ from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import Node
 
 def get_robot_config(robots_file):
     robots = []
@@ -59,7 +60,14 @@ def initialize_robots(context, *args, **kwargs):
         ).perform(context)
     robots = get_robot_config(robots_file)
 
-    spawn_robots_cmds = []
+    spawn_robots_cmds = [
+        Node(package="experiment_supervisor",
+            executable="command_node",
+            output="screen",
+            arguments=[{
+                'robots': robots[:int(n_robots)]
+            }])
+    ]
     for robot in robots[:int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
