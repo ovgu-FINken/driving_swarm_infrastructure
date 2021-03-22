@@ -24,7 +24,7 @@ class CommandNode(Node):
         self.robot_status[robot] = msg.data
         if self.status == "ready":
             if all([status == "ready" for status in self.robot_status.values]):
-                self.set_status("start")
+                self.set_status("go")
             
         
     def set_status(self, status):
