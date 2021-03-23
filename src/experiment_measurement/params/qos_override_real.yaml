@@ -26,7 +26,6 @@
   reliability: best_effort 
   history: keep_last
   depth: 10
-  depth: 10
 /robot222/amcl_pose:
   durability: transient_local 
   history: keep_last

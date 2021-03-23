@@ -3,6 +3,7 @@ import argparse
 import datetime
 import os
 import time
+import traceback
 
 import math
 
@@ -24,7 +25,7 @@ def aggregate_tables(df, table_column_config, step_size):
     xmax = df['timestamp'].iloc[-1] + step_size
 
     robots = {
-        itm[0] for itm in df['name'].str.findall(r'\/([^\/]*)\/') if len(itm) > 0
+        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
     }
     for robot in robots:
         robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
@@ -53,8 +54,7 @@ def aggregate_tables(df, table_column_config, step_size):
                 )
                 try:
                     topic_data = topic(conf)
-                except Exception as e:
-                    # print(e)
+                except IndexError:
                     topic_data = None
                 tmp_col.append(topic_data)
             robot_ret_df[topic.column_name] = tmp_col
@@ -104,7 +104,7 @@ def main():
     try:
         data_aggregation = __import__("config." + config, fromlist=[None])
     except ModuleNotFoundError:
-        raise ModuleNotFoundError("The configuraiton {} does not exist. Please specify a valid configuration file inside the config folder without the .py extension.".format(config))
+        raise ModuleNotFoundError("The configuration {} does not exist. Please specify a valid configuration file inside the config folder without the .py extension.".format(config))
 
 
     data_dict = read_rosbag_all_in_one(input_db_path)
@@ -120,7 +120,7 @@ def main():
             print(robot + ":")
             print(r_data)
         else:
-            csv_output_path = os.path.join(output_folder_path, export_path_prefix + "_" + robot + ".csv")
+            csv_output_path = os.path.join(output_folder_path, export_path_prefix.replace(":", "-") + "_" + robot + ".csv")
             if os.path.exists(csv_output_path):
                 raise Exception("File {} exists!".format(csv_output_path))
             r_data.to_csv(csv_output_path)

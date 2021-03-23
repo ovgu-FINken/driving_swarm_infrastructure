@@ -1,5 +1,5 @@
 # tested
-- name: "robot201"
+- name: "robot245" #"robot201"
   x_pose: 0.15
   y_pose: 1.05
   z_pose: 0.0

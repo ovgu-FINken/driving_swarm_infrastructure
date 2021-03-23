@@ -26,7 +26,7 @@ def generate_launch_description():
     )
 
     watchdog = launch_ros.actions.Node(
-        package='robot_spawner_pkg',
+        package='driving_swarm_bringup',
         executable='watchdog',
         namespace=utils.get_robot_name('robot'),
     )

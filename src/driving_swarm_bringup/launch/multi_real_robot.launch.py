@@ -66,22 +66,44 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    spawner_dir = get_package_share_directory('robot_spawner_pkg')
+    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    exp_measurement_dir = get_package_share_directory('experiment_measurement')
+
+    declare_n_robots_cmd = DeclareLaunchArgument(
+        'n_robots',
+        default_value='2'
+    )
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'swarmlab_two_walls_real.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
         default_value='base_footprint'
+    )
+    declare_rosbag_file_cmd = DeclareLaunchArgument(
+        'rosbag_topics_file',
+        default_value='NONE'
+    )
+
+    rosbag_recording = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(exp_measurement_dir, 'launch', 'rosbag_recording.launch.py')),
+        launch_arguments={
+        }.items()
     )
 
     # Create the launch description and populate
     ld = LaunchDescription()
 
     # Add declarations for launch file arguments
+    ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
+    ld.add_action(declare_rosbag_file_cmd)
+
+    # Add the actions to start rosbag recording
+    ld.add_action(rosbag_recording)
 
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))

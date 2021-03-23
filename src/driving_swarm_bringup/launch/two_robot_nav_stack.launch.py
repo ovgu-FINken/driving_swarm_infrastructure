@@ -37,7 +37,7 @@ def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
     bringup_launch_dir = os.path.join(bringup_dir, 'launch')
-    spawner_dir = get_package_share_directory('robot_spawner_pkg')
+    spawner_dir = get_package_share_directory('driving_swarm_bringup')
     tf_exchange_dir = get_package_share_directory('tf_exchange')
 
     # Names and poses of the robots

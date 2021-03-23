@@ -6,8 +6,6 @@ import psutil
 from geometry_msgs.msg import Twist, Vector3
 from rclpy import qos
 
-# ros2 run robot_spawner_pkg watchdog --ros-args -r __ns:=/robot245
-
 class Watchdog(Node):
     def __init__(self):
         super().__init__('watchdog')

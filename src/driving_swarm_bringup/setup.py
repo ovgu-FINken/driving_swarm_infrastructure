@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import setup
 
-package_name = 'robot_spawner_pkg'
+package_name = 'driving_swarm_bringup'
 
 setup(
     name=package_name,
@@ -18,7 +18,6 @@ setup(
         (os.path.join('share', package_name, 'params'), glob('params/*.yaml')),
         (os.path.join('share', package_name, 'rviz'), glob('rviz/*.rviz')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.world')),
-        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,10 +28,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'spawn_turtlebot = robot_spawner_pkg.spawn_turtlebot:main',
-            'nav2_gazebo_spawner = robot_spawner_pkg.nav2_gazebo_spawner:main',
-            'watchdog = robot_spawner_pkg.watchdog:main',
-            'initial_pose_pub = robot_spawner_pkg.initial_pose_pub:main',
+            'spawn_turtlebot = driving_swarm_bringup.spawn_turtlebot:main',
+            'nav2_gazebo_spawner = driving_swarm_bringup.nav2_gazebo_spawner:main',
+            'watchdog = driving_swarm_bringup.watchdog:main',
+            'initial_pose_pub = driving_swarm_bringup.initial_pose_pub:main',
         ],
     },
 )

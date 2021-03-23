@@ -1,6 +1,8 @@
 # for topics without namespace, WITH leading slash
 - '/clock'
 - '/tf'
+- '/nav/ready'
+- '/nav/go'
 # for namespaced topics, WITHOUT leading slash
 - 'tf'
 - 'amcl_pose'

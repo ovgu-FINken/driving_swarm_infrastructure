@@ -20,7 +20,7 @@ class TableColumn:
     def __init__(self, topic_name, column_name, fn):
         self.topic_name = topic_name
         self.column_name = column_name
-        self.fn = fn
+        self.fn = fn #lamda function
 
     def __call__(self, table_config):
         return self.fn(table_config)
@@ -28,11 +28,11 @@ class TableColumn:
 
 def get_latest_in_interval(conf):
     """Return the datapoint which is right before timestamp or at timestamp."""
-    return conf.df[
-        (conf.df['timestamp'] <= conf.t)
-        & (conf.df['timestamp'] > conf.t_prev)
-    ].iloc[-1]
-
+    res = conf.df.loc[
+        conf.df.timestamp.le(conf.t) 
+        & conf.df.timestamp.gt(conf.t_prev)
+    ]
+    return res.iloc[-1]
 
 def filter_tf_child_frame_id(conf):
     """Filter the tf data for a specific topic (robot)."""
@@ -103,6 +103,8 @@ def filter_force_id(conf, ident):
     conf_copy.df = conf.df[
         mask
     ]
+    # if conf.robot_name == "robot4" or conf.robot_name == "/robot4":
+    #     print(conf_copy)
     return conf_copy
 
 def get_vector_length(point):
