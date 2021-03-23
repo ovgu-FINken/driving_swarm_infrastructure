@@ -64,8 +64,8 @@ def initialize_robots(context, *args, **kwargs):
         Node(package="experiment_supervisor",
             executable="command_node",
             output="screen",
-            arguments=[{
-                'robots': robots[:int(n_robots)]
+            parameters=[{
+                'robots': [robot["name"] for robot in robots[:int(n_robots)]]
             }])
     ]
     for robot in robots[:int(n_robots)]:

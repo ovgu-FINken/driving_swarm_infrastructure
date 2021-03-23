@@ -38,34 +38,36 @@ class DirectPlanner(Node):
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         
-        self.status_pub = self.create_publisher(String, 'status', 1)
+        qos_profile = rclpy.qos.qos_profile_system_default
+        qos_profile.reliability = rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
+        qos_profile.durability = rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
+        self.status_pub = self.create_publisher(String, 'status', qos_profile)
 
-        self.create_subscription(String, '/command', self.command_cb, 1)
+        self.create_subscription(String, '/command', self.command_cb, qos_profile)
         self.follow_action_client = self.create_client(UpdateTrajectory, 'nav/follow_trajectory')
         self.follow_action_client.wait_for_service()
         self.get_logger().info('connected to trajectory follower service')
         f = self.tfBuffer.wait_for_transform_async(self.own_frame, self.reference_frame, rclpy.time.Time().to_msg())
         self.get_logger().info('waiting for transform map -> baselink')
         rclpy.spin_until_future_complete(self, f)
-        self.status_pub.publish(String(data="ready"))
         self.create_subscription(PoseStamped, 'nav/goal', self.goal_cb, 1)
         self.create_timer(0.1, self.timer_cb)
     
     def command_cb(self, msg):
-        if msg.data == "ready":
-            self.status_pub.publish("ready")
-        elif msg.data == "go":
+        if msg.data == "go":
+            self.get_logger().info("going")
             self.started = True
-            self.status_pub.publish("running")
+            self.status_pub.publish(String(data="running"))
         
     def goal_cb(self, msg):
         if self.goal is None:
             self.get_logger().info(f'got goal')#: {msg}')
             self.goal = msg
+            self.status_pub.publish(String(data="ready"))
+            self.get_logger().info("ready")
         elif self.goal.pose != msg.pose:
             self.get_logger().info('got new goal')
             self.goal = msg
-        self.create_path()
 
     def timer_cb(self):
         if self.started:
@@ -90,10 +92,10 @@ class DirectPlanner(Node):
             pose3d = PoseStamped()
             pose3d.header.frame_id = self.reference_frame
             pose3d.header.stamp = self.get_clock().now().to_msg()
-            pose3d.pose.position.x = pose.x
-            pose3d.pose.position.y = pose.y
+            pose3d.pose.position.x = pose[0]
+            pose3d.pose.position.y = pose[1]
             pose3d.pose.position.z = 0.0
-            pose3d.pose.orientation = yaw_to_orientation(pose.theta) 
+            pose3d.pose.orientation = yaw_to_orientation(pose[2]) 
             path.poses.append(pose3d)
         
         # create follow trajectory action goal
