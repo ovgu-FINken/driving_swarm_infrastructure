@@ -64,8 +64,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
         launch_arguments={
             'behaviour': 'false',
-            'world' : 'face.world',
-            'map' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps','face.yaml'),
+            'world' : 'swarmlab_two_walls.world',
+            'map' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps','swarmlab_two_walls.yaml'),
+            'robots_file' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml')
         }.items())
 
     ld = LaunchDescription()

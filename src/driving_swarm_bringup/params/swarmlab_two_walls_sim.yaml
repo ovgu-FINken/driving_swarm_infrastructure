@@ -3,43 +3,79 @@
   y_pose: 1.05
   z_pose: 0.0
   yaw_pose: 3.0
+  goals:
+    x : [2.6, 0.0,  0.15]
+    y : [0.0, 0.0, 1.05]
+    theta: [0.0, 1.5, 3.0]
 - name: "robot2"
   x_pose: 0.1
   y_pose: 0.75
   z_pose: 0.0
   yaw_pose: -2.36
+  goals:
+    x : [2.5, 0.0,  0.1]
+    y : [0.0, 0.0, 0.75]
+    theta: [0.0, 1.5, -2.36]
 - name: "robot3"
   x_pose: 0.5
   y_pose: 0.8
   z_pose: 0.0
   yaw_pose: -1.5
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot4"
   x_pose: 0.14
   y_pose: -1.2
   z_pose: 0.0
   yaw_pose: 0.5
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot5"
   x_pose: 0.56
   y_pose: 0.0
   z_pose: 0.0
   yaw_pose: -2.36
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot6"
   x_pose: 0.1
   y_pose: -0.55
   z_pose: 0.0
   yaw_pose: -0.5
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot7"
   x_pose: 0.05
   y_pose: 0.17
   z_pose: 0.0
   yaw_pose: -1.0
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot8"
   x_pose: 1.25
   y_pose: -1.1
   z_pose: 0.0
   yaw_pose: 2.36
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]
 - name: "robot9"
   x_pose: 1.25
   y_pose: 1.1
   z_pose: 0.0
   yaw_pose: 0.0
+  goals:
+    x : [-2.5, 0.0,  0.0]
+    y : [-1.3, 0.0, 2.0]
+    theta: [0.0, 1.5, 3.1415]

@@ -59,20 +59,25 @@ class DirectPlanner(Node):
             self.started = True
             self.status_pub.publish(String(data="running"))
         
+    def set_goal(self, goal):
+        self.goal_started = False
+        self.goal = goal
+
     def goal_cb(self, msg):
         if self.goal is None:
+            self.set_goal(msg)
             self.get_logger().info(f'got goal')#: {msg}')
-            self.goal = msg
             self.status_pub.publish(String(data="ready"))
             self.get_logger().info("ready")
         elif self.goal.pose != msg.pose:
             self.get_logger().info('got new goal')
-            self.goal = msg
+            self.set_goal(msg)
 
     def timer_cb(self):
-        if self.started:
+        if self.started and not self.goal_started:
             path = self.create_path()
             self.send_path(path)
+            self.goal_started = True
             
     def create_path(self):
         waypoint_tuples = self.get_waypoints()

@@ -6,7 +6,7 @@ import numpy as np
 
 from transformations import euler_from_quaternion
 from experiment_measurement.rosbag2df import read_rosbag_all_in_one
-from att_rep_controller.utils import __cart2pol
+#from att_rep_controller.utils import __cart2pol
 
 class TableConfig:
     def __init__(self, robot_name, df, t, t_prev):
@@ -109,7 +109,7 @@ def filter_force_id(conf, ident):
 
 def get_vector_length(point):
     """Calculate the length of the arrow/vector, negate if it is a repulsion, i.e. the vector shows in backward direction (ego-perpective)"""
-    (r, theta) = __cart2pol(point.x, point.y)
-    if abs(theta) > (np.pi/2):
-        r *= -1
+    r = np.sqrt(point.x ** 2 + point.y ** 2)
+    if point.x < 0:
+        return -1 * r
     return r
