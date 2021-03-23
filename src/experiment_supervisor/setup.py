@@ -27,6 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             'fixed_trajectory_supervisor = experiment_supervisor.fixed_trajectory_supervisor:main',
+            'command_node = experiment_supervisor.command_node:main',
         ],
     },
 )

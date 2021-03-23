@@ -16,6 +16,7 @@ from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path, OccupancyGrid
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 from time import time
+from trajectory_generator.utils import *
 
 
 class PSOPlanner(Node):
@@ -195,7 +196,6 @@ class PSOPlanner(Node):
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
-        #self.get_logger().info('sending path to action server')
         self.client_futures.append(self.follow_action_client.call_async(request))
     
     def get_waypoints(self):
@@ -245,15 +245,6 @@ class PSOPlanner(Node):
         if last_index+2 >= len(self.current_trajectory.poses):
             return None
         return last_index
-
-def yaw_from_orientation(orientation):
-    rot = PyKDL.Rotation.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-    return rot.GetRPY()[2]
-
-def yaw_to_orientation(yaw):
-    q = PyKDL.Rotation.RPY(0,0,yaw).GetQuaternion()
-    return Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
-    
 
 def main():
     rclpy.init()

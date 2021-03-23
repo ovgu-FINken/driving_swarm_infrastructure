@@ -33,6 +33,7 @@ from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import Node
 
 def get_robot_config(robots_file):
     robots = []
@@ -59,7 +60,14 @@ def initialize_robots(context, *args, **kwargs):
         ).perform(context)
     robots = get_robot_config(robots_file)
 
-    spawn_robots_cmds = []
+    spawn_robots_cmds = [
+        Node(package="experiment_supervisor",
+            executable="command_node",
+            output="screen",
+            parameters=[{
+                'robots': [robot["name"] for robot in robots[:int(n_robots)]]
+            }])
+    ]
     for robot in robots[:int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
@@ -82,11 +90,11 @@ def initialize_robots(context, *args, **kwargs):
 def start_rosbag(context, *args, **kwargs):
     start_rosbag_cmd = []
     #TODO: -a einbinden
-    rosbag_topics_file = LaunchConfiguration("rosbag_topics_file", default=None).perform(context)
+    rosbag_topics_file = LaunchConfiguration("rosbag_topics_file").perform(context)
     #/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/qos_override.yaml
-    qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
 
-    if not rosbag_topics_file is None:
+    if rosbag_topics_file != "NONE":
+        qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
         robots_file = LaunchConfiguration('robots_file').perform(context)
         n_robots = LaunchConfiguration('n_robots').perform(context)
 
@@ -145,6 +153,10 @@ def generate_launch_description():
         default_value='base_link'
     )
 
+    declare_rosbag_file_cmd = DeclareLaunchArgument(
+        'rosbag_topics_file',
+        default_value='NONE'
+    )
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -160,6 +172,7 @@ def generate_launch_description():
     # Add declarations for launch file arguments
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
+    ld.add_action(declare_rosbag_file_cmd)
     ld.add_action(declare_base_frame_cmd)
 
     # Add the actions to start gazebo, robots and simulations
