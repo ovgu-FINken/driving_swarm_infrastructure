@@ -106,11 +106,7 @@ def generate_launch_description():
         default_value='base_link'
     )
 
-    declare_rosbag_file_cmd = DeclareLaunchArgument(
-        'rosbag_topics_file',
-        default_value='NONE'
-    )
-
+    
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -133,7 +129,6 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
-    ld.add_action(declare_rosbag_file_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)

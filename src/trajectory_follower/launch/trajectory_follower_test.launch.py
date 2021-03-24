@@ -66,7 +66,10 @@ def generate_launch_description():
             'behaviour': 'false',
             'world' : 'swarmlab_two_walls.world',
             'map' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps','swarmlab_two_walls.yaml'),
-            'robots_file' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml')
+            'robots_file' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml'),
+            'rosbag_topics_file' : os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
+            'qos_override_file' : os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override_sim.yaml')
+            
         }.items())
 
     ld = LaunchDescription()

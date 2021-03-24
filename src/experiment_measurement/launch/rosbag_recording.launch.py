@@ -26,9 +26,9 @@ def get_rosbag_config(rosbag_topics_file):
     return rosbag_config
 
 def start_rosbag(context, *args, **kwargs):
+    rosbag_topics_file = LaunchConfiguration("rosbag_topics_file").perform(context)
     start_rosbag_cmd = []
     #TODO: -a einbinden
-    rosbag_topics_file = LaunchConfiguration("rosbag_topics_file").perform(context)
     #/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/qos_override.yaml
 
     if rosbag_topics_file != "NONE":
@@ -70,10 +70,21 @@ def start_rosbag(context, *args, **kwargs):
     return start_rosbag_cmd
 
 def generate_launch_description():
+    declare_rosbag_file_cmd = DeclareLaunchArgument(
+        'rosbag_topics_file',
+        default_value='NONE'
+    )
+
+    declare_rosbag_flag_cmd = DeclareLaunchArgument(
+        'use_rosbag',
+        default_value='False'
+    )
 
     # Create the launch description and populate
     ld = LaunchDescription()
+    ld.add_action(declare_rosbag_file_cmd)
+    ld.add_action(declare_rosbag_flag_cmd)
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
-    ld.add_action(OpaqueFunction(function=start_rosbag))
+    ld.add_action(OpaqueFunction(function=start_rosbag, condition=IfCondition(LaunchConfiguration('use_rosbag'))))
 
     return ld
