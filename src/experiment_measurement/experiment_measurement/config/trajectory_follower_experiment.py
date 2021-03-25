@@ -121,4 +121,14 @@ table_column_config = [
             data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.orientation
         )[2],
     ),
+    data_aggregation_helper.TableColumn(
+        '/command',
+        'command',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
+    data_aggregation_helper.TableColumn(
+        'status',
+        'status',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
 ]
