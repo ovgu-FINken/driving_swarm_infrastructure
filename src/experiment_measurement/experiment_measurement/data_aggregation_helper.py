@@ -16,6 +16,10 @@ class TableConfig:
         self.t = t
         self.t_prev = t_prev
 
+    def __repr__(self):
+        return 'TableConfig({}\n {}\n {}\n {})'.format(
+            self.robot_name, self.df, self.t, self.t_prev
+        )
 
 class TableColumn:
 
@@ -78,7 +82,8 @@ def tf_calc_x_and_y(conf):
 
 
 def calculate_travelled_distance(conf):
-    """Calculate the travelled distance of the robot basef on the position.
+    """
+    Calculate the travelled distance of the robot basef on the position.
 
     Interpolate the points with linear funcitons.
     """
@@ -113,7 +118,8 @@ def filter_force_id(conf, ident):
 
 
 def get_vector_length(point):
-    """Calculate the length of the arrow/vector, negate if it is a repulsion, i.e. the vector shows
+    """
+    Calculate the length of the arrow/vector, negate if it is a repulsion, i.e. the vector shows
     in backward direction (ego-perpective).
     """
     r = np.sqrt(point.x ** 2 + point.y ** 2)

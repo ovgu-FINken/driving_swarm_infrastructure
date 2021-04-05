@@ -51,6 +51,8 @@ def aggregate_tables(df, table_column_config, step_size):
                     topic_data = topic(conf)
                 except IndexError:
                     topic_data = None
+                except (AttributeError, KeyError):  # No data
+                    topic_data = None
                 tmp_col.append(topic_data)
             robot_ret_df[topic.column_name] = tmp_col
         res[robot] = robot_ret_df
