@@ -1,17 +1,26 @@
 """Aggregate the data to one table."""
 # from experiment_measurement import data_aggregation_helper
-import data_aggregation_helper
+from experiment_measurement import data_aggregation_helper
 
 """
-table_column_config  ::= table_column, [ df_aggregated_topics ]
-table_column         ::= ( topic, table_column_name, func )
+'table_column_config' specifies the mapping from the rosbag data to a new pandas dataframe.
+
+Each entry in the array defines a column inside the new dataframe. The entry includes the
+topic from which the data should be taken, a name for the new column and a function. The function
+is called once for every new entry in the new table-column. The input is a TableConfig object which
+stores all data of {the current topic and the current robot} in a list, as well as a timestamp and
+other data needed to resolve the entry.
+
+If the topic is not associated with a name-space (robot), the topic name must begin with '/'. In
+this case the TableConfig object contains all data of the current topic.
+
+
+table_column_config  ::= table_column, [ table_column, ... ]
+table_column         ::= ( topic, new_table_column_name, func )
 
 topic                ::= string
 table_column_name    ::= string
 func                 ::= TableConfig -> Object
-
-message_dataframe    ::= pd.Series      # All messages to one topic and robot
-time                 ::= number
 """
 table_column_config = [
     data_aggregation_helper.TableColumn(
