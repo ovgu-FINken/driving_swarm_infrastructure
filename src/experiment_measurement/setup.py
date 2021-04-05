@@ -1,6 +1,7 @@
-from setuptools import setup, find_packages
-import os
 from glob import glob
+import os
+
+from setuptools import find_packages, setup
 
 package_name = 'experiment_measurement'
 

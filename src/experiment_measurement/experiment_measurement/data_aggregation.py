@@ -3,13 +3,8 @@ import argparse
 import datetime
 import os
 import time
-import traceback
-
-import math
 
 import pandas as pd
-
-from transformations import euler_from_quaternion
 
 # from rosbag2df import read_rosbag_all_in_one
 # import data_aggregation_helper
@@ -63,9 +58,9 @@ def aggregate_tables(df, table_column_config, step_size):
 
 
 def main():
-    """This is the main entry point when called from command."""
+    """Program starts here."""
     my_parser = argparse.ArgumentParser(
-        description = 'Aggregates the turtlebot data to one table'
+        description='Aggregates the turtlebot data to one table'
     )
 
     my_parser.add_argument('db_file',
@@ -73,7 +68,8 @@ def main():
                            help='path to the db3 database file')
     my_parser.add_argument('config_file',
                            type=str,
-                           help='configuration to use inside the config folder without \'py\' ending, e.g. basti')
+                           help='configuration to use inside the config folder without' +
+                           " 'py' ending, e.g. basti")
     my_parser.add_argument('--out',
                            metavar='output_folder',
                            type=str,
@@ -83,17 +79,15 @@ def main():
                            help='step size in nanoseconds, default: 1 second',
                            default=10**9)
 
-
     args = my_parser.parse_args()
 
-    input_db_path        = args.db_file
-    config               = args.config_file
-    output_folder_path   = args.out
+    input_db_path = args.db_file
+    config = args.config_file
+    output_folder_path = args.out
     try:
-        step_size        = int(args.step_size)
+        step_size = int(args.step_size)
     except ValueError:
-        raise ValueError("Step Size could not be converted to int!")
-
+        raise ValueError('Step Size could not be converted to int!')
 
     assert os.path.isfile(input_db_path),\
         'The input db file path specified does not exist'
@@ -102,10 +96,11 @@ def main():
         os.makedirs(output_folder_path)
 
     try:
-        data_aggregation = __import__("config." + config, fromlist=[None])
+        data_aggregation = __import__('config.' + config, fromlist=[None])
     except ModuleNotFoundError:
-        raise ModuleNotFoundError("The configuration {} does not exist. Please specify a valid configuration file inside the config folder without the .py extension.".format(config))
-
+        raise ModuleNotFoundError(('The configuration {} does not exist. Please specify ' +
+                                   'a valid configuration file inside the config folder ' +
+                                   'without the .py extension.').format(config))
 
     data_dict = read_rosbag_all_in_one(input_db_path)
     data = aggregate_tables(
@@ -117,16 +112,19 @@ def main():
 
     for robot, r_data in data.items():
         if not output_folder_path:
-            print(robot + ":")
+            print(robot + ':')
             print(r_data)
         else:
-            csv_output_path = os.path.join(output_folder_path, export_path_prefix.replace(":", "-") + "_" + robot + ".csv")
+            csv_output_path = os.path.join(
+                output_folder_path, export_path_prefix.replace(':', '-') + '_' + robot + '.csv'
+            )
             if os.path.exists(csv_output_path):
-                raise Exception("File {} exists!".format(csv_output_path))
+                raise Exception('File {} exists!'.format(csv_output_path))
             r_data.to_csv(csv_output_path)
 
     if output_folder_path:
-        print("Wrote {} files!".format(len(data))) # TODO: add export_path_prefix to printout info
+        print('Wrote {} files!'.format(len(data)))  # TODO: add export_path_prefix to printout info
+
 
 if __name__ == '__main__':
     main()
