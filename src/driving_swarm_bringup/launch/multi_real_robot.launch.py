@@ -28,69 +28,78 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo, OpaqueFunction)
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    GroupAction,
+    IncludeLaunchDescription,
+    LogInfo,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaunchFileDir
+from launch.substitutions import (
+    LaunchConfiguration,
+    TextSubstitution,
+    ThisLaunchFileDir,
+)
 
 
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
-    base_frame = LaunchConfiguration('base_frame').perform(context)
+    base_frame = LaunchConfiguration("base_frame").perform(context)
     robot_name_list = []
     robot_name_list_dir = os.path.join(
-        get_package_share_directory('system_status'), 'local_ips.yaml')
+        get_package_share_directory("system_status"), "local_ips.yaml"
+    )
 
-    with open(robot_name_list_dir, 'r') as f:
+    with open(robot_name_list_dir, "r") as f:
         data = yaml.safe_load(f)
-        robot_name_list = data[0]['local_ips']
+        robot_name_list = data[0]["local_ips"]
 
     nav_bringup_cmds = []
     for robot_name in robot_name_list:
-        robot_name = 'robot'+robot_name
+        robot_name = "robot" + robot_name
         nav_bringup_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([
-                    ThisLaunchFileDir(),
-                    "/single_real_robot.launch.py"
-                ]),
+                PythonLaunchDescriptionSource(
+                    [ThisLaunchFileDir(), "/single_real_robot.launch.py"]
+                ),
                 launch_arguments={
-                    'robot_name': TextSubstitution(text=robot_name),
-                    'base_frame': TextSubstitution(text=base_frame),
+                    "robot_name": TextSubstitution(text=robot_name),
+                    "base_frame": TextSubstitution(text=base_frame),
                     # 'turtlebot_type': TextSubstitution(text='burger')
-                }.items()
+                }.items(),
             )
         )
     return nav_bringup_cmds
 
 
 def generate_launch_description():
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
-    exp_measurement_dir = get_package_share_directory('experiment_measurement')
+    spawner_dir = get_package_share_directory("driving_swarm_bringup")
+    exp_measurement_dir = get_package_share_directory("experiment_measurement")
 
-    declare_n_robots_cmd = DeclareLaunchArgument(
-        'n_robots',
-        default_value='2'
-    )
+    declare_n_robots_cmd = DeclareLaunchArgument("n_robots", default_value="2")
     declare_robots_file_cmd = DeclareLaunchArgument(
-        'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'swarmlab_two_walls_real.yaml')
+        "robots_file",
+        default_value=os.path.join(
+            spawner_dir, "params", "swarmlab_two_walls_real.yaml"
+        ),
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
-        'base_frame',
-        default_value='base_footprint'
+        "base_frame", default_value="base_footprint"
     )
     declare_rosbag_file_cmd = DeclareLaunchArgument(
-        'rosbag_topics_file',
-        default_value='NONE'
+        "rosbag_topics_file", default_value="NONE"
     )
 
     rosbag_recording = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(exp_measurement_dir, 'launch', 'rosbag_recording.launch.py')),
-        launch_arguments={
-        }.items()
+            os.path.join(
+                exp_measurement_dir, "launch", "rosbag_recording.launch.py"
+            )
+        ),
+        launch_arguments={}.items(),
     )
 
     # Create the launch description and populate

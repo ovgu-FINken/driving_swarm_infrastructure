@@ -20,16 +20,26 @@ import launch_ros.actions
 
 def generate_launch_description():
 
-    return LaunchDescription([
-        launch_ros.actions.Node(
-            package='driving_swarm_bringup',
-            executable='nav2_gazebo_spawner',
-            output='screen',
-            arguments=[
-                '--robot_name', launch.substitutions.LaunchConfiguration('robot_name'),
-                '--robot_namespace', launch.substitutions.LaunchConfiguration('robot_name'),
-                '--turtlebot_type', launch.substitutions.LaunchConfiguration('turtlebot_type'),
-                '-x', launch.substitutions.LaunchConfiguration('x_pose'),
-                '-y', launch.substitutions.LaunchConfiguration('y_pose'),
-                '-z', launch.substitutions.LaunchConfiguration('z_pose')]),
-    ])
+    return LaunchDescription(
+        [
+            launch_ros.actions.Node(
+                package="driving_swarm_bringup",
+                executable="nav2_gazebo_spawner",
+                output="screen",
+                arguments=[
+                    "--robot_name",
+                    launch.substitutions.LaunchConfiguration("robot_name"),
+                    "--robot_namespace",
+                    launch.substitutions.LaunchConfiguration("robot_name"),
+                    "--turtlebot_type",
+                    launch.substitutions.LaunchConfiguration("turtlebot_type"),
+                    "-x",
+                    launch.substitutions.LaunchConfiguration("x_pose"),
+                    "-y",
+                    launch.substitutions.LaunchConfiguration("y_pose"),
+                    "-z",
+                    launch.substitutions.LaunchConfiguration("z_pose"),
+                ],
+            )
+        ]
+    )

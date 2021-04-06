@@ -1,6 +1,7 @@
 """Aggregate the data to one table."""
 from experiment_measurement import data_aggregation_helper
-#import data_aggregation_helper
+
+# import data_aggregation_helper
 
 """
 table_column_config  ::= table_column, [ df_aggregated_topics ]
@@ -15,77 +16,81 @@ time                 ::= number
 """
 table_column_config = [
     data_aggregation_helper.TableColumn(
-        'cmd_vel',
-        'trans_vel',
+        "cmd_vel",
+        "trans_vel",
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
+            "data"
         ].linear.x,
     ),
     data_aggregation_helper.TableColumn(
-        'cmd_vel',
-        'rot_vel',
+        "cmd_vel",
+        "rot_vel",
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
+            "data"
         ].angular.z,
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_x',
+        "amcl_pose",
+        "amcl_pose_x",
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
+            "data"
         ].pose.pose.position.x,
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_y',
+        "amcl_pose",
+        "amcl_pose_y",
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
+            "data"
         ].pose.pose.position.y,
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_theta',
+        "amcl_pose",
+        "amcl_pose_theta",
         lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.pose.orientation
+            data_aggregation_helper.get_latest_in_interval(conf)[
+                "data"
+            ].pose.pose.orientation
         )[2],
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_x',
+        "/tf",
+        "tf_pose_x",
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
-        )[
-            'data'
-        ].transforms[0].transform.translation.x,
+        )["data"]
+        .transforms[0]
+        .transform.translation.x,
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_y',
+        "/tf",
+        "tf_pose_y",
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
-        )[
-            'data'
-        ].transforms[0].transform.translation.y,
+        )["data"]
+        .transforms[0]
+        .transform.translation.y,
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_theta',
+        "/tf",
+        "tf_pose_theta",
         lambda conf: data_aggregation_helper.quaternion_to_euler(
             data_aggregation_helper.get_latest_in_interval(
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
-            )['data'].transforms[0].transform.rotation
+            )["data"]
+            .transforms[0]
+            .transform.rotation
         )[2],
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_traveled_distance',
+        "amcl_pose",
+        "amcl_traveled_distance",
         lambda conf: data_aggregation_helper.calculate_travelled_distance(
             data_aggregation_helper.amcl_calc_x_and_y(conf)
         ),
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_traveled_distance',
+        "/tf",
+        "tf_traveled_distance",
         lambda conf: data_aggregation_helper.calculate_travelled_distance(
             data_aggregation_helper.tf_calc_x_and_y(
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
@@ -93,42 +98,52 @@ table_column_config = [
         ),
     ),
     data_aggregation_helper.TableColumn(
-        'scan',
-        'min_obstacle_dist',
+        "scan",
+        "min_obstacle_dist",
         lambda conf: min(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
+            data_aggregation_helper.get_latest_in_interval(conf)["data"].ranges
         ),
     ),
     data_aggregation_helper.TableColumn(
-        'goal',
-        'reached_goals',
+        "goal",
+        "reached_goals",
         lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
     ),
     data_aggregation_helper.TableColumn(
-        'nav/desired',
-        'desired_x',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.position.x,
+        "nav/desired",
+        "desired_x",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].pose.position.x,
     ),
     data_aggregation_helper.TableColumn(
-        'nav/desired',
-        'desired_y',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.position.y,
+        "nav/desired",
+        "desired_y",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].pose.position.y,
     ),
     data_aggregation_helper.TableColumn(
-        'nav/desired',
-        'desired_theta',
+        "nav/desired",
+        "desired_theta",
         lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.orientation
+            data_aggregation_helper.get_latest_in_interval(conf)[
+                "data"
+            ].pose.orientation
         )[2],
     ),
     data_aggregation_helper.TableColumn(
-        '/command',
-        'command',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+        "/command",
+        "command",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,
     ),
     data_aggregation_helper.TableColumn(
-        'status',
-        'status',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+        "status",
+        "status",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,
     ),
 ]

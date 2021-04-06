@@ -16,49 +16,51 @@ time                 ::= number
 """
 table_column_config = [
     data_aggregation_helper.TableColumn(
-        'cmd_vel',
-        'trans_vel',
+        "cmd_vel",
+        "trans_vel",
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
+            "data"
         ].linear.x,
     ),
     data_aggregation_helper.TableColumn(
-        'cmd_vel',
-        'rot_vel',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[ #
-            'data'
+        "cmd_vel",
+        "rot_vel",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[  #
+            "data"
         ].angular.z,
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_x',
+        "/tf",
+        "tf_pose_x",
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
-        )[
-            'data'
-        ].transforms[0].transform.translation.x,
+        )["data"]
+        .transforms[0]
+        .transform.translation.x,
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_y',
+        "/tf",
+        "tf_pose_y",
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
-        )[
-            'data'
-        ].transforms[0].transform.translation.y,
+        )["data"]
+        .transforms[0]
+        .transform.translation.y,
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_pose_theta',
+        "/tf",
+        "tf_pose_theta",
         lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval( #
+            data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
-            )['data'].transforms[0].transform.rotation
+            )["data"]
+            .transforms[0]
+            .transform.rotation
         )[2],
     ),
     data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_traveled_distance',
+        "/tf",
+        "tf_traveled_distance",
         lambda conf: data_aggregation_helper.calculate_travelled_distance(
             data_aggregation_helper.tf_calc_x_and_y(
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
@@ -66,88 +68,104 @@ table_column_config = [
         ),
     ),
     data_aggregation_helper.TableColumn(
-        'scan',
-        'obstacle_dist',
-        lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges), #
+        "scan",
+        "obstacle_dist",
+        lambda conf: list(
+            data_aggregation_helper.get_latest_in_interval(conf)["data"].ranges
+        ),  #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/inter_robot_dist',
-        'inter_robot_dist',
-        lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].data), #
+        "measurement/inter_robot_dist",
+        "inter_robot_dist",
+        lambda conf: list(
+            data_aggregation_helper.get_latest_in_interval(conf)["data"].data
+        ),  #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/n_neighbors',
-        'n_neighbors',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data #
+        "measurement/n_neighbors",
+        "n_neighbors",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,  #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/target',
-        'target_x',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].x #
+        "measurement/target",
+        "target_x",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].x,  #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/target',
-        'target_y',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].y #
+        "measurement/target",
+        "target_y",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].y,  #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/tf_error',
-        'tf_error',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data  #
+        "measurement/tf_error",
+        "tf_error",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,  #
     ),
     data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'obstacle_force',
+        "visualization/forces",
+        "obstacle_force",
         lambda conf: data_aggregation_helper.get_vector_length(
-            data_aggregation_helper.get_latest_in_interval( #
+            data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_force_id(conf, ident=0)
-                )['data'].points[1]
-            ),
+            )["data"].points[1]
+        ),
     ),
     data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'neighbor_force',
+        "visualization/forces",
+        "neighbor_force",
         lambda conf: data_aggregation_helper.get_vector_length(
             data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_force_id(conf, ident=1)
-                )['data'].points[1]
-            ),
+            )["data"].points[1]
+        ),
     ),
     data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'target_force',
+        "visualization/forces",
+        "target_force",
         lambda conf: data_aggregation_helper.get_vector_length(
             data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_force_id(conf, ident=2)
-                )['data'].points[1]
-            ),
+            )["data"].points[1]
+        ),
     ),
     data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'alignment',
+        "visualization/forces",
+        "alignment",
         lambda conf: data_aggregation_helper.get_vector_length(
-            data_aggregation_helper.get_latest_in_interval( #
+            data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_force_id(conf, ident=3)
-                )['data'].points[1]
-            ),
+            )["data"].points[1]
+        ),
     ),
     data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'total_force',
+        "visualization/forces",
+        "total_force",
         lambda conf: data_aggregation_helper.get_vector_length(
-            data_aggregation_helper.get_latest_in_interval( #
+            data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_force_id(conf, ident=4)
-                )['data'].points[1]
-            ),
-    ), 
-    data_aggregation_helper.TableColumn(
-        '/nav/ready',
-        'ready_to_go',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+            )["data"].points[1]
+        ),
     ),
     data_aggregation_helper.TableColumn(
-        '/nav/go',
-        'green_light',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+        "/nav/ready",
+        "ready_to_go",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,
+    ),
+    data_aggregation_helper.TableColumn(
+        "/nav/go",
+        "green_light",
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            "data"
+        ].data,
     ),
 ]

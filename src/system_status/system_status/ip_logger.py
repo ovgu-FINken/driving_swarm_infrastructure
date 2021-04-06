@@ -16,16 +16,20 @@ from system_status import utils
 
 class IPLogger(Node):
     def __init__(self):
-        super().__init__('ip_logger')
+        super().__init__("ip_logger")
         self.sub = self.create_subscription(
-            SystemStatus, '/system_status',  self.system_status_callback, qos.qos_profile_system_default)
+            SystemStatus,
+            "/system_status",
+            self.system_status_callback,
+            qos.qos_profile_system_default,
+        )
         self.local_ips_ = []
         self.done_ = False
 
     def store_ips(self):
-        dict_file = [{'local_ips': list(set(self.local_ips_))}]
-        pkg_share_dir = get_package_share_directory('system_status')
-        with open(os.path.join(pkg_share_dir, 'local_ips.yaml'), 'w+') as file:
+        dict_file = [{"local_ips": list(set(self.local_ips_))}]
+        pkg_share_dir = get_package_share_directory("system_status")
+        with open(os.path.join(pkg_share_dir, "local_ips.yaml"), "w+") as file:
             yaml.dump(dict_file, file)
 
     def system_status_callback(self, msg):
@@ -51,6 +55,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

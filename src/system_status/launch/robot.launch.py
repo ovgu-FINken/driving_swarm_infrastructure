@@ -34,80 +34,84 @@ from system_status import utils
 
 
 def edit_param_file_namespace(param_file_dir):
-    with open(param_file_dir, 'r') as f:
+    with open(param_file_dir, "r") as f:
         data = yaml.safe_load(f)
-        name = utils.get_robot_name('robot') + "':"
+        name = utils.get_robot_name("robot") + "':"
         # for every robotXXX you find in the data, replace with the name
-        replaced = re.sub(r'robot[^\s]*', name, str(data))
+        replaced = re.sub(r"robot[^\s]*", name, str(data))
         # str->dict
         replaced = ast.literal_eval(replaced)
 
-    with open(param_file_dir, 'w') as f:
+    with open(param_file_dir, "w") as f:
         yaml.dump(replaced, f)
 
 
 def generate_launch_description():
     default_param_dir = os.path.join(
-        get_package_share_directory('system_status'),
-        'params',
-        'burger.yaml'
+        get_package_share_directory("system_status"), "params", "burger.yaml"
     )
 
     tb3_param_dir = LaunchConfiguration(
-        'tb3_param_dir',
-        default=default_param_dir
+        "tb3_param_dir", default=default_param_dir
     )
     # ATTENTION: this is editing the parameter file's content!
     edit_param_file_namespace(default_param_dir)
 
-    usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    robot_name = LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    usb_port = LaunchConfiguration("usb_port", default="/dev/ttyACM0")
+    use_sim_time = LaunchConfiguration("use_sim_time", default="false")
+    robot_name = LaunchConfiguration(
+        "robot_name", default=utils.get_robot_name("robot")
+    )
 
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'robot_name',
-            default_value=robot_name,
-            description='for the namespace of this robot'
-        ),
-
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value=use_sim_time,
-            description='Use simulation (Gazebo) clock if true'),
-
-        DeclareLaunchArgument(
-            'usb_port',
-            default_value=usb_port,
-            description='Connected USB port with OpenCR'),
-
-        DeclareLaunchArgument(
-            'tb3_param_dir',
-            default_value=tb3_param_dir,
-            description='Full path to turtlebot3 parameter file to load'),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "robot_name",
+                default_value=robot_name,
+                description="for the namespace of this robot",
             ),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
-        ),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/hlds_laser.launch.py']
+            DeclareLaunchArgument(
+                "use_sim_time",
+                default_value=use_sim_time,
+                description="Use simulation (Gazebo) clock if true",
             ),
-            launch_arguments={'port': '/dev/ttyUSB0',
-                              'frame_id': 'base_scan', 'namespace': 'robot_name'}.items(),
-        ),
-
-        Node(
-            package='turtlebot3_node',
-            executable='turtlebot3_ros',
-            parameters=[tb3_param_dir],
-            arguments=['-i', usb_port],
-            output='both',
-            namespace=robot_name,
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-        ),
-    ])
+            DeclareLaunchArgument(
+                "usb_port",
+                default_value=usb_port,
+                description="Connected USB port with OpenCR",
+            ),
+            DeclareLaunchArgument(
+                "tb3_param_dir",
+                default_value=tb3_param_dir,
+                description="Full path to turtlebot3 parameter file to load",
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [
+                        ThisLaunchFileDir(),
+                        "/turtlebot3_state_publisher.launch.py",
+                    ]
+                ),
+                launch_arguments={"use_sim_time": use_sim_time}.items(),
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [ThisLaunchFileDir(), "/hlds_laser.launch.py"]
+                ),
+                launch_arguments={
+                    "port": "/dev/ttyUSB0",
+                    "frame_id": "base_scan",
+                    "namespace": "robot_name",
+                }.items(),
+            ),
+            Node(
+                package="turtlebot3_node",
+                executable="turtlebot3_ros",
+                parameters=[tb3_param_dir],
+                arguments=["-i", usb_port],
+                output="both",
+                namespace=robot_name,
+                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
+            ),
+        ]
+    )

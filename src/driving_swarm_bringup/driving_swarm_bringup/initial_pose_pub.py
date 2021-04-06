@@ -30,16 +30,16 @@ import PyKDL
 
 class Spawner(Node):
     def __init__(self, args):
-        super().__init__(f'spawner_{args.robot_name}')
+        super().__init__(f"spawner_{args.robot_name}")
         self.args = args
-        topic = f'{args.robot_namespace}/initialpose'
+        topic = f"{args.robot_namespace}/initialpose"
         self.pub = self.create_publisher(PoseWithCovarianceStamped, topic, 10)
 
         self.initial_pose = Pose()
         self.initial_pose.position.x = args.x
         self.initial_pose.position.y = args.y
         self.initial_pose.position.z = args.z
-        rot = PyKDL.Rotation.RPY(.0, .0, args.yaw).GetQuaternion()
+        rot = PyKDL.Rotation.RPY(0.0, 0.0, args.yaw).GetQuaternion()
         self.initial_pose.orientation.x = rot[0]
         self.initial_pose.orientation.y = rot[1]
         self.initial_pose.orientation.z = rot[2]
@@ -47,62 +47,95 @@ class Spawner(Node):
 
     def wait_for_localization(self):
         request = GetState.Request()
-        topic = f'/{self.args.robot_name}/amcl/get_state'
+        topic = f"/{self.args.robot_name}/amcl/get_state"
         client = self.create_client(GetState, topic)
         if not client.service_is_ready():
-            self.get_logger().info(f'waiting for service {topic}')
+            self.get_logger().info(f"waiting for service {topic}")
             client.wait_for_service()
-            self.get_logger().info(f'connected to state service')
+            self.get_logger().info("connected to state service")
 
         while True:
             future = client.call_async(request)
             rclpy.spin_until_future_complete(self, future)
             if future.result() is not None:
-                print('response: %r' % future.result())
-                self.get_logger().info(f'{future.result()}')
+                print("response: %r" % future.result())
+                self.get_logger().info(f"{future.result()}")
                 if future.result().current_state.id == 3:
                     break
             else:
                 raise RuntimeError(
-                    'exception while calling service: %r' % future.exception())
+                    "exception while calling service: %r" % future.exception()
+                )
         self.send_initial_pose()
 
     def send_initial_pose(self):
         # Send initial pose
         # geometry_msgs/msg/PoseWithCovarianceStamped
-        self.get_logger().info(f'Sending initial pose')
+        self.get_logger().info("Sending initial pose")
         pose = PoseWithCovarianceStamped()
         pose.header.frame_id = "map"
-        #pose.header.time = self.get_clock().now().stamp()
+        # pose.header.time = self.get_clock().now().stamp()
         pose.pose.pose = self.initial_pose
         self.pub.publish(pose)
 
-        self.get_logger().info('Done! Shutting down self.')
+        self.get_logger().info("Done! Shutting down self.")
         rclpy.shutdown()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Spawn Robot into Gazebo with navigation2')
-    parser.add_argument('-n', '--robot_name', type=str, default='robot',
-                        help='Name of the robot to spawn')
-    parser.add_argument('-ns', '--robot_namespace', type=str, default='robot',
-                        help='ROS namespace to apply to the tf and plugins')
-    parser.add_argument('-x', type=float, default=0.0,
-                        help='the x component of the initial position [meters]')
-    parser.add_argument('-y', type=float, default=0.0,
-                        help='the y component of the initial position [meters]')
-    parser.add_argument('-z', type=float, default=0.0,
-                        help='the z component of the initial position [meters]')
+        description="Spawn Robot into Gazebo with navigation2"
+    )
+    parser.add_argument(
+        "-n",
+        "--robot_name",
+        type=str,
+        default="robot",
+        help="Name of the robot to spawn",
+    )
+    parser.add_argument(
+        "-ns",
+        "--robot_namespace",
+        type=str,
+        default="robot",
+        help="ROS namespace to apply to the tf and plugins",
+    )
+    parser.add_argument(
+        "-x",
+        type=float,
+        default=0.0,
+        help="the x component of the initial position [meters]",
+    )
+    parser.add_argument(
+        "-y",
+        type=float,
+        default=0.0,
+        help="the y component of the initial position [meters]",
+    )
+    parser.add_argument(
+        "-z",
+        type=float,
+        default=0.0,
+        help="the z component of the initial position [meters]",
+    )
 
-    parser.add_argument('-yaw', type=float, default=0.0,
-                        help='rotation of the initial position in [rad]')
+    parser.add_argument(
+        "-yaw",
+        type=float,
+        default=0.0,
+        help="rotation of the initial position in [rad]",
+    )
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-t', '--turtlebot_type', type=str,
-                       choices=['waffle', 'burger'])
-    group.add_argument('-s', '--sdf', type=str,
-                       help="the path to the robot's model file (sdf)")
+    group.add_argument(
+        "-t", "--turtlebot_type", type=str, choices=["waffle", "burger"]
+    )
+    group.add_argument(
+        "-s",
+        "--sdf",
+        type=str,
+        help="the path to the robot's model file (sdf)",
+    )
 
     args, _ = parser.parse_known_args()
     print("-----------------LAUNCH ARGUMENTS--------------")
@@ -115,5 +148,5 @@ def main():
     node.destroy_node()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

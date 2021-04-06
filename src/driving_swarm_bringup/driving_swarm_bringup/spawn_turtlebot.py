@@ -20,12 +20,17 @@ def main():
 
     # Start node
     rclpy.init()
-    node = rclpy.create_node("entity_spawner", cli_args=[
-                            #  '--ros-args -r /tf:=/' + utils.get_robot_name('T') + '/tf'])
-                             '--ros-args -r __ns=/T206 /tf:=tf'])
+    node = rclpy.create_node(
+        "entity_spawner",
+        cli_args=[
+            #  '--ros-args -r /tf:=/' + utils.get_robot_name('T') + '/tf'])
+            "--ros-args -r __ns=/T206 /tf:=tf"
+        ],
+    )
 
     node.get_logger().info(
-        'Creating Service client to connect to `/spawn_entity`')
+        "Creating Service client to connect to `/spawn_entity`"
+    )
     client = node.create_client(SpawnEntity, "/spawn_entity")
 
     node.get_logger().info("Connecting to `/spawn_entity` service...")
@@ -35,14 +40,17 @@ def main():
 
     # Get path to the turtlebot3 burgerbot
     sdf_file_path = os.path.join(
-        get_package_share_directory("turtlebot3_gazebo"), "models",
-        "turtlebot3_burger", "model.sdf")
+        get_package_share_directory("turtlebot3_gazebo"),
+        "models",
+        "turtlebot3_burger",
+        "model.sdf",
+    )
 
     # Set data for request
     request = SpawnEntity.Request()
-    request.name = utils.get_robot_name('T')
-    request.xml = open(sdf_file_path, 'r').read()
-    request.robot_namespace =utils.get_robot_name('T')
+    request.name = utils.get_robot_name("T")
+    request.xml = open(sdf_file_path, "r").read()
+    request.robot_namespace = utils.get_robot_name("T")
     request.initial_pose.position.x = float(argv[0])
     request.initial_pose.position.y = float(argv[1])
     request.initial_pose.position.z = float(argv[2])
@@ -51,10 +59,11 @@ def main():
     future = client.call_async(request)
     rclpy.spin_until_future_complete(node, future)
     if future.result() is not None:
-        print('response: %r' % future.result())
+        print("response: %r" % future.result())
     else:
         raise RuntimeError(
-            'exception while calling service: %r' % future.exception())
+            "exception while calling service: %r" % future.exception()
+        )
 
     node.get_logger().info("Done! Shutting down node.")
     node.destroy_node()

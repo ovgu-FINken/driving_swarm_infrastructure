@@ -6,12 +6,14 @@ import psutil
 from geometry_msgs.msg import Twist, Vector3
 from rclpy import qos
 
+
 class Watchdog(Node):
     def __init__(self):
-        super().__init__('watchdog')
+        super().__init__("watchdog")
         self.cmd_vel_sub = self.create_subscription(
-            Twist, 'cmd_vel', self.vel_callback, qos.qos_profile_system_default)
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 1)
+            Twist, "cmd_vel", self.vel_callback, qos.qos_profile_system_default
+        )
+        self.cmd_vel_pub = self.create_publisher(Twist, "cmd_vel", 1)
         WATCH_RATE = 0.3  # s
         self.timer = self.create_timer(WATCH_RATE, self.watch_callback)
         self.latest_timestamp_vel = 0
@@ -26,11 +28,13 @@ class Watchdog(Node):
             self.latest_timestamp_vel = self.get_clock().now().nanoseconds
 
     def watch_callback(self):
-        #TODO: cover the case where the cmd_vel was only send once, i.e. latest_timestamp_vel is still 0 --> maybe with a timer
-        if (not self.latest_timestamp_vel == 0) and (not self.latest_timestamp_wd == 0):
+        # TODO: cover the case where the cmd_vel was only send once, i.e. latest_timestamp_vel is still 0 --> maybe with a timer
+        if (not self.latest_timestamp_vel == 0) and (
+            not self.latest_timestamp_wd == 0
+        ):
             if self.latest_timestamp_vel == self.latest_timestamp_wd:
                 self.publish_stop_cmd()
-            self.latest_timestamp_wd = self.latest_timestamp_vel 
+            self.latest_timestamp_wd = self.latest_timestamp_vel
 
     def publish_stop_cmd(self):
         angular = Vector3(x=0.0, y=0.0, z=0.0)
@@ -49,5 +53,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

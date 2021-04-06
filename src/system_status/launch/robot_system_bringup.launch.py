@@ -10,25 +10,26 @@ import re
 import subprocess
 from system_status import utils
 
+
 def generate_launch_description():
 
     ip = launch_ros.actions.Node(
-        package='system_status',
-        executable='system_status',
-        output='both',  # "screen", "log" or "both"
-        name='system_status',
+        package="system_status",
+        executable="system_status",
+        output="both",  # "screen", "log" or "both"
+        name="system_status",
     )
 
     robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [ThisLaunchFileDir(), '/robot.launch.py']
-        ),
+            [ThisLaunchFileDir(), "/robot.launch.py"]
+        )
     )
 
     watchdog = launch_ros.actions.Node(
-        package='driving_swarm_bringup',
-        executable='watchdog',
-        namespace=utils.get_robot_name('robot'),
+        package="driving_swarm_bringup",
+        executable="watchdog",
+        namespace=utils.get_robot_name("robot"),
     )
 
     # Create the launch description and populate

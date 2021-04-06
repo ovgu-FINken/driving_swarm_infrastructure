@@ -25,27 +25,43 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess
 from launch.substitutions import LaunchConfiguration
 
-TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
+TURTLEBOT3_MODEL = os.environ["TURTLEBOT3_MODEL"]
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    model_file_name = 'turtlebot3_worlds/' + TURTLEBOT3_MODEL + '.model'
-    # absolute path to the .world file 
+    use_sim_time = LaunchConfiguration("use_sim_time", default="true")
+    model_file_name = "turtlebot3_worlds/" + TURTLEBOT3_MODEL + ".model"
+    # absolute path to the .world file
     # note that this world needs a robot you can move around
     world = LaunchConfiguration(
-        'world', 
-        default=os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'worlds', model_file_name)
-    )
-    launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
-
-    return LaunchDescription([
-        ExecuteProcess(
-            cmd=['gazebo', '--verbose', world, '-s', 'libgazebo_ros_init.so'],
-            output='screen'),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([launch_file_dir, '/robot_state_publisher.launch.py']),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
+        "world",
+        default=os.path.join(
+            get_package_share_directory("turtlebot3_gazebo"),
+            "worlds",
+            model_file_name,
         ),
-    ])
+    )
+    launch_file_dir = os.path.join(
+        get_package_share_directory("turtlebot3_gazebo"), "launch"
+    )
+
+    return LaunchDescription(
+        [
+            ExecuteProcess(
+                cmd=[
+                    "gazebo",
+                    "--verbose",
+                    world,
+                    "-s",
+                    "libgazebo_ros_init.so",
+                ],
+                output="screen",
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [launch_file_dir, "/robot_state_publisher.launch.py"]
+                ),
+                launch_arguments={"use_sim_time": use_sim_time}.items(),
+            ),
+        ]
+    )

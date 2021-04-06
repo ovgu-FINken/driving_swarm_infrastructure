@@ -30,29 +30,32 @@ from system_status import utils
 
 
 def generate_launch_description():
-    port = LaunchConfiguration('port', default='/dev/ttyUSB0')
-    frame_id = LaunchConfiguration('frame_id', default='laser')
-    robot_name = LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    port = LaunchConfiguration("port", default="/dev/ttyUSB0")
+    frame_id = LaunchConfiguration("frame_id", default="laser")
+    robot_name = LaunchConfiguration(
+        "robot_name", default=utils.get_robot_name("robot")
+    )
 
-    return LaunchDescription([
-
-        DeclareLaunchArgument(
-            'port',
-            default_value=port,
-            description='Specifying usb port to connected lidar'),
-
-        DeclareLaunchArgument(
-            'frame_id',
-            default_value=frame_id,
-            description='Specifying frame_id of lidar. Default frame_id is \'laser\''),
-
-        Node(
-            package='hls_lfcd_lds_driver',
-            executable='hlds_laser_publisher',
-            name='hlds_laser_publisher',
-            parameters=[{'port': port, 'frame_id': frame_id}],
-            output='both',
-            namespace=robot_name,
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-        ),
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "port",
+                default_value=port,
+                description="Specifying usb port to connected lidar",
+            ),
+            DeclareLaunchArgument(
+                "frame_id",
+                default_value=frame_id,
+                description="Specifying frame_id of lidar. Default frame_id is 'laser'",
+            ),
+            Node(
+                package="hls_lfcd_lds_driver",
+                executable="hlds_laser_publisher",
+                name="hlds_laser_publisher",
+                parameters=[{"port": port, "frame_id": frame_id}],
+                output="both",
+                namespace=robot_name,
+                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
+            ),
+        ]
+    )

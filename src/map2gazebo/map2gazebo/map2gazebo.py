@@ -9,22 +9,31 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
 
+
 class MapConverter(Node):
     def __init__(self):
-        super().__init__('map_converter')
+        super().__init__("map_converter")
 
-        map_topic = 'map' # rclpy.get_param("~map_topic", "map")
-        self.test_map_pub = self.create_publisher(OccupancyGrid, "test_map", 10)
+        map_topic = "map"  # rclpy.get_param("~map_topic", "map")
+        self.test_map_pub = self.create_publisher(
+            OccupancyGrid, "test_map", 10
+        )
         qos_profile = rclpy.qos.qos_profile_system_default
-        qos_profile.reliability = rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
-        qos_profile.durability = rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
-        self.create_subscription(OccupancyGrid, map_topic, self.map_callback, qos_profile)
-        self.threshold = 1 #rclpy.get_param("~occupied_thresh", 1)
-        self.height = 0.3 #rclpy.get_param("~box_height", 2.0)
+        qos_profile.reliability = (
+            rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
+        )
+        qos_profile.durability = (
+            rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
+        )
+        self.create_subscription(
+            OccupancyGrid, map_topic, self.map_callback, qos_profile
+        )
+        self.threshold = 1  # rclpy.get_param("~occupied_thresh", 1)
+        self.height = 0.3  # rclpy.get_param("~box_height", 2.0)
         # Probably there's some way to get trimesh logs to point to ROS
         # logs, but I don't know it.  Uncomment the below if something
         # goes wrong with trimesh to get the logs to print to stdout.
-        #trimesh.util.attach_to_log()
+        # trimesh.util.attach_to_log()
 
     def map_callback(self, map_msg):
         self.get_logger().info("Received map")
@@ -42,17 +51,21 @@ class MapConverter(Node):
         mesh = trimesh.util.concatenate(meshes)
 
         # Export as STL or DAE
-        mesh_type = 'dae' #rclpy.get_param("~mesh_type", "stl")
+        mesh_type = "dae"  # rclpy.get_param("~mesh_type", "stl")
         # TODO: adjust export directory to a more useful one
-        export_dir = '/tmp/' #rclpy.get_param("~export_dir")
+        export_dir = "/tmp/"  # rclpy.get_param("~export_dir")
         if mesh_type == "stl":
-            with open(export_dir + "/map.stl", 'wb') as f:
+            with open(export_dir + "/map.stl", "wb") as f:
                 mesh.export(f, "stl")
-            self.get_logger().info("Exported STL.  You can shut down this node now")
+            self.get_logger().info(
+                "Exported STL.  You can shut down this node now"
+            )
         elif mesh_type == "dae":
-            with open(export_dir + "/map.dae", 'wb') as f:
+            with open(export_dir + "/map.dae", "wb") as f:
                 f.write(trimesh.exchange.dae.export_collada(mesh))
-            self.get_logger().info("Exported DAE.  You can shut down this node now")
+            self.get_logger().info(
+                "Exported DAE.  You can shut down this node now"
+            )
 
     def publish_test_map(self, points, metadata, map_header):
         """
@@ -75,44 +88,50 @@ class MapConverter(Node):
         """
         map_array = map_array.astype(np.uint8)
         _, thresh_map = cv2.threshold(
-                map_array, self.threshold, 100, cv2.THRESH_BINARY)
+            map_array, self.threshold, 100, cv2.THRESH_BINARY
+        )
         contours, hierarchy = cv2.findContours(
-                thresh_map, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+            thresh_map, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE
+        )
         # Using cv2.RETR_CCOMP classifies external contours at top level of
-        # hierarchy and interior contours at second level.  
+        # hierarchy and interior contours at second level.
         # If the whole space is enclosed by walls RETR_EXTERNAL will exclude
         # all interior obstacles e.g. furniture.
         # https://docs.opencv.org/trunk/d9/d8b/tutorial_py_contours_hierarchy.html
         hierarchy = hierarchy[0]
-        corner_idxs = [i for i in range(len(contours)) if hierarchy[i][3] == -1]
+        corner_idxs = [
+            i for i in range(len(contours)) if hierarchy[i][3] == -1
+        ]
         return [contours[i] for i in corner_idxs]
 
     def contour_to_mesh(self, contour, metadata):
         height = np.array([0, 0, self.height])
-        s3 = 3**0.5 / 3.
         meshes = []
         for point in contour:
             x, y = point[0]
             vertices = []
             new_vertices = [
-                    coords_to_loc((x, y), metadata),
-                    coords_to_loc((x, y+1), metadata),
-                    coords_to_loc((x+1, y), metadata),
-                    coords_to_loc((x+1, y+1), metadata)]
+                coords_to_loc((x, y), metadata),
+                coords_to_loc((x, y + 1), metadata),
+                coords_to_loc((x + 1, y), metadata),
+                coords_to_loc((x + 1, y + 1), metadata),
+            ]
             vertices.extend(new_vertices)
             vertices.extend([v + height for v in new_vertices])
-            faces = [[0, 2, 4],
-                     [4, 2, 6],
-                     [1, 2, 0],
-                     [3, 2, 1],
-                     [5, 0, 4],
-                     [1, 0, 5],
-                     [3, 7, 2],
-                     [7, 6, 2],
-                     [7, 4, 6],
-                     [5, 4, 7],
-                     [1, 5, 3],
-                     [7, 3, 5]]
+            faces = [
+                [0, 2, 4],
+                [4, 2, 6],
+                [1, 2, 0],
+                [3, 2, 1],
+                [5, 0, 4],
+                [1, 0, 5],
+                [3, 7, 2],
+                [7, 6, 2],
+                [7, 4, 6],
+                [5, 4, 7],
+                [1, 5, 3],
+                [7, 3, 5],
+            ]
             mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
             if not mesh.is_volume:
                 self.get_logger().debug("Fixing mesh normals")
@@ -125,6 +144,7 @@ class MapConverter(Node):
         # are guaranteed to be internal faces
         return mesh
 
+
 def coords_to_loc(coords, metadata):
     x, y = coords
     loc_x = x * metadata.resolution + metadata.origin.position.x
@@ -133,10 +153,12 @@ def coords_to_loc(coords, metadata):
     # instead of assuming origin is at z=0 with no rotation wrt map frame
     return np.array([loc_x, loc_y, 0.0])
 
+
 def main():
     rclpy.init()
     node = MapConverter()
     rclpy.spin(node)
-    
+
+
 if __name__ == "__main__":
     main()

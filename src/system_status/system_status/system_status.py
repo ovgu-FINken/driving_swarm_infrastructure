@@ -7,13 +7,13 @@ import subprocess
 import re
 from system_status import utils
 
+
 class StatusPublisher(Node):
     def __init__(self):
-        super().__init__('status_publisher')
-        self.pub = self.create_publisher(SystemStatus, '/system_status', 10)
+        super().__init__("status_publisher")
+        self.pub = self.create_publisher(SystemStatus, "/system_status", 10)
         self.timer = self.create_timer(10.0, self.timer_cb)
         self.ip = utils.get_ip()
-
 
     def timer_cb(self):
         msg = SystemStatus()
@@ -22,8 +22,6 @@ class StatusPublisher(Node):
         msg.load = psutil.cpu_percent()
         msg.memory = psutil.virtual_memory().percent
         self.pub.publish(msg)
-
-
 
 
 def main(args=None):
@@ -35,5 +33,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

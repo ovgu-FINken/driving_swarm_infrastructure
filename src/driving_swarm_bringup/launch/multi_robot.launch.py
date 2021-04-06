@@ -28,16 +28,23 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo, OpaqueFunction)
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    GroupAction,
+    IncludeLaunchDescription,
+    LogInfo,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 
+
 def get_robot_config(robots_file):
     robots = []
-    with open(robots_file, 'r') as stream:
+    with open(robots_file, "r") as stream:
         robots = yaml.safe_load(stream)
     return robots
 
@@ -45,81 +52,82 @@ def get_robot_config(robots_file):
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
-    n_robots = LaunchConfiguration('n_robots').perform(context)
-    robots_file = LaunchConfiguration('robots_file').perform(context)
-    base_frame = LaunchConfiguration('base_frame').perform(context)
+    spawner_dir = get_package_share_directory("driving_swarm_bringup")
+    n_robots = LaunchConfiguration("n_robots").perform(context)
+    robots_file = LaunchConfiguration("robots_file").perform(context)
+    base_frame = LaunchConfiguration("base_frame").perform(context)
     single_robot_launch_file = LaunchConfiguration(
-        'single_robot_launch_file', 
-        default=os.path.join(spawner_dir, 'launch', "single_robot.launch.py")
-        ).perform(context)
+        "single_robot_launch_file",
+        default=os.path.join(spawner_dir, "launch", "single_robot.launch.py"),
+    ).perform(context)
     robots = get_robot_config(robots_file)
 
     spawn_robots_cmds = [
-        Node(package="experiment_supervisor",
+        Node(
+            package="experiment_supervisor",
             executable="command_node",
             output="screen",
-            parameters=[{
-                'robots': [robot["name"] for robot in robots[:int(n_robots)]]
-            }])
+            parameters=[
+                {
+                    "robots": [
+                        robot["name"] for robot in robots[: int(n_robots)]
+                    ]
+                }
+            ],
+        )
     ]
-    for robot in robots[:int(n_robots)]:
+    for robot in robots[: int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    single_robot_launch_file
-                ),
+                PythonLaunchDescriptionSource(single_robot_launch_file),
                 launch_arguments={
-                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
-                    'robot_name': robot['name'],
-                    'base_frame': TextSubstitution(text=base_frame),
-                    'turtlebot_type': TextSubstitution(text='burger')
-                }.items()
+                    "x_pose": TextSubstitution(text=str(robot["x_pose"])),
+                    "y_pose": TextSubstitution(text=str(robot["y_pose"])),
+                    "z_pose": TextSubstitution(text=str(robot["z_pose"])),
+                    "yaw_pose": TextSubstitution(text=str(robot["yaw_pose"])),
+                    "robot_name": robot["name"],
+                    "base_frame": TextSubstitution(text=base_frame),
+                    "turtlebot_type": TextSubstitution(text="burger"),
+                }.items(),
             )
         )
     return spawn_robots_cmds
 
 
 def generate_launch_description():
-    #TODO: 
+    # TODO:
     # * get the launch_config.yaml contents
     # * set the arguments/configs to the specified value and pass them
 
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
-    exp_measurement_dir = get_package_share_directory('experiment_measurement')
+    spawner_dir = get_package_share_directory("driving_swarm_bringup")
+    exp_measurement_dir = get_package_share_directory("experiment_measurement")
 
-    declare_n_robots_cmd = DeclareLaunchArgument(
-        'n_robots',
-        default_value='2'
-    )
+    declare_n_robots_cmd = DeclareLaunchArgument("n_robots", default_value="2")
 
     declare_robots_file_cmd = DeclareLaunchArgument(
-        'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
+        "robots_file",
+        default_value=os.path.join(spawner_dir, "params", "robots.yaml"),
     )
 
     declare_base_frame_cmd = DeclareLaunchArgument(
-        'base_frame',
-        default_value='base_link'
+        "base_frame", default_value="base_link"
     )
 
-    
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(spawner_dir, 'launch', 'simulator.launch.py')),
-        launch_arguments={
-        }.items()
+            os.path.join(spawner_dir, "launch", "simulator.launch.py")
+        ),
+        launch_arguments={}.items(),
     )
 
     rosbag_recording = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(exp_measurement_dir, 'launch', 'rosbag_recording.launch.py')),
-        launch_arguments={
-        }.items()
+            os.path.join(
+                exp_measurement_dir, "launch", "rosbag_recording.launch.py"
+            )
+        ),
+        launch_arguments={}.items(),
     )
 
     # Create the launch description and populate

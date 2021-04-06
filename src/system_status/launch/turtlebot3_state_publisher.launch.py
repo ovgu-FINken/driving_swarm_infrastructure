@@ -27,34 +27,39 @@ import subprocess
 import re
 from system_status import utils
 
+
 def generate_launch_description():
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    urdf_file_name = 'turtlebot3_burger.urdf'
-    robot_name =  LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    use_sim_time = LaunchConfiguration("use_sim_time", default="false")
+    urdf_file_name = "turtlebot3_burger.urdf"
+    robot_name = LaunchConfiguration(
+        "robot_name", default=utils.get_robot_name("robot")
+    )
 
     print("urdf_file_name : {}".format(urdf_file_name))
 
     urdf = os.path.join(
-        get_package_share_directory('turtlebot3_description'),
-        'urdf',
-        urdf_file_name)
+        get_package_share_directory("turtlebot3_description"),
+        "urdf",
+        urdf_file_name,
+    )
 
-
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use simulation (Gazebo) clock if true'),
-
-        Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=[urdf],
-            namespace=robot_name,
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-        ),
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "use_sim_time",
+                default_value="false",
+                description="Use simulation (Gazebo) clock if true",
+            ),
+            Node(
+                package="robot_state_publisher",
+                executable="robot_state_publisher",
+                name="robot_state_publisher",
+                output="screen",
+                parameters=[{"use_sim_time": use_sim_time}],
+                arguments=[urdf],
+                namespace=robot_name,
+                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
+            ),
+        ]
+    )
