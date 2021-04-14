@@ -84,10 +84,6 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    #TODO: 
-    # * get the launch_config.yaml contents
-    # * set the arguments/configs to the specified value and pass them
-
     spawner_dir = get_package_share_directory('driving_swarm_bringup')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
@@ -98,7 +94,7 @@ def generate_launch_description():
 
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'robots.yaml')
+        default_value=os.path.join(spawner_dir, 'params', 'tb3_world_sim.yaml')
     )
 
     declare_base_frame_cmd = DeclareLaunchArgument(

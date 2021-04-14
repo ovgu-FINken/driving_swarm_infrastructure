@@ -83,7 +83,7 @@ def generate_launch_description():
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
+                [ThisLaunchFileDir(), '/occupancy_grid_namespaced.launch.py']),
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'resolution': resolution,

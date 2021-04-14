@@ -27,15 +27,15 @@ import launch_ros.actions
 
 def generate_launch_description():
     tf_exchange_dir = get_package_share_directory('tf_exchange')
-    bringup_dir = get_package_share_directory('nav2_bringup')
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    nav2_dir = get_package_share_directory('nav2_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     slam = LaunchConfiguration('slam')
 
     
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         default_value=os.path.join(
-        bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+        nav2_dir, 'maps', 'turtlebot3_world.yaml'),
         description='Full path to map file to load')
     
     declare_robot_name = DeclareLaunchArgument('robot_name', default_value='robot1')
@@ -49,7 +49,7 @@ def generate_launch_description():
         default_value='True',
         description='Whether to start RVIZ')
 
-    rviz_config_file = LaunchConfiguration('rviz_config_file', default=os.path.join(spawner_dir, 'rviz', 'custom.rviz'))
+    rviz_config_file = LaunchConfiguration('rviz_config_file', default=os.path.join(bringup_dir, 'rviz', 'custom.rviz'))
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
@@ -95,7 +95,7 @@ def generate_launch_description():
 
     rviz = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(bringup_dir, 'launch', 'rviz_launch.py')),
+                    os.path.join(nav2_dir, 'launch', 'rviz_launch.py')),
                 condition=IfCondition(LaunchConfiguration('use_rviz')),
                 launch_arguments={
                     'namespace': LaunchConfiguration('robot_name'),
@@ -108,7 +108,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
-    params_file = os.path.join(spawner_dir, 'params', 'nav2_multirobot_params_1.yaml')
+    params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
     urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
 
 
@@ -127,7 +127,7 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'slam_launch.py')),
+            PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch', 'slam_launch.py')),
             condition=IfCondition(slam),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
@@ -135,7 +135,7 @@ def generate_launch_description():
                               'params_file': params_file}.items()),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch',
+            PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch',
                                                        'localization_launch.py')),
             condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
