@@ -29,6 +29,7 @@ set(msg_files
 set(srv_files
   "srv/VehicleModel.srv"
   "srv/UpdateTrajectory.srv"
+  "srv/GetActiveRobots.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
