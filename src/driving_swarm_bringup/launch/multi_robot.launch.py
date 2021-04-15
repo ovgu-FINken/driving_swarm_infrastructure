@@ -45,13 +45,13 @@ def get_robot_config(robots_file):
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
         'single_robot_launch_file', 
-        default=os.path.join(spawner_dir, 'launch', "single_robot.launch.py")
+        default=os.path.join(bringup_dir, 'launch', "single_robot.launch.py")
         ).perform(context)
     robots = get_robot_config(robots_file)
 
@@ -84,7 +84,7 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
     declare_n_robots_cmd = DeclareLaunchArgument(
@@ -94,7 +94,7 @@ def generate_launch_description():
 
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'tb3_world_sim.yaml')
+        default_value=os.path.join(bringup_dir, 'params', 'tb3_world_sim.yaml')
     )
 
     declare_base_frame_cmd = DeclareLaunchArgument(
@@ -106,7 +106,7 @@ def generate_launch_description():
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(spawner_dir, 'launch', 'simulator.launch.py')),
+            os.path.join(bringup_dir, 'launch', 'simulator.launch.py')),
         launch_arguments={
         }.items()
     )

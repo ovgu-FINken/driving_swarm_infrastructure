@@ -84,11 +84,6 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    # ros2 launch robot_spawner_pkg multi_real_robot_fix_pos.launch.py map:=/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/maps/swarmlab_two_walls.yaml robots_file:=/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/swarmlab_two_walls_real.yaml rviz_config_file:=/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/rviz/flocking_ns.rviz rosbag_topics_file:=/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/rosbag_topics_flocking.yaml qos_override_file:=/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/qos_override_real.yaml n_robots:=3
-    #TODO: 
-    # * get the launch_config.yaml contents
-    # * set the arguments/configs to the specified value and pass them
-
     spawner_dir = get_package_share_directory('driving_swarm_bringup')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
