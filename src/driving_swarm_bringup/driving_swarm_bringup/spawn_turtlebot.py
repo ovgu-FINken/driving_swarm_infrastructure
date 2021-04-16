@@ -8,8 +8,6 @@ import sys
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
-import subprocess
-import re
 from system_status import utils
 
 

@@ -21,8 +21,6 @@ The robots co-exist on a shared environment and are controlled by independent na
 """
 
 import os
-import subprocess
-import re
 
 from ament_index_python.packages import get_package_share_directory
 

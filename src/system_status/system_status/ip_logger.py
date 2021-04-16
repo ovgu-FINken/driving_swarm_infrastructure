@@ -1,15 +1,10 @@
 import rclpy
 from rclpy.node import Node
 from driving_swarm_messages.msg import SystemStatus
-from datetime import datetime
 import psutil
-import subprocess
-import re
 from rclpy import qos
 import yaml
 import os
-from glob import glob
-from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 from system_status import utils
 

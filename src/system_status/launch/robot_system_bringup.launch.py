@@ -6,8 +6,6 @@ from launch.actions import IncludeLaunchDescription
 import launch_ros.actions
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import ThisLaunchFileDir
-import re
-import subprocess
 from system_status import utils
 
 

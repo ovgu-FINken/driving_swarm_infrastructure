@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 
-import os
 import launch_ros
 import yaml
 

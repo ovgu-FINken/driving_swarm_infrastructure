@@ -3,8 +3,6 @@ from rclpy.node import Node
 from driving_swarm_messages.msg import SystemStatus
 from datetime import datetime
 import psutil
-import subprocess
-import re
 from system_status import utils
 
 

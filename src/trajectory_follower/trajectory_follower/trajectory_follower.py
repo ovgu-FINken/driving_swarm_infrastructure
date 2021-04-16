@@ -6,7 +6,6 @@ import tf2_kdl
 import tf2_py
 import tf2_geometry_msgs
 import numpy as np
-import time
 
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -137,7 +136,7 @@ class TrajectoryFollower(Node):
 
         self.ix += x_diff
         self.iy += y_diff
-        self.itheta = theta_diff
+        self.itheta += theta_diff
 
         px = 1.5
         py = 1.5
@@ -152,7 +151,7 @@ class TrajectoryFollower(Node):
         )
         self.cmd_vel.angular.z = (
             desired_vel.angular.z
-            + y_diff * py
+            + y_diff * py * desired_vel.linear.x
             + pi_y * self.iy
             + theta_diff * p_theta
             + pi_theta * self.itheta

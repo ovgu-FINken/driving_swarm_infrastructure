@@ -6,7 +6,6 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 import os
-import copy
 
 from rosidl_runtime_py.utilities import get_message
 from rclpy.serialization import deserialize_message

@@ -15,8 +15,6 @@
 """Script used to spawn a robot in a generic position."""
 
 import argparse
-import os
-import xml.etree.ElementTree as ET
 
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
