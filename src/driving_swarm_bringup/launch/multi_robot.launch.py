@@ -15,25 +15,25 @@
 """
 For spawing multiple robots in Gazebo.
 
-This is from an example on how to create a launch file for spawning multiple robots into Gazebo
-and launch multiple instances of the navigation stack, each controlling one robot.
-The robots co-exist on a shared environment and are controlled by independent nav stacks
+This is from an example on how to create a launch file 
+for spawning multiple robots into Gazebo and launch 
+multiple instances of the navigation stack, each controlling
+one robot.
 """
 
 import os
-import subprocess
-import re
 import yaml
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo, OpaqueFunction)
-from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
+
 
 def get_robot_config(robots_file):
     robots = []
@@ -47,6 +47,7 @@ def initialize_robots(context, *args, **kwargs):
     # Names and poses of the robots
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
     n_robots = LaunchConfiguration('n_robots').perform(context)
+    run_timeout = LaunchConfiguration('run_timeout')
     robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
@@ -54,14 +55,22 @@ def initialize_robots(context, *args, **kwargs):
         default=os.path.join(bringup_dir, 'launch', "single_robot.launch.py")
         ).perform(context)
     robots = get_robot_config(robots_file)
+    command_node = Node(package="experiment_supervisor",
+                        executable="command_node",
+                        output="screen",
+                        parameters=[{
+                           'run_timeout': run_timeout,
+                           'robots': [robot["name"] for robot in robots[:int(n_robots)]],
+                           }])
+
+    exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
+            target_action=command_node,
+            on_exit=EmitEvent(event=Shutdown(reason="command node exited"))
+        )
+    )
 
     spawn_robots_cmds = [
-        Node(package="experiment_supervisor",
-            executable="command_node",
-            output="screen",
-            parameters=[{
-                'robots': [robot["name"] for robot in robots[:int(n_robots)]]
-            }])
+        command_node, exit_event_handler
     ]
     for robot in robots[:int(n_robots)]:
         spawn_robots_cmds.append(
@@ -102,7 +111,11 @@ def generate_launch_description():
         default_value='base_link'
     )
 
-    
+    declare_timeout_cmd = DeclareLaunchArgument(
+        'run_timeout',
+        default_value='0.0'
+    )
+
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -113,7 +126,8 @@ def generate_launch_description():
 
     rosbag_recording = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(exp_measurement_dir, 'launch', 'rosbag_recording.launch.py')),
+            os.path.join(exp_measurement_dir,
+                         'launch', 'rosbag_recording.launch.py')),
         launch_arguments={
         }.items()
     )
@@ -125,6 +139,7 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
+    ld.add_action(declare_timeout_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
@@ -132,7 +147,8 @@ def generate_launch_description():
     # Add the actions to start rosbag recording
     ld.add_action(rosbag_recording)
 
-    # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
+    # The opaque function is neccesary to resolve the context
+    # of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))
 
     return ld
