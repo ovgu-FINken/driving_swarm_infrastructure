@@ -1,0 +1,32 @@
+/robot201/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot201/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot204/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot204/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot220/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot220/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot222/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot222/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
