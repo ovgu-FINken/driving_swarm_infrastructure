@@ -12,6 +12,7 @@ class CommandNode(Node):
         # fetch swarm size and robot names
         self.declare_parameter("robots")
         self.declare_parameter("run_timeout")
+        self.declare_parameter("init_timeout")
         self.robots = self.get_parameter("robots")\
             .get_parameter_value().string_array_value
         qos_profile = rclpy.qos.qos_profile_system_default
@@ -31,8 +32,25 @@ class CommandNode(Node):
             self.get_logger().info(f"subscribing /{robot}/status")
         self.run_timeout = self.get_parameter("run_timeout")\
             .get_parameter_value().double_value
-        self.get_logger().info(f"run_timeout: {self.run_timeout}")
+        self.init_timeout = self.get_parameter("init_timeout")\
+            .get_parameter_value().double_value
         self.set_status("ready")
+        self.init_timer = None
+        if self.init_timeout > 0:
+            self.init_timer = self.create_timer(self.init_timeout, self.init_timeout_callback)
+    
+    def run_timeout_callback(self):
+        self.get_logger().info(f"run timer is due with status {self.status}")
+        self.exit()
+        
+    def init_timeout_callback(self):
+        self.get_logger().info(f"init timer is due with status {self.status}")
+        if self.status == "ready":
+            self.exit()
+        if self.init_timer is not None:
+            self.init_timer.cancel()
+            self.init_timer.destroy()
+            self.init_timer = None
     
     def robot_cb(self, robot, msg):
         self.get_logger().info(colored(f"{robot}: {msg.data}", "yellow"))
@@ -44,7 +62,11 @@ class CommandNode(Node):
             ):
                 self.set_status("go")
                 if self.run_timeout > 0:
-                    self.create_timer(self.run_timeout, callback=self.exit)
+                    self.create_timer(self.run_timeout, callback=self.run_timeout_callback)
+                if self.init_timer is not None:
+                    self.init_timer.cancel()
+                    self.init_timer.destroy()
+                    self.init_timer = None
             
     def set_status(self, status):
         self.status = status

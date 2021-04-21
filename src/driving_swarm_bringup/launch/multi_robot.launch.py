@@ -48,6 +48,7 @@ def initialize_robots(context, *args, **kwargs):
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
     n_robots = LaunchConfiguration('n_robots').perform(context)
     run_timeout = LaunchConfiguration('run_timeout')
+    init_timeout = LaunchConfiguration('init_timeout')
     robots_file = LaunchConfiguration('robots_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
@@ -60,6 +61,7 @@ def initialize_robots(context, *args, **kwargs):
                         output="screen",
                         parameters=[{
                            'run_timeout': run_timeout,
+                           'init_timeout': init_timeout,
                            'robots': [robot["name"] for robot in robots[:int(n_robots)]],
                            }])
 
@@ -111,9 +113,14 @@ def generate_launch_description():
         default_value='base_link'
     )
 
-    declare_timeout_cmd = DeclareLaunchArgument(
+    declare_run_timeout_cmd = DeclareLaunchArgument(
         'run_timeout',
         default_value='0.0'
+    )
+
+    declare_init_timeout_cmd = DeclareLaunchArgument(
+        'init_timeout',
+        default_value='30.0'
     )
 
     # Define commands for launching the navigation instances
@@ -139,7 +146,8 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
-    ld.add_action(declare_timeout_cmd)
+    ld.add_action(declare_run_timeout_cmd)
+    ld.add_action(declare_init_timeout_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
