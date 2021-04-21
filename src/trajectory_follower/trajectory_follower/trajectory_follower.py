@@ -1,24 +1,21 @@
 #!/usr/bin/env python
 import rclpy
 import PyKDL
+
+# modules need to be imported as plugins for tf2
 import tf2_ros
-import tf2_kdl
-import tf2_py
-import tf2_geometry_msgs
+import tf2_kdl # noqa F401
+import tf2_py # noqa F401
+import tf2_geometry_msgs # noqa F401
 import numpy as np
-import time
 
 from rclpy.node import Node
-from rclpy.callback_groups import ReentrantCallbackGroup
-from rclpy.action.server import ActionServer, CancelResponse, GoalResponse
 from nav2_msgs.action import FollowPath
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from nav_msgs.msg import Path
 from driving_swarm_messages.srv import UpdateTrajectory
+from std_srvs.srv import Empty
 
-
-# for the action server seehttps://github.com/ros2/examples/blob/master/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_queue_goals.py
-# as a reference. 
 
 class TrajectoryFollower(Node):
     def __init__(self):
@@ -30,12 +27,13 @@ class TrajectoryFollower(Node):
         self.ix = 0
         self.iy = 0
         self.itheta = 0
-        
+        self.name = self.get_namespace()[1:]
+
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.cmd_vel = Twist()
-        
-        #todo: eventually make this a configurable parameter
+
+        # todo: make this a configurable parameter
         self.fail_radius = 0.3
         
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
@@ -44,6 +42,7 @@ class TrajectoryFollower(Node):
         self.co1 = self.create_publisher(PoseStamped, 'nav/cutoff_1', 9)
         self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
         self.create_service(UpdateTrajectory, 'nav/follow_trajectory', self.update_trajectory_cb)
+        self.replan_client = self.create_client(Empty, 'nav/replan')
 
         self.create_timer(0.1, self.timer_cb)
 
@@ -59,10 +58,12 @@ class TrajectoryFollower(Node):
         response.trajectory = self.trajectory
         return response
 
-
-    def pose2D_to_PoseStamped(self, pose2d):
+    def pose2D_to_PoseStamped(self, pose2d, header_id=None):
         pose_stamped = PoseStamped()
-        pose_stamped.header.frame_id = self.reference_frame
+        if header_id is None:
+            pose_stamped.header.frame_id = self.reference_frame
+        else:
+            pose_stamped.header.frame_id = header_id
         pose_stamped.header.stamp = self.get_clock().now().to_msg()
         pose_stamped.pose.position.x = pose2d.x
         pose_stamped.pose.position.y = pose2d.y
@@ -88,31 +89,48 @@ class TrajectoryFollower(Node):
         except Exception as e:
             self.get_logger().warn(f'could not transform pose to reference frame \n {e}')
         return pose2d
-        
-    def execute_cb(self, goal_handle):
-        goal_handle.succeed()
-        return FollowPath.Result()
-    
-    def timer_cb(self):
-        if self.trajectory is None:
-            self.cmd_vel = Twist()
-            self.cmd_publisher.publish(self.cmd_vel)
-            return
-
+ 
+    def get_diff(self, offset=0):
         ego_pose = self.get_current_ego_pose() 
-        desired_pose, desired_vel = self.get_current_desired_pose_vel()
+        desired_pose, desired_vel = self.get_desired_pose_vel(offset=offset)
         x_diff = desired_pose.x - ego_pose.x
         y_diff = desired_pose.y - ego_pose.y 
         theta_diff = desired_pose.theta - ego_pose.theta
-        if x_diff**2 + y_diff**2 > self.fail_radius**2:
-            self.get_logger().info('canceling goal because to far from planned pose')
-            self.trajectory = None
-            self.cmd_vel = Twist()
-            self.cmd_publisher.publish(self.cmd_vel)
+        return Pose2D(x=x_diff, y=y_diff, theta=theta_diff), desired_vel
+    
+    def set_trajectory_fail(self):
+        self.get_logger().info('canceling goal because to far from planned pose')
+        self.trajectory = None
+        request = Empty.Request()
+        self.replan_client.call_async(request)
+        self.cmd_vel = Twist()
+        self.cmd_publisher.publish(self.cmd_vel)
+        
+    def compute_lookahead_output(self, dt=0.5):
+        diff_pose, desired_vel = self.get_diff(offset=0)
+        if diff_pose.x**2 + diff_pose.y**2 > self.fail_radius**2:
+            return None
+        diff_pose, desired_vel = self.get_diff(offset=dt)
+        
+        vel = Twist()
+        vel.angular.z = diff_pose.theta / dt
+        # linear approximation
+        vel.linear.x = np.linalg.norm(np.array([diff_pose.x, diff_pose.y]))
+        vel.linear.x /= dt * np.sign(diff_pose.x)
+        
+        # todo: x ist approximiert durch die gerade, sollte aber eigentlich länge des kreisbogen sein
+        # d = np.linalg.norm(np.array([diff_pose.x, diff_pose.y]))
+        # r = 0.5 * d / (np.sin(diff_pose.theta / 2))
+        # vel.linear.x = (0.5 * r * diff_pose.theta / np.pi) / dt
+        return vel
 
-        self.ix += x_diff
-        self.iy += y_diff
-        self.itheta = theta_diff
+    def compute_control_output(self):
+        diff_pose, desired_vel = self.get_diff(offset=0)
+        if diff_pose.x**2 + diff_pose.y**2 > self.fail_radius**2:
+            return None
+        self.ix += diff_pose.x
+        self.iy += diff_pose.y
+        self.itheta = diff_pose.theta
         
         px = 1.5
         py = 1.5
@@ -122,56 +140,71 @@ class TrajectoryFollower(Node):
         pi_y = 0.1
         pi_theta = 0.1
         
-        self.cmd_vel.linear.x = desired_vel.linear.x + x_diff * px + pi_x * self.ix
-        self.cmd_vel.angular.z = desired_vel.angular.z + y_diff * py + pi_y * self.iy + theta_diff * p_theta + pi_theta * self.itheta
+        output = Twist()
+        output.linear.x = desired_vel.linear.x + diff_pose.x * px + pi_x * self.ix
 
-        #self.get_logger().info(f'x={self.cmd_vel.linear.x}, theta={self.cmd_vel.angular.z}')
-
+        output.angular.z = desired_vel.angular.z
+        output.angular.z += diff_pose.y * py
+        output.angular.z += pi_y * self.iy
+        output.angular.z += diff_pose.theta * p_theta
+        output.angular.z += pi_theta * self.itheta
+        return output
+    
+    def set_cmd_vel(self, control):
+        # todo: respect limits (acceleration + max vel)
+        self.cmd_vel = control
+    
+    def timer_cb(self):
+        # when no trajectory is given, don't do anything
         if self.trajectory is None:
             self.cmd_vel = Twist()
             self.cmd_publisher.publish(self.cmd_vel)
             return
-        else:
-            self.desired_pose_publisher.publish(self.pose2D_to_PoseStamped(desired_pose))
-            self.path_publisher.publish(self.trajectory)
-            self.cmd_publisher.publish(self.cmd_vel)
+
+        # compute and publish control output
+        control = self.compute_lookahead_output(dt=1.0)
+        if control is None:
+            self.set_trajectory_fail()
+            return
+        
+        self.set_cmd_vel(control)
+        self.cmd_publisher.publish(self.cmd_vel)
+
+        # publish debug info 
+        self.desired_pose_publisher.publish(self.pose2D_to_PoseStamped(
+            self.get_desired_pose_vel()[0], header_id=self.name)
+        )
+        self.path_publisher.publish(self.trajectory)
 
     def get_current_ego_pose(self):
         # this works because reference frame == ego frame
         return Pose2D(x=0.0, y=0.0, theta=0.0)
 
-    def get_current_desired_pose_vel(self):
+    def get_desired_pose_vel(self, offset=0):
         # get last pose, next pose and dt
         NANO = 0.001 ** 3
         current_stamp = self.get_clock().now()
         trajectory_start = rclpy.time.Time.from_msg(self.trajectory.header.stamp)
         rate = 1.0
-        t = (current_stamp - trajectory_start).nanoseconds * NANO * rate
+        t = ((current_stamp - trajectory_start).nanoseconds * NANO + offset) * rate
         if t < 0.0:
             self.get_logger().warn('trajectory start is in the future')
             t = 0.0
-        
         last_index = int(np.floor(t))
         if last_index+2 >= len(self.trajectory.poses):
             self.trajectory = None
             return Pose2D(), Twist()
         dt = (t - np.floor(t))
-        #self.get_logger().info(f't={t / rate}, dt={dt}, index: {last_index}')
-        
         last_pose = self.poseStamped_to_Pose2D(self.trajectory.poses[last_index])
         next_pose = self.poseStamped_to_Pose2D(self.trajectory.poses[last_index + 1])
-        #self.get_logger().info(f'last: {last_pose}')
-        #self.get_logger().info(f'next: {next_pose}')
-        
         x = (1 - dt) * last_pose.x + dt * next_pose.x
         y = (1 - dt) * last_pose.y + dt * next_pose.y
         theta = (1 - dt) * last_pose.theta + dt * next_pose.theta
-
         vel = Twist()
-        vel.linear.x = (next_pose.x - last_pose.x) * rate * 2
+        vel.linear.x = (next_pose.x - last_pose.x) * rate
         vel.angular.z = (next_pose.theta - last_pose.theta) * rate
-        #self.get_logger().info(f'linear vel setpoint={vel}')
         return Pose2D(x=x, y=y, theta=theta), vel
+
 
 def main():
     rclpy.init()
