@@ -30,3 +30,11 @@
   durability: transient_local 
   history: keep_last
   depth: 1
+/robot245/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot245/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
