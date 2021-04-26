@@ -81,12 +81,12 @@ table_column_config = [
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/target',
+        '/target',
         'target_x',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].x #
     ),
     data_aggregation_helper.TableColumn(
-        'measurement/target',
+        '/target',
         'target_y',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].y #
     ),
@@ -141,13 +141,13 @@ table_column_config = [
             ),
     ), 
     data_aggregation_helper.TableColumn(
-        '/nav/ready',
-        'ready_to_go',
+        'status',
+        'robot_status',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     ),
     data_aggregation_helper.TableColumn(
-        '/nav/go',
-        'green_light',
+        '/command',
+        'cmd_status',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     ),
 ]

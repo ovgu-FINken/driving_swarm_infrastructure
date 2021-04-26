@@ -39,16 +39,16 @@ def get_robot_config(robots_file):
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     n_robots = LaunchConfiguration('n_robots').perform(context)
-    robots_file = LaunchConfiguration('robots_file').perform(context)
-    base_frame = LaunchConfiguration('base_frame').perform(context)
     run_timeout = LaunchConfiguration('run_timeout')
     init_timeout = LaunchConfiguration('init_timeout')
+    robots_file = LaunchConfiguration('robots_file').perform(context)
+    base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
         'single_robot_launch_file', 
         default=os.path.join(
-            spawner_dir, 
+            bringup_dir, 
             'launch', 
             'single_real_robot.launch.py'
             )
@@ -98,7 +98,7 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
     declare_n_robots_cmd = DeclareLaunchArgument(
@@ -107,15 +107,11 @@ def generate_launch_description():
     )
     declare_robots_file_cmd = DeclareLaunchArgument(
         'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'swarmlab_two_walls_real.yaml')
+        default_value=os.path.join(bringup_dir, 'params', 'swarmlab_two_walls_real.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',
         default_value='base_footprint'
-    )
-    declare_rosbag_file_cmd = DeclareLaunchArgument(
-        'rosbag_topics_file',
-        default_value='NONE'
     )
 
     declare_run_timeout_cmd = DeclareLaunchArgument(
@@ -142,7 +138,6 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
-    ld.add_action(declare_rosbag_file_cmd)
     ld.add_action(declare_run_timeout_cmd)
     ld.add_action(declare_init_timeout_cmd)
 
