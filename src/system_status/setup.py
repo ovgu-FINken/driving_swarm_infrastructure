@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'system_status = system_status.system_status:main',
-            'ip_logger = system_status.ip_logger:main'
+            'ip_logger = system_status.ip_logger:main',
+            'scan_delay = system_status.scan_delay:main'
         ],
     },
 )

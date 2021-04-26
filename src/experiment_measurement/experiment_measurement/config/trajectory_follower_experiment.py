@@ -131,4 +131,9 @@ table_column_config = [
         'status',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     ),
+    data_aggregation_helper.TableColumn(
+        'scan_delay',
+        'scan_delay',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
 ]

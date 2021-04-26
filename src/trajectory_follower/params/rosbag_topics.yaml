@@ -9,3 +9,4 @@
 - 'cmd_vel'
 - 'scan'
 - 'nav/desired'
+- 'scan_delay'

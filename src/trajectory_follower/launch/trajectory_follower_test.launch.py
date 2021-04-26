@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import launch_ros
 import yaml
 
 from launch import LaunchDescription
@@ -10,6 +9,7 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
+
 
 def controller_spawning(context, *args, **kwargs):
     controllers = []
@@ -32,7 +32,15 @@ def controller_spawning(context, *args, **kwargs):
               'theta': robot['goals']['theta'],
            }],
            output='screen',
-           #arguments=[],
+        ))
+        controllers.append(Node(
+           package='system_status',
+           executable='scan_delay',
+           namespace=robot['name'],
+           parameters=[{
+              'use_sim_time': use_sim_time,
+           }],
+           output='screen',
         ))
         controllers.append(Node(
            package='trajectory_generator',
@@ -41,36 +49,42 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
             'use_sim_time': use_sim_time,
             'vehicle_model': 1,
-            'turn_radius' : 0.2,
-            'step_size' : 0.05
+            'turn_radius': 0.2,
+            'step_size': 0.075
             }],
            output='screen',
-           #arguments=[],
         ))
         controllers.append(Node(
            package='trajectory_follower',
            executable='trajectory_follower',
            namespace=robot['name'],
-           parameters=[{'use_sim_time': use_sim_time}],
+           parameters=[
+              {
+                  "use_sim_time": use_sim_time,
+                  "dt": 2.0,
+                  "w1": 1.0,
+                  "w2": 1.0,
+                  "fail_radius": 0.3
+              }
+           ],
            output='screen',
-           #arguments=[],
         ))
     
     return controllers
 
 
 def generate_launch_description():
+    args = {
+         'behaviour': 'false',
+         'world': 'swarmlab_two_walls.world',
+         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'swarmlab_two_walls.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml'),
+         'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
+         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override_sim.yaml')
+    }
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
-        launch_arguments={
-            'behaviour': 'false',
-            'world' : 'swarmlab_two_walls.world',
-            'map' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps','swarmlab_two_walls.yaml'),
-            'robots_file' : os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml'),
-            'rosbag_topics_file' : os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
-            'qos_override_file' : os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override_sim.yaml')
-            
-        }.items())
+        launch_arguments=args.items())
 
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)

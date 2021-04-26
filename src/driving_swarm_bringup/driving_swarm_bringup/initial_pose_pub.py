@@ -15,17 +15,13 @@
 """Script used to spawn a robot in a generic position."""
 
 import argparse
-import os
-import xml.etree.ElementTree as ET
 
-from ament_index_python.packages import get_package_share_directory
-from gazebo_msgs.srv import SpawnEntity
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose
-from lifecycle_msgs.msg import TransitionEvent
 from lifecycle_msgs.srv import GetState
 import PyKDL
+import time
 
 
 class Spawner(Node):
@@ -65,12 +61,13 @@ class Spawner(Node):
             else:
                 raise RuntimeError(
                     'exception while calling service: %r' % future.exception())
+        time.sleep(2.0)
         self.send_initial_pose()
 
     def send_initial_pose(self):
         # Send initial pose
         # geometry_msgs/msg/PoseWithCovarianceStamped
-        self.get_logger().info(f'Sending initial pose')
+        self.get_logger().info('Sending initial pose')
         pose = PoseWithCovarianceStamped()
         pose.header.frame_id = "map"
         #pose.header.time = self.get_clock().now().stamp()

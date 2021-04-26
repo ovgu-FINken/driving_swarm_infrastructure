@@ -36,9 +36,17 @@ def controller_spawning(context, *args, **kwargs):
                     }
                 ],
                 output="screen",
-                # arguments=[],
             )
         )
+        controllers.append(Node(
+           package='system_status',
+           executable='scan_delay',
+           namespace=robot['name'],
+           parameters=[{
+              'use_sim_time': use_sim_time,
+           }],
+           output='screen',
+        ))
         controllers.append(
             Node(
                 package="trajectory_generator",
@@ -61,7 +69,15 @@ def controller_spawning(context, *args, **kwargs):
                 package="trajectory_follower",
                 executable="trajectory_follower",
                 namespace=robot["name"],
-                parameters=[{"use_sim_time": use_sim_time}],
+                parameters=[
+                    {
+                        "use_sim_time": use_sim_time,
+                        "dt": 2.0,
+                        "w1": 1.0,
+                        "w2": 1.0,
+                        "fail_radius": 0.3
+                    }
+                ],
                 output="screen",
                 # arguments=[],
             )
