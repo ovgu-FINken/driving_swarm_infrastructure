@@ -37,21 +37,17 @@ class LocalTFPub(Node):
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         TIMER_PERIOD = 0.1  # seconds
         self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
+        self.br = tf2_ros.TransformBroadcaster(self)
 
     def timer_callback(self):
-        br = tf2_ros.TransformBroadcaster(self)
         tf2Msg = TransformStamped()
 
         try:
             tf2Msg = self.tfBuffer.lookup_transform(
                 "world", self.base_frame, rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
-            br.sendTransform(tf2Msg)
-
-        # except (LookupException, ExtrapolationException, ConnectivityException) as e:
-        #     self.get_logger().info(str(e))
+            self.br.sendTransform(tf2Msg)
         except Exception as e:
-            # self.get_logger().info(str(e))
             self.get_logger().info(str(type(e)), once=True)
 
 

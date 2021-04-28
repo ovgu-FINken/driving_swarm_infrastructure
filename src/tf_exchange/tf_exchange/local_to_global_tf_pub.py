@@ -14,13 +14,8 @@
 
 import rclpy
 from rclpy.node import Node
-from rclpy.timer import Rate
-from std_msgs.msg import String
-import tf2_ros
-# from tf2_py import *
+import tf2_ros # noqa
 from tf2_msgs.msg import TFMessage
-from geometry_msgs.msg import TransformStamped
-import launch.actions
 
 
 class LocalToGlobalTFPub(Node):
@@ -32,9 +27,8 @@ class LocalToGlobalTFPub(Node):
         self.declare_parameter('robot_name')
         self.robot_name = self.get_parameter('robot_name').value
         self.publisher_ = self.create_publisher(TFMessage, "/tf", 100)
-        self.subscription = self.create_subscription(
+        self.create_subscription(
             TFMessage, 'tf', self.listener_callback, 100)
-        self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
         if msg.transforms[0].child_frame_id == self.robot_name:

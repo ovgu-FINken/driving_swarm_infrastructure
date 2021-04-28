@@ -61,16 +61,14 @@ class Spawner(Node):
             else:
                 raise RuntimeError(
                     'exception while calling service: %r' % future.exception())
-        time.sleep(2.0)
         self.send_initial_pose()
 
     def send_initial_pose(self):
         # Send initial pose
-        # geometry_msgs/msg/PoseWithCovarianceStamped
+        time.sleep(2.0)
         self.get_logger().info('Sending initial pose')
         pose = PoseWithCovarianceStamped()
         pose.header.frame_id = "map"
-        #pose.header.time = self.get_clock().now().stamp()
         pose.pose.pose = self.initial_pose
         self.pub.publish(pose)
 
