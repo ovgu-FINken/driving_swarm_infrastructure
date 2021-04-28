@@ -50,7 +50,7 @@ def controller_spawning(context, *args, **kwargs):
             'use_sim_time': use_sim_time,
             'vehicle_model': 1,
             'turn_radius': 0.2,
-            'step_size': 0.075
+            'step_size': 0.06
             }],
            output='screen',
         ))
@@ -62,8 +62,8 @@ def controller_spawning(context, *args, **kwargs):
               {
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
-                  "w1": 1.0,
-                  "w2": 1.0,
+                  "w1": 0.5,
+                  "w2": 0.5,
                   "fail_radius": 0.3
               }
            ],
@@ -80,7 +80,7 @@ def generate_launch_description():
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'swarmlab_two_walls.yaml'),
          'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
-         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override_sim.yaml')
+         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),

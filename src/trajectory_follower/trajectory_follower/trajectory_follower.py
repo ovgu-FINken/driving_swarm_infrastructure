@@ -40,6 +40,8 @@ class TrajectoryFollower(Node):
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.cmd_vel = Twist()
+        self.max_accel_x = 0.025
+        self.max_accel_z = 0.032
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = \
             self.create_publisher(PoseStamped, 'nav/desired', 9)
@@ -107,7 +109,9 @@ class TrajectoryFollower(Node):
                 PyKDL.Rotation.Quaternion(q.x, q.y, q.z, q.w).GetRPY()[2]
         except Exception as e:
             self.get_logger().warn(
-                f'could not transform pose to reference frame \n {e}'
+                'could not transform pose' +
+                f' in frame {pose_stamped.header.frame_id}' +
+                f' to reference frame {self.reference_frame} \n {e}'
             )
         return pose2d
  
@@ -145,7 +149,17 @@ class TrajectoryFollower(Node):
     
     def set_cmd_vel(self, control):
         # todo: respect limits (acceleration + max vel)
-        self.cmd_vel = control
+        # self.cmd_vel = control
+        self.cmd_vel.linear.x = np.clip(
+            control.linear.x,
+            self.cmd_vel.linear.x - self.max_accel_x,
+            self.cmd_vel.linear.x + self.max_accel_x
+        )
+        self.cmd_vel.angular.z = np.clip(
+            control.angular.z,
+            self.cmd_vel.angular.z - self.max_accel_z,
+            self.cmd_vel.angular.z + self.max_accel_z
+        )
     
     def timer_cb(self):
         # when no trajectory is given, don't do anything

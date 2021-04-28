@@ -1,0 +1,2032 @@
+/robot1/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot1/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot2/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot2/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot3/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot3/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot4/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot4/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot5/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot5/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot6/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot6/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot7/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot7/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot8/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot8/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot9/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot9/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot10/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot10/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot11/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot11/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot12/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot12/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot13/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot13/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot14/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot14/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot15/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot15/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot16/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot16/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot17/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot17/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot18/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot18/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot19/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot19/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot20/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot20/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot21/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot21/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot22/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot22/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot23/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot23/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot24/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot24/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot25/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot25/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot26/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot26/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot27/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot27/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot28/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot28/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot29/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot29/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot30/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot30/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot31/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot31/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot32/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot32/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot33/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot33/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot34/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot34/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot35/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot35/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot36/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot36/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot37/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot37/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot38/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot38/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot39/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot39/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot40/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot40/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot41/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot41/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot42/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot42/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot43/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot43/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot44/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot44/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot45/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot45/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot46/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot46/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot47/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot47/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot48/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot48/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot49/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot49/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot50/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot50/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot51/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot51/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot52/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot52/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot53/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot53/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot54/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot54/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot55/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot55/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot56/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot56/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot57/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot57/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot58/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot58/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot59/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot59/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot60/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot60/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot61/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot61/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot62/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot62/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot63/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot63/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot64/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot64/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot65/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot65/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot66/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot66/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot67/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot67/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot68/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot68/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot69/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot69/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot70/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot70/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot71/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot71/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot72/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot72/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot73/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot73/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot74/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot74/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot75/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot75/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot76/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot76/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot77/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot77/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot78/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot78/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot79/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot79/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot80/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot80/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot81/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot81/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot82/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot82/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot83/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot83/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot84/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot84/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot85/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot85/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot86/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot86/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot87/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot87/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot88/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot88/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot89/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot89/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot90/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot90/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot91/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot91/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot92/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot92/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot93/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot93/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot94/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot94/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot95/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot95/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot96/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot96/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot97/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot97/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot98/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot98/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot99/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot99/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot100/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot100/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot101/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot101/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot102/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot102/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot103/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot103/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot104/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot104/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot105/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot105/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot106/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot106/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot107/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot107/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot108/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot108/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot109/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot109/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot110/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot110/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot111/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot111/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot112/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot112/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot113/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot113/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot114/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot114/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot115/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot115/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot116/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot116/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot117/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot117/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot118/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot118/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot119/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot119/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot120/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot120/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot121/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot121/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot122/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot122/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot123/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot123/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot124/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot124/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot125/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot125/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot126/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot126/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot127/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot127/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot128/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot128/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot129/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot129/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot130/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot130/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot131/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot131/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot132/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot132/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot133/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot133/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot134/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot134/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot135/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot135/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot136/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot136/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot137/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot137/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot138/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot138/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot139/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot139/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot140/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot140/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot141/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot141/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot142/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot142/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot143/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot143/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot144/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot144/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot145/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot145/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot146/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot146/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot147/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot147/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot148/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot148/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot149/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot149/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot150/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot150/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot151/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot151/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot152/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot152/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot153/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot153/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot154/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot154/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot155/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot155/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot156/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot156/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot157/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot157/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot158/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot158/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot159/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot159/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot160/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot160/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot161/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot161/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot162/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot162/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot163/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot163/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot164/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot164/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot165/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot165/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot166/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot166/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot167/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot167/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot168/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot168/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot169/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot169/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot170/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot170/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot171/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot171/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot172/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot172/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot173/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot173/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot174/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot174/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot175/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot175/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot176/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot176/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot177/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot177/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot178/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot178/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot179/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot179/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot180/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot180/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot181/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot181/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot182/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot182/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot183/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot183/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot184/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot184/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot185/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot185/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot186/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot186/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot187/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot187/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot188/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot188/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot189/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot189/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot190/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot190/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot191/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot191/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot192/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot192/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot193/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot193/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot194/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot194/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot195/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot195/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot196/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot196/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot197/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot197/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot198/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot198/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot199/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot199/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot200/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot200/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot201/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot201/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot202/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot202/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot203/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot203/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot204/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot204/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot205/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot205/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot206/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot206/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot207/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot207/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot208/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot208/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot209/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot209/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot210/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot210/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot211/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot211/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot212/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot212/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot213/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot213/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot214/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot214/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot215/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot215/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot216/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot216/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot217/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot217/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot218/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot218/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot219/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot219/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot220/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot220/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot221/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot221/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot222/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot222/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot223/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot223/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot224/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot224/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot225/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot225/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot226/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot226/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot227/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot227/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot228/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot228/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot229/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot229/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot230/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot230/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot231/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot231/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot232/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot232/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot233/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot233/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot234/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot234/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot235/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot235/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot236/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot236/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot237/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot237/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot238/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot238/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot239/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot239/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot240/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot240/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot241/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot241/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot242/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot242/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot243/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot243/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot244/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot244/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot245/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot245/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot246/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot246/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot247/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot247/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot248/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot248/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot249/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot249/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot250/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot250/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot251/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot251/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot252/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot252/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot253/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot253/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
+/robot254/scan:
+  reliability: best_effort 
+  history: keep_last
+  depth: 10
+/robot254/amcl_pose:
+  durability: transient_local 
+  history: keep_last
+  depth: 1
