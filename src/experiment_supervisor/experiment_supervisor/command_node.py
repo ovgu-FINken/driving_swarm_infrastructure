@@ -3,6 +3,7 @@ from std_msgs.msg import String
 import rclpy
 import sys
 import functools
+import time
 from termcolor import colored
 
 
@@ -62,7 +63,10 @@ class CommandNode(Node):
             ):
                 self.set_status("go")
                 if self.run_timeout > 0:
-                    self.create_timer(self.run_timeout, callback=self.run_timeout_callback)
+                    self.create_timer(
+                                         self.run_timeout,
+                                         callback=self.run_timeout_callback
+                                     )
                 if self.init_timer is not None:
                     self.init_timer.cancel()
                     self.init_timer.destroy()
@@ -75,6 +79,7 @@ class CommandNode(Node):
     
     def exit(self):
         self.set_status("stop")
+        time.sleep(1)
         self.get_logger().info("exiting")
         sys.exit(0)
         

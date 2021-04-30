@@ -83,6 +83,9 @@ class DirectPlanner(Node):
             self.get_logger().info("going")
             self.started = True
             self.status_pub.publish(String(data="running"))
+        if msg.data == "stop":
+            self.status_pub.publish(String(data="stopped"))
+            self.send_path([])
 
     def set_goal(self, goal):
         self.goal_started = False

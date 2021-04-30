@@ -32,7 +32,7 @@ def short_angle_range(phi1, phi2, r_step=0.2):
     return np.arange(phi1, phi2, -r_step)
     
 
-def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS, FIX_ANGLES=False, spline_degree=3):
+def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS, FIX_ANGLES=True, spline_degree=3):
     path = []
     for wp1, wp2 in zip(waypoints[:-1], waypoints[1:]):
         #set step-size for this segment

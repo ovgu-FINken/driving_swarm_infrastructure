@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import rclpy
 import PyKDL
+import numpy as np
 
 # modules need to be imported as plugins for tf2
 import tf2_ros
 import tf2_kdl # noqa F401
 import tf2_py # noqa F401
 import tf2_geometry_msgs # noqa F401
-import numpy as np
 
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion

@@ -45,12 +45,13 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_generator',
            executable='direct_planner',
+           # prefix=f"python3 -m cProfile -o log/profile_tg_{robot['name']}.profile",
            namespace=robot['name'],
            parameters=[{
             'use_sim_time': use_sim_time,
             'vehicle_model': 1,
             'turn_radius': 0.2,
-            'step_size': 0.06
+            'step_size': 0.1
             }],
            output='screen',
         ))
@@ -62,8 +63,8 @@ def controller_spawning(context, *args, **kwargs):
               {
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
-                  "w1": 0.5,
-                  "w2": 0.5,
+                  "w1": 1.0,
+                  "w2": 1.0,
                   "fail_radius": 0.3
               }
            ],
