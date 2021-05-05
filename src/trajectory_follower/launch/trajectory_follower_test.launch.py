@@ -51,7 +51,7 @@ def controller_spawning(context, *args, **kwargs):
             'use_sim_time': use_sim_time,
             'vehicle_model': 1,
             'turn_radius': 0.2,
-            'step_size': 0.1
+            'step_size': 0.06
             }],
            output='screen',
         ))
