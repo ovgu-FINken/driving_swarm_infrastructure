@@ -2,24 +2,16 @@ repositories:
   turtlebot3/turtlebot3:
     type: git
     url: https://github.com/ROBOTIS-GIT/turtlebot3.git
-    version: ros2
+    version: 2.1.0
   turtlebot3/turtlebot3_msgs:
     type: git
     url: https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
-    version: ros2
+    version: 2.2.1
   turtlebot3/turtlebot3_simulations:
     type: git
     url: https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
-    version: ros2
-  utils/DynamixelSDK:
-    type: git
-    url: https://github.com/ROBOTIS-GIT/DynamixelSDK.git
-    version: ros2
-  utils/hls_lfcd_lds_driver:
-    type: git
-    url: https://github.com/ROBOTIS-GIT/hls_lfcd_lds_driver.git
-    version: ros2
+    version: ff1d521a20c67b516b40361463285872ba14f3dd
   geometry2:
     type: git
     url:  https://github.com/bastinat0r/geometry2.git
-    version: ros2
+    version: tf2_geometry_msgs_included
