@@ -70,16 +70,16 @@ table_column_config = [
         'obstacle_dist',
         lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges), #
     ),
-    data_aggregation_helper.TableColumn(
-        'measurement/inter_robot_dist',
-        'inter_robot_dist',
-        lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].data), #
-    ),
-    data_aggregation_helper.TableColumn(
-        'measurement/n_neighbors',
-        'n_neighbors',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data #
-    ),
+    # data_aggregation_helper.TableColumn(
+    #     'measurement/inter_robot_dist',
+    #     'inter_robot_dist',
+    #     lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].data), #
+    # ),
+    # data_aggregation_helper.TableColumn(
+    #     'measurement/n_neighbors',
+    #     'n_neighbors',
+    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data #
+    # ),
     data_aggregation_helper.TableColumn(
         '/target',
         'target_x',
@@ -90,11 +90,11 @@ table_column_config = [
         'target_y',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].y #
     ),
-    data_aggregation_helper.TableColumn(
-        'measurement/tf_error',
-        'tf_error',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data  #
-    ),
+    # data_aggregation_helper.TableColumn(
+    #     'measurement/tf_error',
+    #     'tf_error',
+    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data  #
+    # ),
     data_aggregation_helper.TableColumn(
         'visualization/forces',
         'obstacle_force',
@@ -140,11 +140,11 @@ table_column_config = [
                 )['data'].points[1]
             ),
     ), 
-    data_aggregation_helper.TableColumn(
-        'status',
-        'robot_status',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
-    ),
+    # data_aggregation_helper.TableColumn(
+    #     'status',
+    #     'robot_status',
+    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    # ),
     data_aggregation_helper.TableColumn(
         '/command',
         'cmd_status',
