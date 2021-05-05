@@ -1,4 +1,4 @@
-- name: "robot254"
+- name: "robot204"
   x_pose: 0.15
   y_pose: 1.05
   z_pose: 0.0
@@ -16,7 +16,7 @@
     x : [2.7, 1.0,  1.0]
     y : [0.1, -0.1, 0.3]
     theta: [0.0, 1.5, -2.36]
-- name: "robot210"
+- name: "robot254"
   x_pose: 0.5
   y_pose: 0.8
   z_pose: 0.0
