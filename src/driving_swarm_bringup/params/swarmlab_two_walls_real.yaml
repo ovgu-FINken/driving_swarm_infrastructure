@@ -1,4 +1,4 @@
-- name: "robot204"
+- name: "robot201"
   x_pose: 0.15
   y_pose: 1.05
   z_pose: 0.0
@@ -7,7 +7,7 @@
     x : [0.1, 0.4, 3.4, 3.35,  0.3]
     y : [0.3, 1.0, 1.0, -1.2, -1.15]
     theta: [0, 0 ,-1.5, -1.5, 3.0]
-- name: "robot245"
+- name: "robot204"
   x_pose: 0.1
   y_pose: 0.75
   z_pose: 0.0
@@ -16,23 +16,23 @@
     x : [2.7, 1.0,  1.0]
     y : [0.1, -0.1, 0.3]
     theta: [0.0, 1.5, -2.36]
-- name: "robot254"
+- name: "robot210"
   x_pose: 0.5
   y_pose: 0.8
   z_pose: 0.0
   yaw_pose: -1.5
-- name: "robot201"
+- name: "robot220"
   x_pose: 0.14
   y_pose: -1.2
   z_pose: 0.0
   yaw_pose: 0.5
-- name: "robot220"
+- name: "robot232"
   x_pose: 1.15
   y_pose: 1.05
   z_pose: 0.0
   yaw_pose: 0.0
-- name: "robot247"
-  x_pose: 0.56
+- name: "robot245"
+  x_pose: 0.5
   y_pose: 0.0
   z_pose: 0.0
   yaw_pose: -1.5
