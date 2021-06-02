@@ -1,0 +1,8 @@
+---
+# main ansible for tb project
+
+- name: config
+  hosts: turtlebots
+  become: true
+  roles:
+          - config
