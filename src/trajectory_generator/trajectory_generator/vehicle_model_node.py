@@ -21,7 +21,7 @@ class Vehicle(IntEnum):
     REEDS_SHEPP_ADAPTIVE = 7
 
 
-def short_angle_range(phi1, phi2, r_step=0.2):
+def short_angle_range(phi1: float, phi2: float, r_step:float=0.2):
     if np.abs(phi1 - (2*np.pi + phi2)) < np.abs(phi1 - phi2):
         phi2 = 2*np.pi + phi2
     if np.abs(phi1 - (-2*np.pi + phi2)) < np.abs(phi1 - phi2):
@@ -29,6 +29,8 @@ def short_angle_range(phi1, phi2, r_step=0.2):
         
     if phi1 < phi2:
         return np.arange(phi1, phi2, r_step)
+    elif phi1 == phi2:
+        return [phi1]
     return np.arange(phi1, phi2, -r_step)
     
 
@@ -60,8 +62,13 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
             dist = np.linalg.norm(np.array(wp1[0:2]) - np.array(wp2[0:2]))
             x = wp1[0]
             y = wp1[1]
-            phi = wp1[2] % (2 * np.pi)
-            if dist > s:
+            # if no orientation is set, use the last orientation
+            # -- first orientation must be set, otherwise this will not work!
+            if np.isnan(wp1[2]):
+                phi = path[-1][2]
+            else:
+                phi = wp1[2] % (2 * np.pi)
+            if dist > s or np.isnan(wp2[2]):
                 dx = wp2[0] - wp1[0]
                 dy = wp2[1] - wp1[1]
                 # as per https://docs.scipy.org/doc/numpy/reference/generated/numpy.arctan2.html
@@ -84,7 +91,7 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
                 y += dy
                 path.append( (x, y, phi_goal) )
                 
-            if model == Vehicle.RTR:
+            if model == Vehicle.RTR and not np.isnan(wp2[2]):
                 # rotate (2)
                 x = wp2[0]
                 y = wp2[1]
@@ -93,9 +100,6 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
                 for a in short_angle_range(phi, phi_goal, r_step=r_step):
                     path.append( (x, y, a) )
                     
-#                if len(path) < 3:
-#                    print("OH NO")
-#                    print(f"{wp1}, {wp2}, {path}, {phi}")
         elif model==Vehicle.REEDS_SHEPP or model==Vehicle.REEDS_SHEPP_ADAPTIVE:
             part = []
             r_temp = r
@@ -145,7 +149,7 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
     return path
 
 class TrajectoryGenerator:
-    def __init__(self, model=Vehicle.DUBINS_ADAPTIVE, r=1, step=0.1):
+    def __init__(self, model=Vehicle.DUBINS_ADAPTIVE, r=1, step=0.1, r_step=0.1):
         self.model = model
         self.r = r
         self.step = step
