@@ -30,7 +30,7 @@ def generate_launch_description():
 
     # Start Gazebo with plugin providing the robot spawing service
     start_gazebo_cmd = ExecuteProcess(
-        cmd=[simulator, '--verbose', '-s', 'libgazebo_ros_factory.so', '-s', 'libgazebo_ros_init.so' , world],
+        cmd=[simulator, '--verbose', '-s', 'libgazebo_ros_factory.so', '-s', 'libgazebo_ros_init.so', world],
         output='screen')
 
     # Create the launch description and populate

@@ -22,7 +22,7 @@ from trajectory_generator.utils import yaw_from_orientation, yaw_to_orientation
 from driving_swarm_nav_graph.utils import *
 
 
-class NavGraphPlanner(NavGraphNode):
+class NavGraphLocalPlanner(NavGraphNode):
     def __init__(self):
         super().__init__()
         self.get_logger().info("Starting")
@@ -68,11 +68,11 @@ class NavGraphPlanner(NavGraphNode):
         self.create_subscription(
             String, "/command", self.command_cb, qos_profile
         )
-        self.follow_action_client = self.create_client(
+        self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
         self.create_service(Empty, "nav/replan", self.replan_callback)
-        self.follow_action_client.wait_for_service()
+        self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         f = self.tfBuffer.wait_for_transform_async(
             self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
@@ -110,7 +110,7 @@ class NavGraphPlanner(NavGraphNode):
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
-        self.follow_action_client.call_async(request)
+        self.follow_client.call_async(request)
 
 
     def goal_cb(self, goal_msg):
@@ -169,7 +169,7 @@ class NavGraphPlanner(NavGraphNode):
 
 def main():
     rclpy.init()
-    node = NavGraphPlanner()
+    node = NavGraphLocalPlanner()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
