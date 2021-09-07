@@ -19,6 +19,22 @@ def controller_spawning(context, *args, **kwargs):
     use_sim_time = TextSubstitution(text='true')
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
+        
+    controllers.append(Node(
+       package='driving_swarm_nav_graph',
+       executable='global_graph_planner',
+       parameters=[{
+        'use_sim_time': use_sim_time,
+        'robot_names': [robot['name'] for robot in robots[:int(n_robots)]],
+        'tiling': LaunchConfiguration('tiling'),
+        # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
+        'graph_file': os.path.join(
+           get_package_share_directory('driving_swarm_bringup'),
+           'maps',
+           'icra2021_map.yaml'),
+        }],
+       output='screen',
+    ))
     
     for robot in robots[:int(n_robots)]:
         controllers.append(Node(
@@ -51,14 +67,14 @@ def controller_spawning(context, *args, **kwargs):
             'use_sim_time': use_sim_time,
             'vehicle_model': 3,
             'turn_radius': 0.2,
-            'turn_speed': 0.2,
+            'turn_speed': 0.5,
             'step_size': 0.1,
             'tiling': LaunchConfiguration('tiling'),
             # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
             'graph_file': os.path.join(
                get_package_share_directory('driving_swarm_bringup'),
                'maps',
-               'swarmlab_two_walls.yaml'),
+               'icra2021_map.yaml'),
             }],
            output='screen',
         ))
@@ -84,9 +100,9 @@ def controller_spawning(context, *args, **kwargs):
 def generate_launch_description():
     args = {
          'behaviour': 'false',
-         'world': 'swarmlab_two_walls.world',
-         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'swarmlab_two_walls.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_sim.yaml'),
+         'world': 'icra2021_world.world',
+         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2021_map.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }

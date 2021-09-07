@@ -20,18 +20,22 @@ class Vehicle(IntEnum):
     DUBINS_ADAPTIVE = 6
     REEDS_SHEPP_ADAPTIVE = 7
 
+def normalize_angle(phi: float):
+    return (phi + np.pi) % (2*np.pi) - np.pi
+
+
+def angle_dist(phi1: float, phi2: float):
+    d = normalize_angle(phi1 - phi2)
+    if np.abs(d) < np.pi:
+        return d
+    return normalize_angle(2*np.pi - d)
+
 
 def short_angle_range(phi1: float, phi2: float, r_step:float=0.2):
-    if np.abs(phi1 - (2*np.pi + phi2)) < np.abs(phi1 - phi2):
-        phi2 = 2*np.pi + phi2
-    if np.abs(phi1 - (-2*np.pi + phi2)) < np.abs(phi1 - phi2):
-        phi2 = -2*np.pi + phi2
-        
-    if phi1 < phi2:
-        return np.arange(phi1, phi2, r_step)
-    elif phi1 == phi2:
+    phi2 = phi1 + angle_dist(phi2, phi1)
+    if phi1 == phi2:
         return [phi1]
-    return np.arange(phi1, phi2, -r_step)
+    return np.arange(phi1, phi2, np.sign(angle_dist(phi2, phi1)) * r_step)
     
 
 def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS, FIX_ANGLES=False, spline_degree=3):
@@ -156,7 +160,10 @@ class TrajectoryGenerator:
         self.costmap = None
 
     def tuples_to_path(self, waypoints_tuples):
-        return waypoints_to_path(waypoints_tuples, r=self.r, model=self.model, step=self.step)
+        tuples = waypoints_to_path(waypoints_tuples, r=self.r, model=self.model, step=self.step)
+        if np.isnan(tuples[-1][2]):
+            return tuples[:-1]
+        return tuples
 
     def convert_map_data_to_image(self, map_data):
         image = np.array(map_data.data, dtype=int)

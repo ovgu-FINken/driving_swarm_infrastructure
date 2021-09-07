@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'nav_graph = driving_swarm_nav_graph.nav_graph:main',
             'nav_graph_planner = driving_swarm_nav_graph.nav_graph_planner:main',
+            'global_graph_planner = driving_swarm_nav_graph.global_graph_planner:main',
         ],
     },
 )

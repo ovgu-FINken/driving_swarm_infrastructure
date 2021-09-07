@@ -25,20 +25,22 @@ class NavGraphNode(Node):
         if map_file.endswith(".yaml"):
             tiling = self.get_parameter('tiling').get_parameter_value().string_value
             if tiling == 'hex':
-                points = hexagon_tiling(0.7, **self.wa)
+                points = hexagon_tiling(0.8, **self.wa)
             elif tiling == 'square':
                 points = square_tiling(0.4, **self.wa)
             elif tiling == 'random':
                 points = random_tiling(60, **self.wa)
             else:
                 self.get_logger().warn('no tiling specified, using hex')
-                points = hexagon_tiling(0.75, **self.wa)
+                points = hexagon_tiling(0.8, **self.wa)
             _, occupied_space = read_obstacles(map_file)
             assert(occupied_space is not None)
-            self.g = create_graph(points, offset=0.12,
+            self.g = create_graph(points, offset=0.18,
                                         occupied_space=occupied_space, **self.wa)
         elif map_file.endswith(".xml.gz") or map_file.endswith(".xml"):
             self.g = load_graph(map_file)
+        self.g.set_vertex_filter(self.g.vp['traversable'])
+        self.g.set_edge_filter(self.g.ep['traversable'])
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
 
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)

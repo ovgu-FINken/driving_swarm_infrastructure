@@ -14,7 +14,7 @@ def generate_launch_description():
             parameters=[
                 {
                     'yaml_filename':
-                    '/home/turtle-student/maps/two_gaps/map.yaml'
+                    '/home/basti/ros/driving_swarm_infrastructure/driving_swarm_bringup/maps/icra2021_map.yaml'
                 }
             ],
             remappings=[

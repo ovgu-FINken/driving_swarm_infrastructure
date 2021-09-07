@@ -58,11 +58,9 @@ def create_graph(generator_points: np.array,
         outer = poly.intersection(limits)
 
         # in case polygon is split by obstacles -- use largest polygon as shape
-        if outer.geometryType() == 'MultiPolygon':
-            outer = sorted(outer, key=lambda p: p.area, reverse=True)[0]
+        outer = select_largest_poly(outer)
         inner = outer.buffer(-offset)
-        if inner.geometryType() == 'MultiPolygon':
-            inner = sorted(inner, key=lambda p: p.area, reverse=True)[0]
+        inner = select_largest_poly(inner)
         nodes.append(NavNode(center=Point(x, y), outer=outer, inner=inner, name=f'N{i}'))
 
     edges = []
@@ -144,7 +142,7 @@ def read_map(info_file):
     return img, info
 
 def convert_coordinates(poly, resolution:float, oX:float, oY:float):
-    poly = poly * resolution + np.array([oX, oY+resolution])
+    poly = poly * resolution + np.array([oX+0.025, oY+1.45])
     poly[:,1] *= -1
     return Polygon(poly)
 
@@ -158,25 +156,26 @@ def read_obstacles(file_name):
     # classify different levels of objects
     # holes need to be filled by opposite value
     while unclassified:
-        for poly in unclassified:
+        for i, poly in enumerate(unclassified):
             if np.max(img[measure.grid_points_in_poly(img.shape, poly)]) <= thresh:
                 img[measure.grid_points_in_poly(img.shape, poly)] = 200
-                unclassified.remove(poly)
+                del unclassified[i]
                 p = convert_coordinates(poly, info['resolution'], info['origin'][0], info['origin'][1])
                 for f in free:
                     if p.contains(f):
                         p = p.difference(f)
                 obstacles.append(p)
-                continue
+                break
 
             if np.min(img[measure.grid_points_in_poly(img.shape, poly)]) >= thresh:
                 img[measure.grid_points_in_poly(img.shape, poly)] = 30
-                unclassified.remove(poly)
+                del unclassified[i]
                 p = convert_coordinates(poly, info['resolution'], info['origin'][0], info['origin'][1])
                 for o in obstacles:
                     if p.contains(o):
                         p = p.difference(o)
                 free.append(p)
+                break
 
     return shapely.ops.unary_union(free), shapely.ops.unary_union(obstacles)
 
@@ -319,7 +318,7 @@ class SpaceTimeVisitor(AStarVisitor):
         i2 = self.g.vp['index'][v2]
 
         if i1 == i2:
-            e = self.g.add_edge(v, vout)
+            e = self.g.add_edge(v1, v2)
             self.g.ep['dist'][e] = .1
             return e
 
@@ -375,10 +374,14 @@ def check_node_constraints(g, v, nc):
 
 
 def pred_to_list(g, pred, start, goal):
+    assert (goal is not None)
     p = goal
     l = [p]
     g.vp['visited'] = g.new_vertex_property("bool")
     while p != start:
+        if p is None:
+            print(l)
+            return l
         if pred[p] == p:
             break
         p = pred[p]
@@ -388,7 +391,7 @@ def pred_to_list(g, pred, start, goal):
 
 def add_edge_constraints(edge_constraints, path):
     """append the constraints resulting from particular path to the list of existing constraints"""
-    ec = {t: [e] for t, e in enumerate(zip(path[:-1], path[1:]))}
+    ec = {t: [e, tuple(reversed(e))] for t, e in enumerate(zip(path[:-1], path[1:]))}
     if edge_constraints is None:
         return ec
     for k, v in ec.items():
@@ -399,12 +402,15 @@ def add_edge_constraints(edge_constraints, path):
         
     return edge_constraints
 
-def add_node_constraints(node_constraints, path):
+def add_node_constraints(node_constraints, path: list, limit=0) -> dict:
     """append the constraints resulting from particular path to the list of existing constraints"""
-    ec = {t: [n] for t, n in enumerate(path)}
+    nc = {t: [n] for t, n in enumerate(path)}
+    # if there is a limit on path length, we want to block the node where the robot is sitting after the goal is finished
+    if len(path) < limit:
+        nc.update( {t: [path[-1]] for t in range(len(path), limit)} )
     if node_constraints is None:
-        return ec
-    for k, v in ec.items():
+        return nc
+    for k, v in nc.items():
         if k in node_constraints:
             node_constraints[k] += v
         else:
@@ -417,11 +423,13 @@ def prioritized_plans(g, start_goal, edge_constraints=None, node_constraints=Non
     first agent is planned first, constraints are created for the remaining agents
     start_goal -- [(start, goal) for agent in agents]"""
     # plan first path with A-Star
+    # g.set_edge_filter(g.ep['traversable'])
+    # g.set_vertex_filter(g.vp['traversable'])
     paths = []
     for sn, gn in start_goal:
         paths.append(find_constrained_path(g, sn, gn, edge_constraints=edge_constraints, node_constraints=node_constraints, limit=limit))
         edge_constraints = add_edge_constraints(edge_constraints, paths[-1])
-        node_constraints = add_node_constraints(node_constraints, paths[-1])
+        node_constraints = add_node_constraints(node_constraints, paths[-1], limit=limit)
     
     return paths
 
@@ -455,11 +463,17 @@ def find_path_astar(g, sn, gn):
     )
     return pred_to_list(g, pred, sn, gn)
 
+def select_largest_poly(poly):
+    if poly.geometryType() == 'MultiPolygon':
+        return sorted(poly, key=lambda p: p.area, reverse=True)[0]
+    return poly
 
-def poly_from_path(g, path, eps=0.1):
+def poly_from_path(g, path, eps=0.05):
     poly = [g.vp['geometry'][p].inner.buffer(eps) for p in path]
     poly += [g.ep['geometry'][g.edge(*e)].borderPoly.buffer(eps) for e in zip(path[:-1], path[1:])]
-    return shapely.ops.unary_union(poly).buffer(-eps).simplify(eps)
+    poly = shapely.ops.unary_union(poly).buffer(-eps).simplify(eps)
+    return select_largest_poly(poly)
+        
 
 
 def path_from_positions(g, start, goal):
@@ -524,6 +538,7 @@ def shorten_recursive(g, poly, coords, eps=0.01):
         return [coords[0]] + shorten_recursive(g, poly, coords[1:], eps=eps)
     
     straight_segment = compute_straight_path(g, poly, coords[1], coords[-1])
+    #straight_segment = coords[1:]
     return [coords[0]] + shorten_recursive(g, poly, straight_segment, eps=eps)
 
 

@@ -15,7 +15,7 @@ import traceback
 from geometry_msgs.msg import PoseStamped, Pose2D, Quaternion
 from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
 from trajectory_generator.utils import yaw_from_orientation, yaw_to_orientation
@@ -29,6 +29,8 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.own_frame = "base_link"
         self.reference_frame = "map"
         self.goal = None
+        self.plan = None
+
         self.started = False
         self.current_trajectory = None
 
@@ -78,10 +80,37 @@ class NavGraphLocalPlanner(NavGraphNode):
             self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
         )
         self.get_logger().info("waiting for transform map -> baselink")
+        self.cell_publisher = self.create_publisher(Int32, "nav/cell", 1)
         rclpy.spin_until_future_complete(self, f)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        self.create_subscription(String, "nav/plan", self.plan_cb, 1)
+        self.create_timer(1.0, self.timer_cb)
     
     
+    def timer_cb(self):
+        try:
+            trans = self.tfBuffer.lookup_transform(
+                self.reference_frame,
+                self.own_frame,
+                rclpy.time.Time().to_msg(),
+            )
+            frame = tf2_kdl.transform_to_kdl(trans)
+            pose = (frame.p.x(), frame.p.y(), frame.M.GetRPY()[2])
+
+        except Exception as e:
+            self.get_logger().warn(f"Exception in tf transformations\n{e}")
+            return
+        
+        node = find_nearest_node(self.g, (pose[0], pose[1]))
+        self.cell_publisher.publish(Int32(data=int(node)))
+    
+    def plan_cb(self, msg):
+        plan = yaml.safe_load(msg.data)
+        if self.plan != plan:
+            self.plan = plan
+            self.get_logger().info(f'plan:{self.plan}')
+            self.go_to_goal() 
+
     def command_cb(self, msg):
         if msg.data == "go":
             self.get_logger().info("going")
@@ -112,7 +141,6 @@ class NavGraphLocalPlanner(NavGraphNode):
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
         self.follow_client.call_async(request)
 
-
     def goal_cb(self, goal_msg):
         goal = (
             goal_msg.pose.position.x,
@@ -128,7 +156,7 @@ class NavGraphLocalPlanner(NavGraphNode):
                 self.go_to_goal()
         
     def go_to_goal(self):
-        if self.goal is None:
+        if self.plan is None:
             return
         try:
             trans = self.tfBuffer.lookup_transform(
@@ -142,7 +170,8 @@ class NavGraphLocalPlanner(NavGraphNode):
         except Exception as e:
             self.get_logger().warn(f"Exception in tf transformations\n{e}")
             return
-        waypoints = self.gen_rtr_path(start, self.goal)
+        waypoints = self.gen_rtr_path(start)
+        self.get_logger().info(f'wps: {waypoints}')
         trajectory = self.vm.tuples_to_path(waypoints)
         self.send_path(trajectory)
     
@@ -152,19 +181,16 @@ class NavGraphLocalPlanner(NavGraphNode):
             self.get_logger().info('got replanning request, which we will do')
         return res
     
-    def gen_rtr_path(self, start, goal):
-        self.get_logger().info(f'computing path from {start} to {goal}')
-        try:
-            _, poly = path_poly(self.g, start[:2], goal[:2], eps=0.02)
-            path = waypoints_through_poly(self.g, poly, start[:2], goal[:2], eps=0.03)
-            pose_path = [[coords[0], coords[1], np.nan, 1.0] for coords in path.coords]
-            pose_path = [start] + pose_path + [goal]
-            return pose_path
-        except Exception as e:
-            self.get_logger().warn(f'Exception {e}')
-            self.get_logger().warn(traceback.format_stack())
-            self.get_logger().info(f'start: {start}, goal: {goal}')
-        return None
+    def gen_rtr_path(self, start):
+        if start is None:
+            return
+        poly = poly_from_path(self.g, self.plan) 
+        # set goal from final node in path
+        goal = self.g.vp['geometry'][self.plan[-1]].inner.centroid.coords[0]
+        path = waypoints_through_poly(self.g, poly, start[:2], goal, eps=0.01)
+        pose_path = [[coords[0], coords[1], np.nan, 1.0] for coords in path.coords]
+        pose_path = [start] + pose_path + [(*goal, np.nan)]
+        return pose_path
 
 
 def main():
