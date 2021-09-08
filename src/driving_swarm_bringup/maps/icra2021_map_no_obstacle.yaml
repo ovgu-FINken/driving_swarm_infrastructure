@@ -1,4 +1,4 @@
-image: icra2021_map.pgm
+image: icra2021_map_no_obstacle.pgm
 mode: trinary
 resolution: 0.05
 origin: [-3, -3.39, 0]
