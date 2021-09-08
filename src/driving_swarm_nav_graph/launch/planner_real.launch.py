@@ -102,7 +102,7 @@ def generate_launch_description():
          'behaviour': 'false',
          #'world': 'icra2021_world.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2021_map.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021_real.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
