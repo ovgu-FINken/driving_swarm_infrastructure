@@ -147,8 +147,7 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
         else:
             print("NO VEHICLE MODEL!")
     
-        
-    if waypoints[-1] != path[-1]:
+    if waypoints[-1] != path[-1] and not np.isnan(waypoints[-1][2]):
         path.append(waypoints[-1][0:3])
     return path
 

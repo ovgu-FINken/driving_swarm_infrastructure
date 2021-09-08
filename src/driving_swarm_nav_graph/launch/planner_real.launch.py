@@ -16,7 +16,7 @@ def controller_spawning(context, *args, **kwargs):
 
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
-    use_sim_time = TextSubstitution(text='true')
+    use_sim_time = TextSubstitution(text='false')
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
         
@@ -66,8 +66,8 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
             'use_sim_time': use_sim_time,
             'vehicle_model': 3,
-            'turn_radius': 0.2,
-            'turn_speed': 0.5,
+            'turn_radius': 0.05,
+            'turn_speed': 1.0,
             'step_size': 0.1,
             'tiling': LaunchConfiguration('tiling'),
             # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
@@ -100,14 +100,14 @@ def controller_spawning(context, *args, **kwargs):
 def generate_launch_description():
     args = {
          'behaviour': 'false',
-         'world': 'icra2021_world.world',
+         #'world': 'icra2021_world.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2021_map.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021_sim.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
     multi_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_real_robot_fix_pos.launch.py')),
         launch_arguments=args.items())
 
     declare_tiling_cmd = DeclareLaunchArgument(

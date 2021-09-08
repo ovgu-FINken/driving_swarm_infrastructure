@@ -28,7 +28,6 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.get_logger().info("Starting")
         self.own_frame = "base_link"
         self.reference_frame = "map"
-        self.goal = None
         self.plan = None
 
         self.started = False
@@ -82,7 +81,6 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.get_logger().info("waiting for transform map -> baselink")
         self.cell_publisher = self.create_publisher(Int32, "nav/cell", 1)
         rclpy.spin_until_future_complete(self, f)
-        self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
         self.create_subscription(String, "nav/plan", self.plan_cb, 1)
         self.create_timer(1.0, self.timer_cb)
     
@@ -107,16 +105,14 @@ class NavGraphLocalPlanner(NavGraphNode):
     def plan_cb(self, msg):
         plan = yaml.safe_load(msg.data)
         if self.plan != plan:
-            self.plan = plan
             self.get_logger().info(f'plan:{self.plan}')
-            self.go_to_goal() 
+            self.go_to_goal(plan) 
 
     def command_cb(self, msg):
         if msg.data == "go":
             self.get_logger().info("going")
             self.started = True
             self.status_pub.publish(String(data="running"))
-            self.go_to_goal()
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space
@@ -141,23 +137,15 @@ class NavGraphLocalPlanner(NavGraphNode):
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
         self.follow_client.call_async(request)
 
-    def goal_cb(self, goal_msg):
-        goal = (
-            goal_msg.pose.position.x,
-            goal_msg.pose.position.y,
-            yaw_from_orientation(goal_msg.pose.orientation)
-        )
-        if self.goal is None and not self.started:
-            self.status_pub.publish(String(data="ready"))
-            
-        if goal != self.goal:
-            self.goal = goal
-            if self.started:
-                self.go_to_goal()
+    def go_to_goal(self, plan):
+        if self.plan is not None:
+            if plan[-1] == self.plan[-1]:
+                self.plan == plan
+                return
+        self.plan = plan
+        self.execute_plan()
         
-    def go_to_goal(self):
-        if self.plan is None:
-            return
+    def execute_plan(self):
         try:
             trans = self.tfBuffer.lookup_transform(
                 self.reference_frame,
@@ -177,8 +165,8 @@ class NavGraphLocalPlanner(NavGraphNode):
     
     def replan_callback(self, _, res):
         if self.started:
-            self.go_to_goal()
             self.get_logger().info('got replanning request, which we will do')
+        self.execute_plan()
         return res
     
     def gen_rtr_path(self, start):
