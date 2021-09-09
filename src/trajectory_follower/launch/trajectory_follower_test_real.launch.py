@@ -100,12 +100,12 @@ def generate_launch_description():
             "map": os.path.join(
                 get_package_share_directory("driving_swarm_bringup"),
                 "maps",
-                "swarmlab_two_walls.yaml",
+                "icra2021_map.yaml",
             ),
             "robots_file": os.path.join(
                 get_package_share_directory("driving_swarm_bringup"),
                 "params",
-                "swarmlab_two_walls_real.yaml",
+                "icra2021_demo.yaml",
             ),
             "rosbag_topics_file": os.path.join(
                 get_package_share_directory("trajectory_follower"),
