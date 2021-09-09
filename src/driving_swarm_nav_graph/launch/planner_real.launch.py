@@ -31,7 +31,7 @@ def controller_spawning(context, *args, **kwargs):
         'graph_file': os.path.join(
            get_package_share_directory('driving_swarm_bringup'),
            'maps',
-           'icra2021_map.yaml'),
+           'icra2021_map_no_obstacle.yaml'),
         }],
        output='screen',
     ))
