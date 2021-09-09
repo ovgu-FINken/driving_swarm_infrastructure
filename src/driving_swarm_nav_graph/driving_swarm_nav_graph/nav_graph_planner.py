@@ -159,6 +159,7 @@ class NavGraphLocalPlanner(NavGraphNode):
             self.get_logger().warn(f"Exception in tf transformations\n{e}")
             return
         waypoints = self.gen_rtr_path(start)
+
         self.get_logger().info(f'wps: {waypoints}')
         trajectory = self.vm.tuples_to_path(waypoints)
         self.send_path(trajectory)
