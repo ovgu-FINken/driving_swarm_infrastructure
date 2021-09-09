@@ -22,9 +22,9 @@
   z_pose: 0.0
   yaw_pose: 1.57
   goals:
-    x : [2.2, ]
-    y : []
-    theta: [0, 0 ,-1.5, -1.5, 3.0]
+    x : [2.2]
+    y : [2]
+    theta: [0]
 - name: "robotD"
   x_pose: 2.2
   y_pose: -2.1
