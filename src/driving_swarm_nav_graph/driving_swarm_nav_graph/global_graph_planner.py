@@ -84,7 +84,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
 
         #self.get_logger().info(f'{list(sg)}')
         # make plan
-        plans = prioritized_plans(self.g, sg, limit=30)
+        plans = prioritized_plans(self.g, sg, limit=50)
         self.get_logger().info(f'{plans}')
         plans = {k: v for k, v in zip(self.node_occupancies.keys(), plans)}
         return plans

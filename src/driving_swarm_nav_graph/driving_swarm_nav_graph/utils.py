@@ -374,7 +374,9 @@ def check_node_constraints(g, v, nc):
 
 
 def pred_to_list(g, pred, start, goal):
-    assert (goal is not None)
+    if goal is None:
+        print("goal was NONE, this means no path was found")
+        return [start]
     p = goal
     l = [p]
     g.vp['visited'] = g.new_vertex_property("bool")
