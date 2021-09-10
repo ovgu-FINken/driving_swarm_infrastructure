@@ -37,21 +37,16 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.declare_parameter("step_size")
         self.declare_parameter("turn_radius")
         self.declare_parameter("turn_speed")
+        step = self.get_parameter("step_size").get_parameter_value().double_value
+        if step == 0.0:
+            self.get_logger().warn(f'step size equal to zero!!!! this will make the node fail')
         self.vm = TrajectoryGenerator(
             model=Vehicle(
-                self.get_parameter("vehicle_model")
-                .get_parameter_value()
-                .integer_value
+                self.get_parameter("vehicle_model").get_parameter_value().integer_value
             ),
-            step=self.get_parameter("step_size")
-            .get_parameter_value()
-            .double_value,
-            r=self.get_parameter("turn_radius")
-            .get_parameter_value()
-            .double_value,
-            r_step=self.get_parameter("turn_speed")
-            .get_parameter_value()
-            .double_value,
+            step=step,
+            r=self.get_parameter("turn_radius").get_parameter_value().double_value,
+            r_step=self.get_parameter("turn_speed").get_parameter_value().double_value,
         )
 
         self.tfBuffer = tf2_ros.Buffer()
@@ -165,6 +160,7 @@ class NavGraphLocalPlanner(NavGraphNode):
         waypoints = self.gen_rtr_path(start)
 
         self.get_logger().info(f'wps: {waypoints}')
+        self.get_logger().info(f'vm: step == {self.vm.step}')
         trajectory = self.vm.tuples_to_path(waypoints)
         self.send_path(trajectory)
     

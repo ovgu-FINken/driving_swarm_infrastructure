@@ -89,6 +89,8 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
                     path.append( (x, y, a) )
             
             # translate
+
+            print(f's: {s}, dist: {dist}, step: {step}')
             steps = dist / s
             if steps < 1:
                 steps = 1.0
