@@ -65,7 +65,8 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
             # rotate (1)
             dist = np.linalg.norm(np.array(wp1[0:2]) - np.array(wp2[0:2]))
             if dist < step:
-                path.append(wp1)
+                if not np.isnan(wp1[2]):
+                    path.append(wp1)
                 continue
             x = wp1[0]
             y = wp1[1]
