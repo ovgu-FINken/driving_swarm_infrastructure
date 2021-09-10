@@ -2,6 +2,7 @@
 - '/clock'
 - '/tf'
 - '/command'
+- '/plan'
 # for namespaced topics, WITHOUT leading slash
 - 'tf'
 - 'status'
@@ -10,3 +11,5 @@
 - 'scan'
 - 'nav/desired'
 - 'scan_delay'
+- 'nav/cell'
+- 'nav/plan'

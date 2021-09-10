@@ -81,6 +81,7 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.get_logger().info("waiting for transform map -> baselink")
         self.cell_publisher = self.create_publisher(Int32, "nav/cell", 1)
         rclpy.spin_until_future_complete(self, f)
+        self.status_pub.publish(String(data="ready"))
         self.create_subscription(String, "nav/plan", self.plan_cb, 1)
         self.create_timer(1.0, self.timer_cb)
     
@@ -109,7 +110,7 @@ class NavGraphLocalPlanner(NavGraphNode):
             self.go_to_goal(plan) 
 
     def command_cb(self, msg):
-        if msg.data == "go":
+        if msg.data == "go" and self.plan is not None:
             self.get_logger().info("going")
             self.started = True
             self.status_pub.publish(String(data="running"))

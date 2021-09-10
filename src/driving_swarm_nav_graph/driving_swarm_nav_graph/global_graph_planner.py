@@ -38,6 +38,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
         self.node_occupancies = {}
         self.robot_publishers = {}
         self.get_logger().info(str(self.robots))
+        self.plan_publisher = self.create_publisher(String, f'/plan', qos_profile)
         for robot in self.robots:
             self.create_subscription(Int32, f"/{robot}/nav/cell", partial(self.cell_cb,robot=robot), 10)
             self.node_occupancies[robot] = None
@@ -122,8 +123,10 @@ class NavGraphGlobalPlanner(NavGraphNode):
             # remove duplicates [1,1,1,2,1,3,3,1] -> [1,2,1,3,1]
             # https://stackoverflow.com/questions/5738901/removing-elements-that-have-consecutive-duplicates
             robot_plan = [x[0] for x in groupby(robot_plan)]
-            self.get_logger().info(f'sending plan to {robot}: {robot_plan}')
+            #self.get_logger().info(f'sending plan to {robot}: {robot_plan}')
             self.send_plan_to_robot(robot_plan, robot)
+        str_plan = String()
+        str_plan.data = yaml.dump({'plan': plans, 'constraints': nv})
         self.get_logger().info(f'plans: {plans}')
         self.get_logger().info(f'constraints: {nv}')
         
