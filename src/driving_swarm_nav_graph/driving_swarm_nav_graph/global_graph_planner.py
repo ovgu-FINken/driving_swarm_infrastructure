@@ -127,6 +127,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
             self.send_plan_to_robot(robot_plan, robot)
         str_plan = String()
         str_plan.data = yaml.dump({'plan': plans, 'constraints': nv})
+        self.plan_publisher.publish(str_plan)
         self.get_logger().info(f'plans: {plans}')
         self.get_logger().info(f'constraints: {nv}')
         
