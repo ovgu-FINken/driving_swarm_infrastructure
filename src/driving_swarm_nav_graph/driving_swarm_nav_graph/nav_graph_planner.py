@@ -105,15 +105,16 @@ class NavGraphLocalPlanner(NavGraphNode):
     
     def plan_cb(self, msg):
         plan = yaml.safe_load(msg.data)
+        if self.plan is None and self.started and plan:
+            self.status_pub.publish(String(data="running"))
         if self.plan != plan:
             self.get_logger().info(f'plan:{self.plan}')
             self.go_to_goal(plan) 
 
     def command_cb(self, msg):
-        if msg.data == "go" and self.plan is not None:
+        if msg.data == "go":
             self.get_logger().info("going")
             self.started = True
-            self.status_pub.publish(String(data="running"))
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space

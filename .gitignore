@@ -63,3 +63,4 @@ build-*/
 *.gch
 /.project
 .vscode
+rosbag**
