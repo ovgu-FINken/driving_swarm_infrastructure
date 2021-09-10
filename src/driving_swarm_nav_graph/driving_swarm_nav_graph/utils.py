@@ -539,7 +539,7 @@ def shorten_recursive(g, poly, coords, eps=0.01):
     if len(coords) < 4:
         return [coords[0]] + shorten_recursive(g, poly, coords[1:], eps=eps)
     
-    straight_segment = compute_straight_path(g, poly, coords[1], coords[-1]).simplify(eps)
+    straight_segment = compute_straight_path(g, poly, coords[1], coords[-1], eps=eps)
     #straight_segment = coords[1:]
     return [coords[0]] + shorten_recursive(g, poly, straight_segment, eps=eps)
 
@@ -597,7 +597,7 @@ def point_on_border(g, poly:Polygon, point:Point)->Point:
     return poe
 
 
-def compute_straight_path(g, poly, start, goal):
+def compute_straight_path(g, poly, start, goal, eps=None):
     line = LineString([start, goal])
     if line.length < 0.01 or line.within(poly):
         return [start, goal]
@@ -667,5 +667,6 @@ def compute_straight_path(g, poly, start, goal):
             if len(segment.coords) > 1:
                 coords += list(segment.coords)[1:]
         return coords
-
+    if eps:
+        line = line.simplify(eps)
     return list(line.coords)
