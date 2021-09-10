@@ -539,7 +539,7 @@ def shorten_recursive(g, poly, coords, eps=0.01):
     if len(coords) < 4:
         return [coords[0]] + shorten_recursive(g, poly, coords[1:], eps=eps)
     
-    straight_segment = compute_straight_path(g, poly, coords[1], coords[-1])
+    straight_segment = compute_straight_path(g, poly, coords[1], coords[-1]).simplify(eps)
     #straight_segment = coords[1:]
     return [coords[0]] + shorten_recursive(g, poly, straight_segment, eps=eps)
 

@@ -38,28 +38,6 @@ def controller_spawning(context, *args, **kwargs):
     
     for robot in robots[:int(n_robots)]:
         controllers.append(Node(
-           package='goal_provider',
-           executable='simple_goal',
-           namespace=robot['name'],
-           parameters=[{
-              'use_sim_time': use_sim_time,
-              'x': robot['goals']['x'],
-              'y': robot['goals']['y'],
-              'theta': robot['goals']['theta'],
-           }],
-           output='screen',
-        ))
-        controllers.append(Node(
-           package='system_status',
-           executable='scan_delay',
-           namespace=robot['name'],
-           parameters=[{
-              'use_sim_time': use_sim_time,
-           }],
-           output='screen',
-        ))
-
-        controllers.append(Node(
            package='driving_swarm_nav_graph',
            executable='nav_graph_planner',
            namespace=robot['name'],
