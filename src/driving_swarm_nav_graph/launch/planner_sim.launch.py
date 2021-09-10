@@ -28,10 +28,7 @@ def controller_spawning(context, *args, **kwargs):
         'robot_names': [robot['name'] for robot in robots[:int(n_robots)]],
         'tiling': LaunchConfiguration('tiling'),
         # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
-        'graph_file': os.path.join(
-           get_package_share_directory('driving_swarm_bringup'),
-           'maps',
-           'icra2021_map_no_obstacle.yaml'),
+        'graph_file': '/home/semai/random_graph.xml.gz',
         }],
        output='screen',
     ))
@@ -49,10 +46,7 @@ def controller_spawning(context, *args, **kwargs):
             'step_size': 0.1,
             'tiling': LaunchConfiguration('tiling'),
             # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
-            'graph_file': os.path.join(
-               get_package_share_directory('driving_swarm_bringup'),
-               'maps',
-               'icra2021_map_no_obstacle.yaml'),
+            'graph_file': '/home/semai/random_graph.xml.gz',
             }],
            output='screen',
         ))

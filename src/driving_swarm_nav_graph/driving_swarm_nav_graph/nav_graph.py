@@ -29,7 +29,7 @@ class NavGraphNode(Node):
             elif tiling == 'square':
                 points = square_tiling(0.40, **self.wa)
             elif tiling == 'random':
-                points = random_tiling(50, **self.wa)
+                points = random_tiling(40, **self.wa)
             else:
                 self.get_logger().warn('no tiling specified, using hex')
                 points = hexagon_tiling(0.60, **self.wa)
