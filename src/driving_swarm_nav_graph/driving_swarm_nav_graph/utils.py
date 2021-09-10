@@ -618,7 +618,10 @@ def compute_straight_path(g, poly, start, goal):
     result = [i for i in inner_line if i.geometryType() == 'LineString']
     outer_line = line - poly
     if outer_line.geometryType() == 'LineString':
-        outer_line = MultiLineString([outer_line])
+        if outer_line.is_empty:
+            outer_line = MultiLineString([])
+        else:
+            outer_line = MultiLineString([outer_line])
     for ls in outer_line:
         i0 = poly.exterior.project(Point(ls.coords[0]))
         i1 = poly.exterior.project(Point(ls.coords[-1])) 
