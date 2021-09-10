@@ -101,6 +101,8 @@ class NavGraphLocalPlanner(NavGraphNode):
             return
         
         node = find_nearest_node(self.g, (pose[0], pose[1]))
+        if not node:
+            self.get_logger().info(f'node: {node}')
         self.cell_publisher.publish(Int32(data=int(node)))
     
     def plan_cb(self, msg):
