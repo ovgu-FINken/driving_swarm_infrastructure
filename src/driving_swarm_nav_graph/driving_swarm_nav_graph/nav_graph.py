@@ -37,6 +37,7 @@ class NavGraphNode(Node):
             assert(occupied_space is not None)
             self.g = create_graph(points, offset=0.15,
                                         occupied_space=occupied_space, **self.wa)
+            self.g.gp['occupied_space'] = self.g.new_graph_property('object', val=occupied_space)
         elif map_file.endswith(".xml.gz") or map_file.endswith(".xml"):
             self.g = load_graph(map_file)
         self.g.set_vertex_filter(self.g.vp['traversable'])

@@ -45,7 +45,7 @@ def controller_spawning(context, *args, **kwargs):
             'use_sim_time': use_sim_time,
             'vehicle_model': 3,
             'turn_radius': 0.2,
-            'turn_speed': 0.5,
+            'turn_speed': 1.0,
             'step_size': 0.1,
             'tiling': LaunchConfiguration('tiling'),
             # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
