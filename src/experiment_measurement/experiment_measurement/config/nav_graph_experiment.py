@@ -1,6 +1,7 @@
 """Aggregate the data to one table."""
 from experiment_measurement import data_aggregation_helper
 #import data_aggregation_helper
+import numpy as np
 
 """
 table_column_config  ::= table_column, [ df_aggregated_topics ]
@@ -72,9 +73,11 @@ table_column_config = [
     data_aggregation_helper.TableColumn(
         'scan',
         'min_obstacle_dist',
-        lambda conf: min(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
-        ),
+        lambda conf:
+            np.min([
+                r for r in data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges if r > 0.08
+            ])
+        ,
     ),
     data_aggregation_helper.TableColumn(
         'nav/desired',
