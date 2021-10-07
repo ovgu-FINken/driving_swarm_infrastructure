@@ -435,6 +435,91 @@ def prioritized_plans(g, start_goal, edge_constraints=None, node_constraints=Non
     
     return paths
 
+def pad_path(path: list, limit=10) -> list:
+    return path + [path[-1] for _ in range(limit- len(path))]
+
+def compute_node_conflicts(paths: list, limit:int=10) -> list:
+    node_occupancy = compute_node_occupancy(paths, limit=limit)
+    
+    conflicts = []
+    for (t, node), agents in node_occupancy.values():
+        if len(agents) > 1:
+            conflicts.append((t,node,agents))
+    return conflicts
+
+def compute_node_occupancy(paths: list, limit:int=10) -> dict:
+    node_occupancy = {}
+    for i, path in enumerate(paths):
+        for t, node in enumerate(pad_path(path, limit=limit)):
+            if (t, node) not in node_occupancy:
+                node_occupancy[t, node] = i
+            else:
+                node_occupancy[t, node].add(i)
+    return node_occupancy
+
+
+def compute_edge_conflicts(paths, limit=10):
+    node_occupancy = compute_node_occupancy(paths, limit=limit)
+    
+    conflicts = []
+    for i, path in enumerate(paths):
+        for t, node in path:
+            if t < 1:
+                continue
+            if (t-1, node) in node_occupancy.keys():
+                if node_occupancy[t-1, node] != i:
+                    c = (t, node, i)
+                    if t > 1:
+                        conflicts += [(c, (t-1, node, node_occupancy[t-1,node]))]
+                    else:
+                        conflicts += [(c)]
+    return conflicts
+
+def sum_of_cost(paths):
+    return sum([len(p) for p in paths])
+
+def conflict_based_search(g, start_goal, agent_constraints=None, limit=10):
+    paths = []
+    if agent_constraints is None:
+        agent_constraints = [([], []) for _ in start_goal]
+    # compute paths according to constraints
+    for (sn, gn), agent_constraints in zip(start_goal, agent_constraints):
+        paths.append(find_constrained_path(g, sn, gn, node_constraints=agent_constraints, limit=limit))
+    # compute set of constraints
+    # if there are no conflicts return, else expand one conflict -> recursion
+    conflicts = compute_node_conflicts(paths)
+    if conflicts:
+        # expand node based on conflict
+        c = conflicts[0]
+        solutions = []
+        for agent in c[2]:
+            ac = agent_constraints.copy()
+            # set constraint for node c[1] at time c[0] for an agent of c[2]
+            ac[agent][c[0]] = c[1]
+            solutions.append(
+                conflict_based_search(g, start_goal, agent_constraints=agent_constraints, limit=limit)
+            )
+        fitness = [sum_of_cost(s) for s in solutions]
+        imin = fitness.index(min(fitness))
+        return solutions[imin]
+        
+        
+    conflicts = compute_edge_conflicts(paths, limit=limit)
+    if conflicts:
+        solutions = []
+        for c in conflicts[0]:
+            ac = agent_constraints.copy()
+            # set constraint for node c[1] at time c[0] for an agent c[2]
+            ac[c[2]][c[0]] = c[1]
+            solutions.append(
+                conflict_based_search(g, start_goal, agent_constraints=agent_constraints, limit=limit)
+            )
+        fitness = [sum_of_cost(s) for s in solutions]
+        imin = fitness.index(min(fitness))
+        return solutions[imin]
+
+    return paths
+
 def find_constrained_path(g, sn, gn, edge_constraints=None, node_constraints=None, limit=10):
     if edge_constraints is None and node_constraints is None:
         return find_path_astar(g, sn, gn)
