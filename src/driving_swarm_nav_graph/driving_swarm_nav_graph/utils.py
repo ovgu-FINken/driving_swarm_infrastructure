@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from graph_tool.all import * #noqa
 from skimage import io, measure
 from deprecation import deprecated
+from functools import lru_cache
 import yaml
 import os
 
@@ -278,6 +279,7 @@ class SpaceTimeVisitor(AStarVisitor):
         self.g.ep['dist'] = self.g.new_edge_property('double')
         self.g.vp['cost'] = self.g.new_vertex_property('double')
         self.g.vp['dist'] = self.g.new_vertex_property('double')
+        self.timed_target_node = None
 
         self.target = goal
         for v in self.timeless.vertices():
@@ -442,9 +444,9 @@ def compute_node_conflicts(paths: list, limit:int=10) -> list:
     node_occupancy = compute_node_occupancy(paths, limit=limit)
     
     conflicts = []
-    for (t, node), agents in node_occupancy.values():
+    for (t, node), agents in node_occupancy.items():
         if len(agents) > 1:
-            conflicts.append((t,node,agents))
+            conflicts.append((CBSConstraint(time=t, node=node, agent=agent) for agent in agents))
     return conflicts
 
 def compute_node_occupancy(paths: list, limit:int=10) -> dict:
@@ -452,9 +454,9 @@ def compute_node_occupancy(paths: list, limit:int=10) -> dict:
     for i, path in enumerate(paths):
         for t, node in enumerate(pad_path(path, limit=limit)):
             if (t, node) not in node_occupancy:
-                node_occupancy[t, node] = i
+                node_occupancy[t, node] = [i]
             else:
-                node_occupancy[t, node].add(i)
+                node_occupancy[t, node] += [i]
     return node_occupancy
 
 
@@ -463,39 +465,128 @@ def compute_edge_conflicts(paths, limit=10):
     
     conflicts = []
     for i, path in enumerate(paths):
-        for t, node in path:
+        for t, node in enumerate(path):
             if t < 1:
                 continue
             if (t-1, node) in node_occupancy.keys():
                 if node_occupancy[t-1, node] != i:
                     c = (t, node, i)
                     if t > 1:
-                        conflicts += [(c, (t-1, node, node_occupancy[t-1,node]))]
+                        conflicts.append( (CBSConstraint(time=t, node=node, agent=i), CBSConstraint(time=t-1, node=node, agent=node_occupancy[t-1,node][0])) )
                     else:
-                        conflicts += [(c)]
+                        conflicts.append( (CBSConstraint(time=t, node=node, agent=i)) )
     return conflicts
 
 def sum_of_cost(paths):
+    if paths is None or None in paths:
+        return np.inf
     return sum([len(p) for p in paths])
+
+@dataclass(eq=True, frozen=True, init=True)
+class CBSConstraint:
+    agent:int
+    time:int
+    node:int
+
+
+class CBSNode:
+    def __init__(self, constraints:frozenset=frozenset()):
+        self.children = ()
+        self.fitness = None
+        self.paths = None
+        self.conflicts = None
+        self.open = True
+
+    def iter(self):
+        yield self
+        for child in self.children:
+            child.iter()
+    
+    
+class CBS:
+    def __init__(self, g, start_goal, agent_constraints=None, limit=10):
+        self.start_goal = start_goal
+        self.g = g
+        self.limit = limit
+        self.root = CBSNode(constraints=agent_constraints)
+        self.cache = {}
+        self.agents = (i for i, _ in enumerate(start_goal))
+
+    def run(self):
+        self.cache = {}
+        self.best = None
+        done = True
+        while not done:
+            done = not self.step()
+        return self.best
+
+    def step(self):
+            for node in self.root.iter():
+                if node.open:
+                    self.evaluate_node(node)
+                    return True
+            return False
+
+    def evaluate_node(self, node):
+        node.solution = []
+        for agent in self.agents:
+            # we have a cache, so paths with the same preconditions do not have to be calculated twice
+            nc = frozenset(c for c in node.constraints if c.agent == agent)
+            if nc not in self.cache:
+                sn, gn = self.start_goal[agent]
+                self.cache[nc] = find_constrained_path(self.g, sn, gn, node_constraints=nc, limit=self.limit)
+            node.solution.append(self.cache[nc])
+
+        node.fitness = sum_of_cost(node.solution)
+        if node.fitness > len(node.solution) * self.limit:
+            node.final = True
+            node.open = False
+            return
+        node.conflicts = compute_node_conflicts(node.solution)
+        if not len(node.conflicts):
+            node.conflitcs = compute_edge_conflicts(node.solution)
+        
+        if len(node.conflicts):
+            node.children = frozenset(CBSNode(constraints=c) for c in node.conflicts[0])
+        else:
+            if self.best is None or node.fitness < self.best.fitness:
+                self.best = node
+        node.open = False
+        
+    
+
+
+
+
+        
 
 def conflict_based_search(g, start_goal, agent_constraints=None, limit=10):
     paths = []
+    print(start_goal)
     if agent_constraints is None:
-        agent_constraints = [([], []) for _ in start_goal]
+        agent_constraints = [{} for _ in start_goal]
+    print(agent_constraints)
     # compute paths according to constraints
-    for (sn, gn), agent_constraints in zip(start_goal, agent_constraints):
-        paths.append(find_constrained_path(g, sn, gn, node_constraints=agent_constraints, limit=limit))
+    for (sn, gn), node_constraints in zip(start_goal, agent_constraints):
+        p = find_constrained_path(g, sn, gn, node_constraints=node_constraints, limit=limit)
+        if p is None:
+            return
+        paths.append(p)
     # compute set of constraints
     # if there are no conflicts return, else expand one conflict -> recursion
     conflicts = compute_node_conflicts(paths)
-    if conflicts:
+    if len(conflicts):
         # expand node based on conflict
         c = conflicts[0]
+        print(c)
         solutions = []
         for agent in c[2]:
             ac = agent_constraints.copy()
             # set constraint for node c[1] at time c[0] for an agent of c[2]
-            ac[agent][c[0]] = c[1]
+            if c[0] in ac[agent]:
+                ac[agent][c[0]] += [c[1]]
+            else:
+                ac[agent][c[0]] = [c[1]]
             solutions.append(
                 conflict_based_search(g, start_goal, agent_constraints=agent_constraints, limit=limit)
             )
@@ -505,12 +596,17 @@ def conflict_based_search(g, start_goal, agent_constraints=None, limit=10):
         
         
     conflicts = compute_edge_conflicts(paths, limit=limit)
-    if conflicts:
+    if len(conflicts):
         solutions = []
         for c in conflicts[0]:
+            print(c)
             ac = agent_constraints.copy()
             # set constraint for node c[1] at time c[0] for an agent c[2]
-            ac[c[2]][c[0]] = c[1]
+            if c[0] in ac[c[2]]:
+                ac[c[2]][c[0]] += [c[1]]
+            else:
+                ac[c[2]][c[0]] = [c[1]]
+                
             solutions.append(
                 conflict_based_search(g, start_goal, agent_constraints=agent_constraints, limit=limit)
             )
@@ -520,6 +616,7 @@ def conflict_based_search(g, start_goal, agent_constraints=None, limit=10):
 
     return paths
 
+# @lru_cache(maxsize=1024)
 def find_constrained_path(g, sn, gn, edge_constraints=None, node_constraints=None, limit=10):
     if edge_constraints is None and node_constraints is None:
         return find_path_astar(g, sn, gn)
@@ -535,6 +632,8 @@ def find_constrained_path(g, sn, gn, edge_constraints=None, node_constraints=Non
         dist_map=nv.g.vp['dist']
     )
 
+    if nv.timed_target_node is None:
+        return None
     l = pred_to_list(nv.g, pred, sn, nv.timed_target_node)
     return [nv.g.vp["index"][v] for v in l]
 
