@@ -12,6 +12,16 @@ rosdep update
 rosdep install --from-paths src/ --ignore-src -y
 ```
 Now you need to build the depent packages with `colcon build` and source the workspace you used in your `.bashrc`.
+The bashrc file should contain the following lines:
+```
+export TURTLEBOT3_MODEL=burger
+source /usr/share/gazebo/setup.sh
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/models/:~/ros/essentials/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models:~/ros/driving_swarm_representation/src/driving_swarm_representation/models/
+export GAZEBO_RESOURCE_PATH=$GAZEBO_RESOURCE_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/worlds/:~/ros/essentials/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models:~/ros/driving_swarm_representation/src/driving_swarm_representation/worlds/
+source /opt/ros/foxy/local_setup.bash
+source ~/ros/essentials/install/setup.bash
+source ~/ros/driving_swarm_infrastructure/install/local_setup.bash
+```
 
 Once the dependencies are correctly installed, you should be able to build the main workspace of the DrivingSwarm with colcon build.
 You can source the workspace, now you should be able to run your first simulation.
