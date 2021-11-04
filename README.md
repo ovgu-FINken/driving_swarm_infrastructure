@@ -7,8 +7,10 @@ To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](htt
 
 The easiest way to run the project is then to check out the repositories listed in the directory
 `driving_swarm_infrastructure/repo-files/` with `vcs import`. Install the dependencies for those packages with the rosdep tool.
-`rosdep update
-rosdep install --from-paths src/ --ignore-src -y`.
+```
+rosdep update
+rosdep install --from-paths src/ --ignore-src -y
+```
 Now you need to build the depent packages with `colcon build` and source the workspace you used in your `.bashrc`.
 
 Once the dependencies are correctly installed, you should be able to build the main workspace of the DrivingSwarm with colcon build.
