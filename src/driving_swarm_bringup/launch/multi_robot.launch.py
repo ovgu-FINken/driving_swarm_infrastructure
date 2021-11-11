@@ -45,6 +45,7 @@ def get_robot_config(robots_file):
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
+    # Ignore this comment
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
     n_robots = LaunchConfiguration('n_robots').perform(context)
     run_timeout = LaunchConfiguration('run_timeout')
