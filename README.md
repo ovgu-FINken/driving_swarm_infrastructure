@@ -5,8 +5,7 @@
 To install and run the DrivingSwarm framework we strongly recommend to use the Ubuntu version 20.04, which goes along with the ROS2 foxy-fitzroy.
 To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](https://docs.ros.org/en/foxy/Installation.html).
 
-The easiest way to run the project is then to check out the repositories listed in the directory
-`driving_swarm_infrastructure/repo-files/` with `vcs import`. Install the dependencies for those packages with the rosdep tool.
+To install the dependencies, you can create a new folder `mkdir -o dependencies/scr`, change to the root of this workspace `cd dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`. Install the dependencies for those packages with the rosdep tool. And build the packages with `colcon build`.
 
 For this we use the following directory structure:
 ```
