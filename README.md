@@ -21,21 +21,23 @@ For this project we use the following directory structure:
 
 With two different workspaces `dependencies` and `driving_swarm_infrastructure`
 
-To install the dependencies, you can create a new folder `mkdir -p dependencies/src`, change to the root of this workspace `cd dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`. Install the dependencies for those packages with the rosdep tool and nd build the packages with `colcon build`.
-
+To install the dependencies, you can create a new folder `mkdir -p dependencies/src`, change to the root of this workspace `cd dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`.
+Now you can source your global ros2 environment with `source /opt/ros/foxy/setup.bash`. Install the dependencies for those packages with the rosdep tool and then build the packages with `colcon build`.
 ```
 rosdep update
 rosdep install --from-paths src/ --ignore-src -y
 ```
-Now you need to build the depent packages with `colcon build` and source the workspace you used in your `.bashrc`.
+Now you need to build the depent packages with `colcon build` and source the dependencies workspace (`source PATH_TO/dependencies/install/setup.bash`) you used in your `.bashrc`.
+Now you can clone and build the driving_swarm_infrastructure workspace, in a folder on the same level as the dependencies workspace.
+
 The bashrc file should contain the following lines:
 ```
 export TURTLEBOT3_MODEL=burger
 source /usr/share/gazebo/setup.sh
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/models/:~/ros/essentials/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models:~/ros/driving_swarm_representation/src/driving_swarm_representation/models/
-export GAZEBO_RESOURCE_PATH=$GAZEBO_RESOURCE_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/worlds/:~/ros/essentials/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models:~/ros/driving_swarm_representation/src/driving_swarm_representation/worlds/
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/models/:~/ros/dependencies/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models:~/ros/driving_swarm_representation/src/driving_swarm_representation/models/
+export GAZEBO_RESOURCE_PATH=$GAZEBO_RESOURCE_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/worlds/:~/ros/dependencies/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models
 source /opt/ros/foxy/local_setup.bash
-source ~/ros/essentials/install/setup.bash
+source ~/ros/dependencies/install/setup.bash
 source ~/ros/driving_swarm_infrastructure/install/local_setup.bash
 ```
 
