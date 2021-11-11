@@ -30,7 +30,7 @@ rosdep install --from-paths src/ --ignore-src -y
 Now you need to build the depent packages with `colcon build` and source the dependencies workspace (`source PATH_TO/dependencies/install/setup.bash`) you used in your `.bashrc`.
 Now you can clone and build the driving_swarm_infrastructure workspace, in a folder on the same level as the dependencies workspace.
 
-The bashrc file should contain the following lines:
+The `.bashrc` file in your home directory should contain the following lines:
 ```
 export TURTLEBOT3_MODEL=burger
 source /usr/share/gazebo/setup.sh
