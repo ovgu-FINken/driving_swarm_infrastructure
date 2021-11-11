@@ -7,6 +7,20 @@ To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](htt
 
 The easiest way to run the project is then to check out the repositories listed in the directory
 `driving_swarm_infrastructure/repo-files/` with `vcs import`. Install the dependencies for those packages with the rosdep tool.
+
+For this we use the following directory structure:
+```
+- dependencies
+  - src
+  - install
+  - build
+
+- driving_swarm_infrastructure
+  - src
+  - install
+  - build
+  - log
+```
 ```
 rosdep update
 rosdep install --from-paths src/ --ignore-src -y
