@@ -11,6 +11,7 @@ For this project we use the following directory structure:
   - src
   - install
   - build
+  - log
 
 - driving_swarm_infrastructure
   - src
