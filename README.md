@@ -9,31 +9,34 @@ We assume in this guide, that you install both folders under '~/ros', if you use
 
 For this project we use the following directory structure:
 ```
-- dependencies
-  - src
-  - install
-  - build
-  - log
+- ~/ros
+  - dependencies
+    - src
+    - install
+    - build
+    - log
 
-- driving_swarm_infrastructure
-  - src
-  - install
-  - build
-  - log
+  - driving_swarm_infrastructure
+    - src
+    - install
+    - build
+    - log
 ```
 
 With two different workspaces `dependencies` and `driving_swarm_infrastructure`
 
-To install the dependencies, you can create a new folder `mkdir -p dependencies/src`, change to the root of this workspace `cd dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`.
-Now you can source your global ros2 environment with `source /opt/ros/foxy/setup.bash`. Install the dependencies for those packages with the rosdep tool and then build the packages with `colcon build`.
+To install the dependencies, you can create a new folder `mkdir -p ~/ros/dependencies/src`, change to the root of this workspace `cd ~/ros/dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`.
+Now you can source your global ros2 environment with `source /opt/ros/foxy/setup.bash`. Install the dependencies for those packages with the rosdep tool:
 ```
 rosdep update
 rosdep install --from-paths src/ --ignore-src -y
 ```
-Now you need to build the depent packages with `colcon build` and source the dependencies workspace (`source PATH_TO/dependencies/install/setup.bash`) you used in your `.bashrc`.
-Now you can clone and build the driving_swarm_infrastructure workspace, in a folder on the same level as the dependencies workspace.
+Now you need to build the depent packages with `colcon build`.
 
-The `.bashrc` file in your home directory should contain the following lines:
+To install the main workspace called `driving_swarm_infrastructure` you can use the following commands:
+* Source the dependencies workspace (`source ~/ros/dependencies/install/setup.bash`)
+* Use `cd ~/ros && git clone` to download the driving_swarm_infrastucture workspace to the same level as the dependencies folder.
+* Setup your `~/.bashrc` to contain the following lines, once the file is saved restart your shell:
 ```
 export TURTLEBOT3_MODEL=burger
 source /usr/share/gazebo/setup.sh
