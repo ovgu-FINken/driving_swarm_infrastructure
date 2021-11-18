@@ -3,7 +3,9 @@
 ## Installation
 
 To install and run the DrivingSwarm framework we strongly recommend to use the Ubuntu version 20.04, which goes along with the ROS2 foxy-fitzroy.
-To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](https://docs.ros.org/en/foxy/Installation.html).
+To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](https://docs.ros.org/en/foxy/Installation.html)
+We assume in this guide, that you install both folders under '~/ros', if you use another location adapt the paths to your directories accordingly.
+
 
 For this project we use the following directory structure:
 ```
