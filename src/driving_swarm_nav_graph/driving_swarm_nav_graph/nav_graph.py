@@ -62,6 +62,8 @@ class NavGraphNode(Node):
         for i, e in enumerate(self.g.edges()):
             if self.g.ep['geometry'][e].borderPoly is None:
                 continue
+            if  self.g.ep['geometry'][e].borderPoly.geometryType() != 'Polygon':
+                continue
             marker = Marker(action=Marker.ADD, ns="transition", id=i, type=Marker.LINE_STRIP)
             marker.header.frame_id = 'map'
             marker.scale.x = 0.01
