@@ -46,7 +46,7 @@ source /opt/ros/foxy/local_setup.bash
 source ~/ros/dependencies/install/setup.bash
 source ~/ros/driving_swarm_infrastructure/install/local_setup.bash
 ```
-In addition you need to instal the following python packages: `python3-pykdl`, `python3-termcolor`
+In addition you need to instal the following python packages: `python3-pykdl`, `python3-termcolor`, `python3-skimage`, `shapely`, `graph-tool`, `python3-scipy`, `deprecation`, `dubins`, `bezier`, `pip3 install git+https://github.com/ghliu/pyReedsShepp.git`
 
 Once the dependencies are correctly installed, you should be able to build the main workspace of the DrivingSwarm with colcon build.
 You can source the workspace, now you should be able to run your first simulation.
