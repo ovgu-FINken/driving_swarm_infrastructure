@@ -126,3 +126,13 @@ def get_vector_length(point):
     if point.x < 0:
         return -1 * r
     return r
+
+
+def get_vector_angle(point):
+    """
+    Calculate the angle of the vector
+    """
+    theta = np.arctan2(point.y, point.x)  # -pi to +pi
+    if theta > np.pi:
+        theta = theta - 2*np.pi
+    return theta

@@ -125,26 +125,12 @@ table_column_config = [
     data_aggregation_helper.TableColumn(
         'visualization/forces',
         'alignment',
-        lambda conf: data_aggregation_helper.get_vector_length(
+        lambda conf: data_aggregation_helper.get_vector_angle(
             data_aggregation_helper.get_latest_in_interval( #
                 data_aggregation_helper.filter_force_id(conf, ident=3)
                 )['data'].points[1]
             ),
     ),
-    data_aggregation_helper.TableColumn(
-        'visualization/forces',
-        'total_force',
-        lambda conf: data_aggregation_helper.get_vector_length(
-            data_aggregation_helper.get_latest_in_interval( #
-                data_aggregation_helper.filter_force_id(conf, ident=4)
-                )['data'].points[1]
-            ),
-    ), 
-    # data_aggregation_helper.TableColumn(
-    #     'status',
-    #     'robot_status',
-    #     lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
-    # ),
     data_aggregation_helper.TableColumn(
         '/command',
         'cmd_status',

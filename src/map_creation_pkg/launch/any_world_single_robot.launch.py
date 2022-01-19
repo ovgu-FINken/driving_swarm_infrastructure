@@ -22,30 +22,47 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import ExecuteProcess
-from launch.substitutions import LaunchConfiguration
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
+                            IncludeLaunchDescription, LogInfo, OpaqueFunction)
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 
 TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
 
-def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    model_file_name = 'turtlebot3_worlds/' + TURTLEBOT3_MODEL + '.model'
-    # absolute path to the .world file 
+def initialize_world_and_robot(context, *args, **kwargs):
+    use_sim_time = LaunchConfiguration('use_sim_time',
+                                       default='true').perform(context)
+    # complete absolute path to the .world file NOT only the file name!
     # note that this world needs a robot you can move around
-    world = LaunchConfiguration(
-        'world', 
-        default=os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'worlds', model_file_name)
-    )
-    launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
+    model_file = LaunchConfiguration('model_file',
+                                     default='turtlebot3_worlds/' +
+                                     TURTLEBOT3_MODEL +
+                                     '.model').perform(context)
 
-    return LaunchDescription([
+    world = LaunchConfiguration(
+        'world',
+        default=os.path.join(
+            get_package_share_directory('driving_swarm_bringup'), 'worlds',
+            model_file))
+    launch_file_dir = os.path.join(
+        get_package_share_directory('turtlebot3_gazebo'), 'launch')
+
+    cmd = [
         ExecuteProcess(
             cmd=['gazebo', '--verbose', world, '-s', 'libgazebo_ros_init.so'],
             output='screen'),
-
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([launch_file_dir, '/robot_state_publisher.launch.py']),
+            PythonLaunchDescriptionSource(
+                [launch_file_dir, '/robot_state_publisher.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
-    ])
+    ]
+    return cmd
+
+
+def generate_launch_description():
+    # Create the launch description and populate
+    ld = LaunchDescription()
+    # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
+    ld.add_action(OpaqueFunction(function=initialize_world_and_robot))
+    return ld
