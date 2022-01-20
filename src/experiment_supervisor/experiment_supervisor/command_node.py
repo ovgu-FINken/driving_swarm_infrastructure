@@ -9,6 +9,7 @@ from termcolor import colored
 class CommandNode(Node):
     def __init__(self):
         super().__init__("command_node")
+        self.logger_ = self.get_logger()
         # fetch swarm size and robot names
         self.declare_parameter("robots")
         self.declare_parameter("run_timeout")
@@ -29,7 +30,7 @@ class CommandNode(Node):
                 functools.partial(self.robot_cb, robot),
                 qos_profile
             )
-            self.get_logger().info(f"subscribing /{robot}/status")
+            self.logger_.info(f"subscribing /{robot}/status")
         self.run_timeout = self.get_parameter("run_timeout")\
             .get_parameter_value().double_value
         self.init_timeout = self.get_parameter("init_timeout")\
@@ -40,11 +41,11 @@ class CommandNode(Node):
             self.init_timer = self.create_timer(self.init_timeout, self.init_timeout_callback)
     
     def run_timeout_callback(self):
-        self.get_logger().info(f"run timer is due with status {self.status}")
+        self.logger_.info(f"run timer is due with status {self.status}")
         self.exit()
         
     def init_timeout_callback(self):
-        self.get_logger().info(f"init timer is due with status {self.status}")
+        self.logger_.info(f"init timer is due with status {self.status}")
         if self.status == "ready":
             self.exit()
         if self.init_timer is not None:
@@ -53,9 +54,9 @@ class CommandNode(Node):
             self.init_timer = None
     
     def robot_cb(self, robot, msg):
-        self.get_logger().info(colored(f"{robot}: {msg.data}", "yellow"))
+        self.logger_.info(colored(f"{robot}: {msg.data}", "yellow"))
         self.robot_status[robot] = msg.data
-        self.get_logger().info(f"{self.robot_status}")
+        self.logger_.info(f"{self.robot_status}")
         if self.status == "ready":
             if all(
                 [status == "ready" for status in self.robot_status.values()]
@@ -71,11 +72,11 @@ class CommandNode(Node):
     def set_status(self, status):
         self.status = status
         self.cmd_pub.publish(String(data=status))
-        self.get_logger().info(colored(status, "red"))
+        self.logger_.info(colored(status, "red"))
     
     def exit(self):
         self.set_status("stop")
-        self.get_logger().info("exiting")
+        self.logger_.info("exiting")
         sys.exit(0)
         
 
