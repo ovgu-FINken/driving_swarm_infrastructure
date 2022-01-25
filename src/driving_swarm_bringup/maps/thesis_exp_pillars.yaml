@@ -1,4 +1,4 @@
-image: /home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/driving_swarm_bringup/maps/thesis_exp_pillars.pgm
+image: thesis_exp_pillars.pgm
 mode: trinary
 resolution: 0.05
 origin: [-3.2, -2.75, 0]

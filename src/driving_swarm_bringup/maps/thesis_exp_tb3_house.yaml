@@ -1,7 +1,7 @@
-image: thesis_exp_wall.pgm
+image: thesis_exp_tb3_house.pgm
 mode: trinary
 resolution: 0.05
-origin: [-3.2, -2.7, 0]
+origin: [-5.71, -7.94, 0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25
