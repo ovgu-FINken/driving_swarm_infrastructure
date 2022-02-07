@@ -2,7 +2,7 @@
   x_pose: -1.0
   y_pose: -1.0
   z_pose: 0.01
-  yaw_pose : 0.0
+  yaw_pose : 0.5
   goals:
     x : 1.5
     y : 1.5

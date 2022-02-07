@@ -1,0 +1,12 @@
+- name: 'robot1'
+  x_pose: -3.6
+  y_pose: -4.3
+  z_pose: 0.01
+  yaw_pose : 3.14
+  goals:
+    # 2.1
+    x : -1.0
+    y : 0.0
+    # 2.2 -- too difficult!
+    # x : 1.0
+    # y : -3.0
