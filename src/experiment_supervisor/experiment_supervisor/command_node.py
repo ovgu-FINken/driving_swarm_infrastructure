@@ -72,7 +72,7 @@ class CommandNode(Node):
     def set_status(self, status):
         self.status = status
         self.cmd_pub.publish(String(data=status))
-        self.logger_.info(colored(status, "red"))
+        self.logger_.info(colored(status, "green"))
     
     def exit(self):
         self.set_status("stop")
