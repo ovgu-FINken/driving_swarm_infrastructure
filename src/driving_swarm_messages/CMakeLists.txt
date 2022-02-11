@@ -21,11 +21,13 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 
 set(msg_files
   "msg/SystemStatus.msg"
   "msg/FloatArray.msg"
   "msg/FloatArrayStamped.msg"
+  "msg/ParameterListStamped.msg"
 )
 
 set(srv_files
@@ -38,7 +40,7 @@ set(srv_files
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
-  DEPENDENCIES geometry_msgs nav_msgs std_msgs
+  DEPENDENCIES geometry_msgs nav_msgs std_msgs rcl_interfaces
 )
 
 ament_export_dependencies(rosidl_default_runtime)
