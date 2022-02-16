@@ -3,6 +3,7 @@ import os
 import subprocess
 import re
 import yaml
+from datetime import datetime
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -28,13 +29,15 @@ def get_rosbag_config(rosbag_topics_file):
 def start_rosbag(context, *args, **kwargs):
     rosbag_topics_file = LaunchConfiguration("rosbag_topics_file").perform(context)
     start_rosbag_cmd = []
-    #TODO: -a einbinden
-    #/home/traichel/DrivingSwarm/driving_swarm_infrastructure/src/robot_spawner_pkg/params/qos_override.yaml
+    #TODO: include -a for recording all topics
 
     if rosbag_topics_file != "NONE":
-        qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
         robots_file = LaunchConfiguration('robots_file').perform(context)
         n_robots = LaunchConfiguration('n_robots').perform(context)
+        qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
+        ts = datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
+        default_rosbag_output_dir = 'rosbag_' + str(n_robots) + ' robots_' + ts
+        rosbag_output_dir = LaunchConfiguration('rosbag_output_dir', default=default_rosbag_output_dir).perform(context)
 
         rosbag_topics = []
         robots = get_robot_config(robots_file)
@@ -53,17 +56,18 @@ def start_rosbag(context, *args, **kwargs):
 
 
         # cmd syntax: https://github.com/ros2/launch/issues/263
+        # https://github.com/ros2/rosbag2
         if not qos_override_file is None:
             start_rosbag_cmd.append(
                 ExecuteProcess(
-                    cmd=['ros2', 'bag', 'record'] + rosbag_topics + ['--qos-profile-overrides-path', str(qos_override_file)],
+                    cmd=['ros2', 'bag', 'record'] + rosbag_topics + ['--output', str(rosbag_output_dir)] + ['--qos-profile-overrides-path', str(qos_override_file)],
                     output='screen',
                 )
             )
         else:
             start_rosbag_cmd.append(
                 ExecuteProcess(
-                    cmd=['ros2', 'bag', 'record'] + rosbag_topics,
+                    cmd=['ros2', 'bag', 'record'] + rosbag_topics + ['--output', str(rosbag_output_dir)],
                     output='screen',
                 )
             )

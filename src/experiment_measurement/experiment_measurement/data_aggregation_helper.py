@@ -5,6 +5,7 @@ import math
 import numpy as np
 
 from transformations import euler_from_quaternion
+from rclpy.parameter import Parameter
 # from att_rep_controller.utils import __cart2pol
 
 
@@ -40,6 +41,22 @@ def get_latest_in_interval(conf):
     ]
     return res.iloc[-1]
 
+def get_all_params_as_tuple_list(conf):
+    """Return all params before timestamp or at timestamp as a list of (name,value)-tuple, NaN if empty."""
+    s = conf.df.loc[
+        conf.df.timestamp.le(conf.t)
+        & conf.df.timestamp.gt(conf.t_prev)
+    ]['data']
+    if len(s) > 0:
+        res = []
+        for _, v in s.items():
+            res.append(
+                [(Parameter.from_parameter_msg(param).name, Parameter.from_parameter_msg(param).value) for param in v.data]
+            )
+        res = [val for sublist in res for val in sublist]
+    else:
+        res = np.nan
+    return res
 
 def filter_tf_child_frame_id(conf):
     """Filter the tf data for a specific topic (robot)."""

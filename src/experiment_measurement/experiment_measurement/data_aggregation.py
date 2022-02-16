@@ -4,10 +4,13 @@ import datetime
 import os
 import time
 
+import numpy as np
 import pandas as pd
 
 # from rosbag2df import read_rosbag_all_in_one
 # import data_aggregation_helper
+# from builtin_interfaces.msg import Time
+from rclpy.time import Time
 
 from experiment_measurement.rosbag2df import read_rosbag_all_in_one
 from experiment_measurement import data_aggregation_helper
@@ -58,6 +61,58 @@ def aggregate_tables(df, table_column_config, step_size):
         res[robot] = robot_ret_df
     return res
 
+
+def aggregate_tables_by_msg_timestamps(df, table_column_config):
+    """Create a table for each robot with corresponding values."""
+    res = {}
+
+    robots = {
+        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
+    }
+    for robot in robots:
+        robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
+        t_min = df['timestamp'][0]
+        timestamps_abs = [t_min]
+        msgs = robot_df.loc[robot_df['name'] == '/' + robot + '/context_steering/vis/all_and_pareto_individuals', 'data']
+        for msg in msgs:
+            timestamps_abs.append(
+                Time.from_msg(msg.header.stamp).nanoseconds
+            )
+        timestamps_rel = np.array(timestamps_abs)
+        timestamps_rel -= t_min
+        robot_ret_df = pd.DataFrame(
+            timestamps_rel[1:], columns=['timestamp']
+        )
+
+        for topic in table_column_config:
+            tmp_col = []
+
+            if topic.topic_name.startswith('/'):
+                robot_df_topic = df[
+                    df['name'].str.match(topic.topic_name)
+                ]
+            else:
+                robot_df_topic = robot_df[
+                    robot_df['name'].str.match(r'\/.*\/{}'.format(topic.topic_name))
+                ]
+
+            for i, t in enumerate(timestamps_abs[1:], start=1):
+                conf = data_aggregation_helper.TableConfig(
+                    robot,
+                    robot_df_topic,
+                    t,
+                    timestamps_abs[i-1],
+                )
+                try:
+                    topic_data = topic(conf)
+                except IndexError:
+                    topic_data = None
+                except (AttributeError, KeyError):  # No data
+                    topic_data = None
+                tmp_col.append(topic_data)
+            robot_ret_df[topic.column_name] = tmp_col
+        res[robot] = robot_ret_df
+    return res
 
 def main():
     """Program starts here."""
