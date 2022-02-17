@@ -25,7 +25,7 @@ For this project we use the following directory structure:
 
 With two different workspaces `dependencies` and `driving_swarm_infrastructure`
 
-To install the dependencies, you can create a new folder `mkdir -p ~/ros/dependencies/src`, change to the root of this workspace `cd ~/ros/dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/`.
+To install the dependencies, you can create a new folder `mkdir -p ~/ros/dependencies/src`, change to the root of this workspace `cd ~/ros/dependencies` and run  `vcs import --input https://raw.githubusercontent.com/ovgu-FINken/driving_swarm_infrastructure/master/repo-files/turtlebot3.repos src/` - the vcs tool can be installed via pip (`pip3 install vcs-tool`).
 Now you can source your global ros2 environment with `source /opt/ros/foxy/setup.bash`. Install the dependencies for those packages with the rosdep tool:
 ```
 rosdep update
