@@ -17,7 +17,7 @@ from experiment_measurement import data_aggregation_helper
 
 
 def aggregate_tables(df, table_column_config, step_size):
-    """Create a table for each robot with corresponding values."""
+    """Create a table for each robot with corresponding values for each timestep defined by user."""
     res = {}
     xmin = df['timestamp'][0] + step_size
     xmax = df['timestamp'].iloc[-1] + step_size
@@ -62,8 +62,8 @@ def aggregate_tables(df, table_column_config, step_size):
     return res
 
 
-def aggregate_tables_by_msg_timestamps(df, table_column_config):
-    """Create a table for each robot with corresponding values."""
+def aggregate_tables_by_msg_header(df, table_column_config, msg_topic):
+    """Create a table for each robot with corresponding values for each timestamp stored in the messages' header (sent to msg_topic)."""
     res = {}
 
     robots = {
@@ -73,7 +73,9 @@ def aggregate_tables_by_msg_timestamps(df, table_column_config):
         robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
         t_min = df['timestamp'][0]
         timestamps_abs = [t_min]
-        msgs = robot_df.loc[robot_df['name'] == '/' + robot + '/context_steering/vis/all_and_pareto_individuals', 'data']
+        if not msg_topic.startswith('/'):
+            msg_topic = '/' + robot + '/' + msg_topic 
+        msgs = robot_df.loc[robot_df['name'] == msg_topic, 'data']
         for msg in msgs:
             timestamps_abs.append(
                 Time.from_msg(msg.header.stamp).nanoseconds
@@ -113,6 +115,60 @@ def aggregate_tables_by_msg_timestamps(df, table_column_config):
             robot_ret_df[topic.column_name] = tmp_col
         res[robot] = robot_ret_df
     return res
+
+
+def aggregate_tables_by_msg_timestamps(df, table_column_config, msg_topic):
+    """Create a table for each robot with corresponding values for each timestamp the message was sent to msg_topic."""
+    res = {}
+
+    robots = {
+        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
+    }
+    for robot in robots:
+        robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
+        t_min = df['timestamp'][0]
+        timestamps_abs = [t_min]
+        t_min = df['timestamp'][0]
+        if not msg_topic.startswith('/'):
+            msg_topic = '/' + robot + '/' + msg_topic 
+        msg_timestamps = robot_df.loc[robot_df['name'] == msg_topic, 'timestamp']
+        timestamps_abs = [t_min] + [ts for ts in msg_timestamps]
+        timestamps_rel = np.array(timestamps_abs)
+        timestamps_rel -= t_min
+        robot_ret_df = pd.DataFrame(
+            timestamps_rel[1:], columns=['timestamp']
+        )
+
+        for topic in table_column_config:
+            tmp_col = []
+
+            if topic.topic_name.startswith('/'):
+                robot_df_topic = df[
+                    df['name'].str.match(topic.topic_name)
+                ]
+            else:
+                robot_df_topic = robot_df[
+                    robot_df['name'].str.match(r'\/.*\/{}'.format(topic.topic_name))
+                ]
+
+            for i, t in enumerate(timestamps_abs[1:], start=1):
+                conf = data_aggregation_helper.TableConfig(
+                    robot,
+                    robot_df_topic,
+                    t,
+                    timestamps_abs[i-1],
+                )
+                try:
+                    topic_data = topic(conf)
+                except IndexError:
+                    topic_data = None
+                except (AttributeError, KeyError):  # No data
+                    topic_data = None
+                tmp_col.append(topic_data)
+            robot_ret_df[topic.column_name] = tmp_col
+        res[robot] = robot_ret_df
+    return res
+
 
 def main():
     """Program starts here."""

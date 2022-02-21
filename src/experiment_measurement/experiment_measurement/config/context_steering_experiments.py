@@ -58,14 +58,14 @@ table_column_config = [
     data_aggregation_helper.TableColumn(
         'cmd_vel',
         'rot_vel',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[ #
+        lambda conf: data_aggregation_helper.get_earliest_in_next_intervall(conf)[ #
             'data'
         ].angular.z,
     ),
     data_aggregation_helper.TableColumn(
         'cmd_vel',
         'trans_vel',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+        lambda conf: data_aggregation_helper.get_earliest_in_next_intervall(conf)[
             'data'
         ].linear.x,
     ),
@@ -85,14 +85,14 @@ table_column_config = [
         'context_steering/vis/polygon',
         'polygon',
         lambda conf: np.asarray(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+            data_aggregation_helper.get_closest_to_timestamp(conf)['data'].data
         ).reshape(-1, 2), 
     ),
     data_aggregation_helper.TableColumn(
         'context_steering/vis/all_and_pareto_individuals',
         'all_and_pareto_individuals',
         lambda conf: np.asarray(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+            data_aggregation_helper.get_closest_to_timestamp(conf)['data'].data
         ).reshape(-1, 5), 
     ),
     data_aggregation_helper.TableColumn(

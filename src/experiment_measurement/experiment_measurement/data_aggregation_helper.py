@@ -33,13 +33,32 @@ class TableColumn:
         return self.fn(table_config)
 
 
-def get_latest_in_interval(conf):
+def get_latest_in_interval(conf, use_none=False):
     """Return the datapoint which is right before timestamp or at timestamp."""
     res = conf.df.loc[
         conf.df.timestamp.le(conf.t)
         & conf.df.timestamp.gt(conf.t_prev)
     ]
+    if use_none and res.empty:
+        return None
     return res.iloc[-1]
+
+def get_earliest_in_next_intervall(conf, use_none=False):
+    """Return the next upcoming datapoint after or at timestamp."""
+    res = conf.df.loc[
+        conf.df.timestamp.ge(conf.t)
+    ]
+    if use_none and res.empty:
+        return None
+    return res.iloc[0]
+    
+def get_closest_to_timestamp(conf):
+    """Return the datapoint at timestamp saved within the message."""
+    if get_latest_in_interval(conf, use_none=True) is None:
+        return get_earliest_in_next_intervall(conf)
+    else:
+        return get_latest_in_interval(conf)
+
 
 def get_all_params_as_tuple_list(conf):
     """Return all params before timestamp or at timestamp as a list of (name,value)-tuple, NaN if empty."""
