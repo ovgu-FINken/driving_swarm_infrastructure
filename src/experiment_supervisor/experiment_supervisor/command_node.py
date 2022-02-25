@@ -83,8 +83,12 @@ class CommandNode(Node):
 def main():
     rclpy.init()
     node = CommandNode()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.logger_.info(f'got keyboard interrupt, shutting down')
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

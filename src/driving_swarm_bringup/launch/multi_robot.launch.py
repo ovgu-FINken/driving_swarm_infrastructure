@@ -61,6 +61,7 @@ def initialize_robots(context, *args, **kwargs):
                         executable="command_node",
                         output="screen",
                         parameters=[{
+                           'use_sim_time': LaunchConfiguration('use_sim_time'),
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
                            'robots': [robot["name"] for robot in robots[:int(n_robots)]],
@@ -114,6 +115,11 @@ def generate_launch_description():
         default_value='base_link'
     )
 
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time', 
+        default_value='true'
+    )
+    
     declare_run_timeout_cmd = DeclareLaunchArgument(
         'run_timeout',
         default_value='0.0'
@@ -147,6 +153,7 @@ def generate_launch_description():
     ld.add_action(declare_n_robots_cmd)
     ld.add_action(declare_robots_file_cmd)
     ld.add_action(declare_base_frame_cmd)
+    ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_run_timeout_cmd)
     ld.add_action(declare_init_timeout_cmd)
 
