@@ -127,7 +127,7 @@ def generate_launch_description():
 
     declare_init_timeout_cmd = DeclareLaunchArgument(
         'init_timeout',
-        default_value='30.0'
+        default_value='0.0'
     )
 
     # Define commands for launching the navigation instances
