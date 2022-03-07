@@ -72,7 +72,7 @@ def get_all_params_as_tuple_list(conf):
             res.append(
                 [(Parameter.from_parameter_msg(param).name, Parameter.from_parameter_msg(param).value) for param in v.data]
             )
-        res = [val for sublist in res for val in sublist]
+        # res = [val for sublist in res for val in sublist]
     else:
         res = np.nan
     return res

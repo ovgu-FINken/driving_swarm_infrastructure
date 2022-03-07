@@ -36,7 +36,7 @@ table_column_config = [
         '/tf',
         'tf_pose_theta',
         lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval( #
+            data_aggregation_helper.get_latest_in_interval(  #
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
             )['data'].transforms[0].transform.rotation
         )[2],
@@ -53,12 +53,14 @@ table_column_config = [
     data_aggregation_helper.TableColumn(
         'scan',
         'obstacle_dist',
-        lambda conf: list(data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges), #
+        lambda conf: np.array(
+            data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
+        ),
     ),
     data_aggregation_helper.TableColumn(
         'cmd_vel',
         'rot_vel',
-        lambda conf: data_aggregation_helper.get_earliest_in_next_intervall(conf)[ #
+        lambda conf: data_aggregation_helper.get_earliest_in_next_intervall(conf)[  #
             'data'
         ].angular.z,
     ),
@@ -77,30 +79,30 @@ table_column_config = [
     data_aggregation_helper.TableColumn(
         'context_steering/samples',
         'samples',
-        lambda conf: np.asarray(
+        lambda conf: np.array(
             data_aggregation_helper.get_latest_in_interval(conf)['data'].data
-        ).reshape(-1, 2), 
+        ).reshape(-1, 2),
     ),
     data_aggregation_helper.TableColumn(
         'context_steering/vis/polygon',
         'polygon',
-        lambda conf: np.asarray(
+        lambda conf: np.array(
             data_aggregation_helper.get_closest_to_timestamp(conf)['data'].data
-        ).reshape(-1, 2), 
+        ).reshape(-1, 2),
     ),
     data_aggregation_helper.TableColumn(
         'context_steering/vis/all_and_pareto_individuals',
         'all_and_pareto_individuals',
-        lambda conf: np.asarray(
+        lambda conf: np.array(
             data_aggregation_helper.get_closest_to_timestamp(conf)['data'].data
-        ).reshape(-1, 5), 
+        ).reshape(-1, 5)
     ),
     data_aggregation_helper.TableColumn(
-        'context_steering/vis/chosen_and_admissable_individuals',
-        'chosen_and_admissable_individuals',
-        lambda conf: np.asarray(
+        'context_steering/vis/chosen_and_admissible_individuals',
+        'chosen_and_admissible_individuals',
+        lambda conf: np.array(
             data_aggregation_helper.get_latest_in_interval(conf)['data'].data
-        ).reshape(-1, 5), 
+        ).reshape(-1, 5),
     ),
 
 ]
