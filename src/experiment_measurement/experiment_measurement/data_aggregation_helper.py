@@ -64,7 +64,7 @@ def get_all_params_as_tuple_list(conf):
     """Return all params before timestamp or at timestamp as a list of (name,value)-tuple, NaN if empty."""
     s = conf.df.loc[
         conf.df.timestamp.le(conf.t)
-        & conf.df.timestamp.ge(conf.t_prev)
+        & conf.df.timestamp.gt(conf.t_prev)
     ]['data']
     if len(s) > 0:
         res = []
