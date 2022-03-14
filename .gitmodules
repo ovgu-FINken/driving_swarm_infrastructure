@@ -1,0 +1,3 @@
+[submodule "ansible/roles/ansible-role-ros2"]
+	path = ansible/roles/ansible-role-ros2
+	url = https://github.com/rarrais/ansible-role-ros2
