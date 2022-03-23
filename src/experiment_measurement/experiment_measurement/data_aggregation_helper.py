@@ -6,8 +6,7 @@ import numpy as np
 
 from transformations import euler_from_quaternion
 from rclpy.parameter import Parameter
-# from att_rep_controller.utils import __cart2pol
-
+from sensor_msgs_py import point_cloud2
 
 class TableConfig:
 
@@ -86,6 +85,22 @@ def filter_tf_child_frame_id(conf):
         mask
     ]
     return conf_copy
+
+def get_obstacle_distance(cloud):
+    cloud_points = np.array(
+        list(
+            point_cloud2.read_points(
+                cloud,
+                skip_nans=True,
+                field_names = ("x", "y")
+            )
+        )
+    )
+    distances =  np.linalg.norm(
+        cloud_points,
+        axis=1
+    )
+    return distances
 
 
 def quaternion_to_euler(data):
