@@ -101,7 +101,7 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
-      <model name='thesis_exp_tb3_house'>
+      <model name='thesis_exp_house'>
         <pose>2.05751 -3.7249 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='Wall_101'>
@@ -248,7 +248,7 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <model name='thesis_exp_tb3_house'>
+    <model name='thesis_exp_house'>
       <link name='Wall_101'>
         <pose>-0.05 3.1 0 0 0 -1.5708</pose>
         <self_collide>0</self_collide>

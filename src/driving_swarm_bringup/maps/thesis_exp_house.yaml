@@ -1,4 +1,4 @@
-image: thesis_exp_tb3_house.pgm
+image: thesis_exp_house.pgm
 mode: trinary
 resolution: 0.05
 origin: [-5.71, -7.94, 0]
