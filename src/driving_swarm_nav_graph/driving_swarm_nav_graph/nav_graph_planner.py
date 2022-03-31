@@ -43,15 +43,11 @@ class NavGraphLocalPlanner(NavGraphNode):
                 .get_parameter_value()
                 .integer_value
             ),
-            step=self.get_parameter("step_size")
-            .get_parameter_value()
-            .double_value,
+            step=0.1,
             r=self.get_parameter("turn_radius")
             .get_parameter_value()
             .double_value,
-            r_step=self.get_parameter("turn_speed")
-            .get_parameter_value()
-            .double_value,
+            r_step=1.0,
         )
 
         self.tfBuffer = tf2_ros.Buffer()
