@@ -1,8 +1,0 @@
----
-# run apt update + apt upgrade
-
-- name: update packgaes
-  apt:
-    name: "*"
-    state: latest
-    update_cache: yes
