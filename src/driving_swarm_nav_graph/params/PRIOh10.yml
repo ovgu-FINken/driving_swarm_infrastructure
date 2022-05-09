@@ -1,0 +1,6 @@
+planner: PrioritizedPlanner
+planner_args:
+  weight: 'dist'
+  limit: 200
+  discard_conflicts_beyond: 10
+  horizon: 10

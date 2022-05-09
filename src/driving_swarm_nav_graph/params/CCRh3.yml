@@ -1,0 +1,6 @@
+planner: CCR
+planner_args:
+  limit: 200
+  weight: 'dist'
+  discard_conflicts_beyond: 3
+  horizon: 3

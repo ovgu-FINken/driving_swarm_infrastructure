@@ -1,0 +1,4 @@
+planner: PrioritizedPlanner
+planner_args:
+  weight: 'dist'
+  limit: 200

@@ -22,8 +22,8 @@ def controller_spawning(context, *args, **kwargs):
         
     controllers.append(Node(
        package='driving_swarm_nav_graph',
-       #executable='global_graph_planner',
-       executable='nav_graph',
+       executable='global_graph_planner',
+       #executable='nav_graph',
        parameters=[{
         'use_sim_time': use_sim_time,
         'robot_names': [robot['name'] for robot in robots[:int(n_robots)]],
@@ -33,12 +33,15 @@ def controller_spawning(context, *args, **kwargs):
            get_package_share_directory('driving_swarm_bringup'),
            'maps',
            'icra2021_map_no_obstacle.yaml'),
-        }],
+        'planner_config': os.path.join(
+            get_package_share_directory('driving_swarm_nav_graph'),
+            'params',
+            'CBS.yml'
+        )}],
        output='screen',
     ))
     
-    #for robot in robots[:int(n_robots)]:
-    for robot in []:
+    for robot in robots[:int(n_robots)]:
         controllers.append(Node(
            package='driving_swarm_nav_graph',
            executable='nav_graph_planner',

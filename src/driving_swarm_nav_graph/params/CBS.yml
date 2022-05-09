@@ -1,0 +1,5 @@
+planner: CBS
+planner_args:
+  limit: 200
+  weight: 'dist'
+  max_iter: 1_000_000

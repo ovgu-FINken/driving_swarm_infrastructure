@@ -19,12 +19,13 @@ from std_msgs.msg import String, Int32
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
 from trajectory_generator.utils import yaw_from_orientation, yaw_to_orientation
-from driving_swarm_nav_graph.utils import *
+import polygonal_roadmaps as poro
+import yaml
 
 
 class NavGraphLocalPlanner(NavGraphNode):
     def __init__(self):
-        super().__init__()
+        super().__init__('local_planner')
         self.get_logger().info("Starting")
         self.own_frame = "base_link"
         self.reference_frame = "map"
@@ -96,7 +97,7 @@ class NavGraphLocalPlanner(NavGraphNode):
             self.get_logger().warn(f"Exception in tf transformations\n{e}")
             return
         
-        node = find_nearest_node(self.g, (pose[0], pose[1]))
+        node = poro.geometry.find_nearest_node(self.env.g, (pose[0], pose[1]))
         if not node:
             self.get_logger().info(f'node: {node}')
         self.cell_publisher.publish(Int32(data=int(node)))
@@ -173,10 +174,10 @@ class NavGraphLocalPlanner(NavGraphNode):
     def gen_rtr_path(self, start):
         if start is None:
             return
-        poly = poly_from_path(self.g, self.plan) 
+        poly = poro.geometry.poly_from_path(self.env.g, self.plan) 
         # set goal from final node in path
-        goal = self.g.vp['geometry'][self.plan[-1]].inner.centroid.coords[0]
-        path = waypoints_through_poly(self.g, poly, start[:2], goal, eps=0.01)
+        goal = self.env.g.nodes()[self.plan[-1]]['geometry'].inner.centroid.coords[0]
+        path = poro.geometry.waypoints_through_poly(self.env.g, poly, start[:2], goal, eps=0.01)
         pose_path = [[coords[0], coords[1], np.nan, 1.0] for coords in path.coords]
         pose_path = [start] + pose_path + [(*goal, np.nan)]
         return pose_path

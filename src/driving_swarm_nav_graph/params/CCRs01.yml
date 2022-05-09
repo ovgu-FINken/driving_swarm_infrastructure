@@ -1,0 +1,5 @@
+planner: CCR
+planner_args:
+  limit: 200
+  weight: 'dist'
+  social_reward: 0.1

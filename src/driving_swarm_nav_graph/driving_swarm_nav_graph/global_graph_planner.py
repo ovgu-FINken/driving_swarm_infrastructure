@@ -9,14 +9,15 @@ from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path
 from std_msgs.msg import String, Int32
 from std_srvs.srv import Empty
-from driving_swarm_nav_graph.utils import *
 from functools import partial
 from itertools import groupby
+import yaml
 
+import polygonal_roadmaps as poro
 
 class NavGraphGlobalPlanner(NavGraphNode):
     def __init__(self):
-        super().__init__('Global Planner')
+        super().__init__('global_planner')
         self.get_logger().info("Starting")
         self.own_frame = "base_link"
         self.reference_frame = "map"
@@ -33,6 +34,9 @@ class NavGraphGlobalPlanner(NavGraphNode):
         qos_profile.durability = (
             rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
         )
+        self.declare_parameter('planner_config')
+        self.planner_config = self.get_parameter('planner_config').get_parameter_value().string_value
+            
 
         self.plans = None
         self.node_occupancies = {}
@@ -80,12 +84,15 @@ class NavGraphGlobalPlanner(NavGraphNode):
             return
         # create start and goal assignments
         
-        sg = self.node_occupancies.values()
-        sg = list(zip(sg, reversed(sg)))
+        self.env.state = self.env.start = self.node_occupancies.values()
+        self.env.goal = list(reversed(self.env.state))
+        self.planner = poro.utils.create_planner_from_config_file(self.planner_config, self.env)
+        self.plan_executor = poro.polygonal_roadmap.Executor(self.env, self.planner)
 
         #self.get_logger().info(f'{list(sg)}')
         # make plan
-        plans = prioritized_plans(self.g, sg, limit=50)
+        self.plan_executor.run()
+        plans = self.plan_executor.get_history_as_solution()
         self.get_logger().info(f'{plans}')
         plans = {k: v for k, v in zip(self.node_occupancies.keys(), plans)}
         return plans
