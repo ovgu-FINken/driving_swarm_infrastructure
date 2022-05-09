@@ -16,7 +16,7 @@ from itertools import groupby
 
 class NavGraphGlobalPlanner(NavGraphNode):
     def __init__(self):
-        super().__init__()
+        super().__init__('Global Planner')
         self.get_logger().info("Starting")
         self.own_frame = "base_link"
         self.reference_frame = "map"

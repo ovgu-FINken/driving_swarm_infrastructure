@@ -22,7 +22,8 @@ def controller_spawning(context, *args, **kwargs):
         
     controllers.append(Node(
        package='driving_swarm_nav_graph',
-       executable='global_graph_planner',
+       #executable='global_graph_planner',
+       executable='nav_graph',
        parameters=[{
         'use_sim_time': use_sim_time,
         'robot_names': [robot['name'] for robot in robots[:int(n_robots)]],
@@ -36,7 +37,8 @@ def controller_spawning(context, *args, **kwargs):
        output='screen',
     ))
     
-    for robot in robots[:int(n_robots)]:
+    #for robot in robots[:int(n_robots)]:
+    for robot in []:
         controllers.append(Node(
            package='driving_swarm_nav_graph',
            executable='nav_graph_planner',
