@@ -5,7 +5,7 @@ import yaml
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -36,7 +36,7 @@ def controller_spawning(context, *args, **kwargs):
         'planner_config': os.path.join(
             get_package_share_directory('driving_swarm_nav_graph'),
             'params',
-            'CBS.yml'
+            'CCR.yml'
         )}],
        output='screen',
     ))
@@ -97,6 +97,12 @@ def generate_launch_description():
         'tiling',
         default_value='hex'
     )
+
+    declare_planner_cmd = DeclareLaunchArgument(
+        'planner',
+        default_value='CCR.yml'
+    )
+
 
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)

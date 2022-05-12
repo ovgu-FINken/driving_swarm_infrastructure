@@ -36,6 +36,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
         )
         self.declare_parameter('planner_config')
         self.planner_config = self.get_parameter('planner_config').get_parameter_value().string_value
+        self.get_logger().info(f'Planner config: {self.planner_config}')
             
 
         self.plans = None
@@ -84,7 +85,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
             return
         # create start and goal assignments
         
-        self.env.state = self.env.start = self.node_occupancies.values()
+        self.env.state = self.env.start = list(self.node_occupancies.values())
         self.env.goal = list(reversed(self.env.state))
         self.planner = poro.utils.create_planner_from_config_file(self.planner_config, self.env)
         self.plan_executor = poro.polygonal_roadmap.Executor(self.env, self.planner)
