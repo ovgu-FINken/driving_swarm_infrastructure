@@ -34,6 +34,7 @@ class FakeRange(Node):
             self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
         )
         self.get_logger().info(f"waiting for transform map -> {self.reference_frame}")
+        rclpy.spin_until_future_complete(self, f)
 
         self.range_pub = self.create_publisher(Range, 'range', 10)
         self.create_timer(rate, self.timer_cb)
