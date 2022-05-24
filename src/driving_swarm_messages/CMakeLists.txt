@@ -28,6 +28,7 @@ set(msg_files
   "msg/FloatArray.msg"
   "msg/FloatArrayStamped.msg"
   "msg/ParameterListStamped.msg"
+  "msg/Range.msg"
 )
 
 set(srv_files

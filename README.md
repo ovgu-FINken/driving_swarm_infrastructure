@@ -2,7 +2,9 @@
 
 ## Installation
 
-Four automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible) installation option.
+!!! For automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible) installation option. !!!
+
+### Manual Installation
 
 To install and run the DrivingSwarm framework we strongly recommend to use the Ubuntu version 20.04, which goes along with the ROS2 foxy-fitzroy.
 To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](https://docs.ros.org/en/foxy/Installation.html)

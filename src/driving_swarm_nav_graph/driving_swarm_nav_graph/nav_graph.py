@@ -23,7 +23,7 @@ class NavGraphNode(Node):
             if tiling == 'hex':
                 points = geometry.hexagon_tiling(0.60, working_area_x=wx, working_area_y=wy)
             elif tiling == 'square':
-                points = geometry.square_tiling(0.40, working_area_x=wx, working_area_y=wy)
+                points = square_tiling(0.60, **self.wa)
             elif tiling == 'random':
                 points = geometry.random_tiling(50, working_area_x=wx, working_area_y=wy)
             else:
