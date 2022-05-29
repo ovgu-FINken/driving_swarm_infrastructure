@@ -25,6 +25,18 @@ class FakeRange(Node):
 - {x: 0.0, y: 0.0, z: 2.0}''')
         anchors = self.get_parameter('anchor_list').get_parameter_value().string_value
         self.anchors = yaml.safe_load(anchors)
+        self.get_logger().info(f"anchors: {self.anchors}")
+        for anchor in self.anchors:
+            if not "ox" in anchor:
+                anchor["ox"] = 0.0
+            if not "oy" in anchor:
+                anchor["oy"] = 0.0
+            if not "oz" in anchor:
+                anchor["oz"] = 0.0
+            if not "sigma" in anchor:
+                anchor["sigma"] = 0.0
+            if not "mu" in anchor:
+                anchor["mu"] = 0.0
         self.get_logger().info(f'achors: {self.anchors}')
         self.declare_parameter('rate', 0.2)
         rate = self.get_parameter('rate').get_parameter_value().double_value
@@ -59,7 +71,11 @@ class FakeRange(Node):
         # compute range
         anchor = self.anchors[self.t % len(self.anchors)]
         ax, ay, az = anchor['x'], anchor['y'], anchor['z']
+        ax += anchor["ox"]
+        ay += anchor["oy"]
+        az += anchor["oz"]
         dist = np.linalg.norm(np.array([x - ax, y - ay, z - az]))
+        dist *= np.random.normal(anchor["mu"], anchor["sigma"])
 
         # publish range message
         self.get_logger().debug(f'robot at position ({x:.1f}, {y:.1f}, {z:.1f}). Dist = {dist}')
