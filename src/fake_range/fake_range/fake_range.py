@@ -36,7 +36,7 @@ class FakeRange(Node):
             if not "sigma" in anchor:
                 anchor["sigma"] = 0.0
             if not "mu" in anchor:
-                anchor["mu"] = 0.0
+                anchor["mu"] = 1.0
         self.get_logger().info(f'achors: {self.anchors}')
         self.declare_parameter('rate', 0.2)
         rate = self.get_parameter('rate').get_parameter_value().double_value
