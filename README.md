@@ -2,9 +2,32 @@
 
 ## Installation
 
-!!! For automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible) installation option. !!!
+- For automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible) installation option.
+- For the manual installation see the instructinos below
 
-### Manual Installation
+
+## Using Driving Swarm
+
+To use the DrivingSwarm framework, you best start with running the launch-file `ros2 launch driving_swarm_bringup multi_robot.launch.py`.
+The launch file will start
+- The gazebo simulation (you can use `simulator:=gzserver` to disable the visualization)
+- `single_robot.launch.py` for each robot, this launchfile will in turn launch serveral nodes for each robot
+  - amcl-localization
+  - nodes to translate TF-information between local- an global namespace
+  - rviz
+- We use a map, a gazebo-world and a robot-configuration containing the starting position and (optional) additional information for each robots
+- `n_robots:=4` will start the behavior with four robots (you can change the value according to your own preference)
+
+To run real robots you can use `multi_real_robot_fix_pos.launch` to launch multiple real robots with fixed starting positions.
+If you want to define your own behavior, you can include the main launchfile and deactivate the behaviours via parameters
+- `behavior:=False` will deactivate the behavior
+- `use_rviz:=False` will disable rviz
+
+A simple example workspace using the DrivingSwarm framework can be found in the tutorials for our lecture [Introduction to Robotics](https://github.com/ovgu-FINken/introduction_to_robotics_tutorial/tree/main/src/reactive_behaviour). Each package in this workspace contains simple implementations for behaviors and a launch-file, which launches the behvior and the infrastructure neccessary for running an experiment with simulated and real robots.
+See the [wiki](https://github.com/ovgu-FINken/driving_swarm_infrastructure/wiki) for further documentation.
+
+
+## Manual Installation
 
 To install and run the DrivingSwarm framework we strongly recommend to use the Ubuntu version 20.04, which goes along with the ROS2 foxy-fitzroy.
 To install the DrivingSwarm package, you need to install [ROS2-foxy-fitzroy](https://docs.ros.org/en/foxy/Installation.html)
@@ -55,21 +78,3 @@ In addition you need to instal the following python packages: `python3-pykdl`, `
 Once the dependencies are correctly installed, you should be able to build the main workspace of the DrivingSwarm with colcon build.
 You can source the workspace, now you should be able to run your first simulation.
 
-
-## Useage
-
-To use the DrivingSwarm framework, you best start with running the launch-file `ros2 launch driving_swarm_bringup multi_robot.launch.py`.
-The launch file will start
-- The gazebo simulation (you can use `simulator:=gzserver` to disable the visualization)
-- `single_robot.launch.py` for each robot, this launchfile will in turn launch serveral nodes for each robot
-  - amcl-localization
-  - nodes to translate TF-information between local- an global namespace
-  - rviz
-  - a simple behaviour (turtlebot3 drive, from the TurtleBot3 repos)
-
-To run real robots you can use `multi_real_robot_fix_pos.launch` to launch multiple real robots with fixed starting positions.
-If you want to define your own behavior, you can include the main launchfile and deactivate the behaviours via parameters
-- `behavior:=False` will deactivate the behavior
-- `use_rviz:=False` will disable rviz
-
-See the [wiki](https://github.com/ovgu-FINken/driving_swarm_infrastructure/wiki) for further documentation.
