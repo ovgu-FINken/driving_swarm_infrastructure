@@ -13,31 +13,40 @@ class NavGraphNode(Node):
     def __init__(self, node_name):
         super().__init__(node_name)
         self.declare_parameter('graph_file')
+        self.declare_parameter('x_min', -1.0)
+        self.declare_parameter('x_max', 4.0)
+        self.declare_parameter('y_min', -1.0)
+        self.declare_parameter('y_max', 4.0)
         map_file = self.get_parameter('graph_file').get_parameter_value().string_value
-        wx = (-0.75, 4)
-        wy = (-3, 0.75)
-        self.declare_parameter('tiling')
+        
+        wx = (self.get_parameter('x_min').get_parameter_value().double_value, self.get_parameter('x_max').get_parameter_value().double_value)
+        wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
+        self.declare_parameter('grid_type', 'hex')
+        self.declare_parameter('grid_size', .6)
+         
             
+        self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         if map_file.endswith(".yaml"):
-            tiling = self.get_parameter('tiling').get_parameter_value().string_value
+            grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
+            tiling = self.get_parameter('grid_type').get_parameter_value().string_value
             if tiling == 'hex':
-                points = geometry.hexagon_tiling(0.60, working_area_x=wx, working_area_y=wy)
+                points = geometry.hexagon_tiling(grid_size, working_area_x=wx, working_area_y=wy)
             elif tiling == 'square':
-                points = square_tiling(0.60, **self.wa)
+                points = geometry.square_tiling(grid_size, working_area_x=wx, working_area_y=wy)
             elif tiling == 'random':
                 points = geometry.random_tiling(50, working_area_x=wx, working_area_y=wy)
             else:
                 self.get_logger().warn('no tiling specified, using hex')
-                points = geometry.hexagon_tiling(0.60, working_area_x=wx, working_area_y=wy)
+                points = geometry.hexagon_tiling(grid_size, working_area_x=wx, working_area_y=wy)
         self.env = polygonal_roadmap.RoadmapEnvironment(map_file,
                                                         None,
                                                         None,
                                                         generator_points=points,
                                                         wx=wx,
-                                                        wy=wy)
+                                                        wy=wy,
+                                                        offset=0.2)
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
 
-        self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         self.get_logger().info(f"graph generated {map_file}")
         self.create_timer(1.0, self.visualization_timer_cb)
     
@@ -65,6 +74,14 @@ class NavGraphNode(Node):
             coords = e['geometry'].borderPoly.exterior.coords
             marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
             marker.colors = [ColorRGBA(r=0.5, g=0.5, b=0.8, a=0.3) for _ in coords]
+            poly_msg.markers.append(marker)
+            idx += 1
+            marker = Marker(action=Marker.ADD, ns="edge", id=idx, type=Marker.LINE_STRIP)
+            marker.header.frame_id = 'map'
+            marker.scale.x = 0.01
+            coords = e['geometry'].connection.coords
+            marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
+            marker.colors = [ColorRGBA(r=0.5, g=0.3, b=0.3, a=0.3) for _ in coords]
             poly_msg.markers.append(marker)
 
         return poly_msg

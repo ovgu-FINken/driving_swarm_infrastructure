@@ -94,7 +94,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
         # make plan
         self.plan_executor.run()
         plans = self.plan_executor.get_history_as_solution()
-        self.get_logger().info(f'{plans}')
+        self.get_logger().info(f'PLANS: {plans}')
         plans = {k: v for k, v in zip(self.node_occupancies.keys(), plans)}
         return plans
 

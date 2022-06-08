@@ -1,4 +1,5 @@
 planner: CCR
 planner_args:
-  limit: 200
+  limit: 100
   weight: 'dist'
+  pad_paths: True
