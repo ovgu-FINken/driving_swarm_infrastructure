@@ -19,6 +19,21 @@ def controller_spawning(context, *args, **kwargs):
     use_sim_time = TextSubstitution(text='false')
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
+
+    tiling_params = {
+        'grid_type': 'square',
+        'grid_size': 0.6,
+        'x_min' : -4.0,
+        'x_max' : 4.0,
+        'y_min' : -4.0,
+        'y_max' : 4.0,
+        # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
+        'graph_file': os.path.join(
+           get_package_share_directory('driving_swarm_bringup'),
+           'maps',
+           'lndw2022.yaml'),
+
+    }
         
     controllers.append(Node(
        package='driving_swarm_nav_graph',
@@ -26,13 +41,11 @@ def controller_spawning(context, *args, **kwargs):
        parameters=[{
         'use_sim_time': use_sim_time,
         'robot_names': [robot['name'] for robot in robots[:int(n_robots)]],
-        'tiling': LaunchConfiguration('tiling'),
-        # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
-        'graph_file': os.path.join(
-           get_package_share_directory('driving_swarm_bringup'),
-           'maps',
-           'icra2021_map_no_obstacle.yaml'),
-        }],
+        'planner_config': os.path.join(
+            get_package_share_directory('driving_swarm_nav_graph'),
+            'params',
+            'CCR.yml'
+        )}, tiling_params],
        output='screen',
     ))
     
@@ -57,13 +70,7 @@ def controller_spawning(context, *args, **kwargs):
             'turn_radius': 0.05,
             'turn_speed': 1.0,
             'step_size': 0.1,
-            'tiling': LaunchConfiguration('tiling'),
-            # graph file can either be a .yaml for a map, or a file containing an xml-representation for the graph
-            'graph_file': os.path.join(
-               get_package_share_directory('driving_swarm_bringup'),
-               'maps',
-               'icra2021_map_no_obstacle.yaml'),
-            }],
+            }, tiling_params],
            output='screen',
         ))
         controllers.append(Node(
@@ -89,8 +96,8 @@ def generate_launch_description():
     args = {
          'behaviour': 'false',
          #'world': 'icra2021_world.world',
-         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2021_map_no_obstacle.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2021_real.yaml'),
+         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'lndw2022.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'lndw2022.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
