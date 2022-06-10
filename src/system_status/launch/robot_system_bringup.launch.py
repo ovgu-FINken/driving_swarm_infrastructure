@@ -35,5 +35,5 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(ip)
     ld.add_action(robot)
-    ld.add_action(watchdog)
+    # ld.add_action(watchdog)
     return ld
