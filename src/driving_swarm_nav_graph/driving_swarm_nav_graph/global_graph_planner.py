@@ -55,7 +55,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
         self.get_logger().info(f'agents @: {self.node_occupancies}')
         if None in self.node_occupancies.values():
             return
-        if self.plans is None:
+        if self.plans is None or self.env.goal == list(self.node_occupancies.values()):
             self.get_logger().info('Start planning')
             self.plans = self.make_plan()
             self.node_constraints = self.make_node_constraints(self.plans)
@@ -87,6 +87,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
         
         self.env.state = self.env.start = list(self.node_occupancies.values())
         self.env.goal = list(reversed(self.env.state))
+        self.env.goal = [self.env.state[-1]] + self.env.state[:-1]
         self.planner = poro.utils.create_planner_from_config_file(self.planner_config, self.env)
         self.plan_executor = poro.polygonal_roadmap.Executor(self.env, self.planner)
 

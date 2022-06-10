@@ -98,7 +98,7 @@ class NavGraphLocalPlanner(NavGraphNode):
             return
         
         node = poro.geometry.find_nearest_node(self.env.g, (pose[0], pose[1]))
-        if not node:
+        if not node or node == 0:
             self.get_logger().info(f'node: {node}')
         self.cell_publisher.publish(Int32(data=int(node)))
     
