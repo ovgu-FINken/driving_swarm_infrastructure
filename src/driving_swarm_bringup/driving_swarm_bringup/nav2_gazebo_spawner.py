@@ -133,7 +133,7 @@ class Spawner(Node):
         self.get_logger().info('Sending initial pose')
         pose = PoseWithCovarianceStamped()
         pose.header.frame_id = "map"
-        #pose.header.time = self.get_clock().now().stamp()
+        pose.header.stamp = self.get_clock().now().to_msg()
         pose.pose.pose = self.initial_pose
         self.pub.publish(pose)
 

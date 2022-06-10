@@ -19,6 +19,7 @@ import argparse
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose
+from std_srvs.srv import Empty
 from lifecycle_msgs.srv import GetState
 import PyKDL
 import time
@@ -30,6 +31,7 @@ class Spawner(Node):
         self.args = args
         topic = f'{args.robot_namespace}/initialpose'
         self.pub = self.create_publisher(PoseWithCovarianceStamped, topic, 10)
+        self.srv = self.create_client(Empty, f'{args.robot_namespace}/request_nomotion_update')
 
         self.initial_pose = Pose()
         self.initial_pose.position.x = args.x
@@ -62,18 +64,29 @@ class Spawner(Node):
                 raise RuntimeError(
                     'exception while calling service: %r' % future.exception())
         self.send_initial_pose()
+        self.request_no_motion_update()
+        rclpy.shutdown()
+
+    def request_no_motion_update(self):
+        self.get_logger().info("sending nomotion update request")
+        self.srv.wait_for_service()
+        future = self.srv.call_async(Empty.Request())
+        rclpy.spin_until_future_complete(self, future)
+        self.get_logger().info("nomotion update request completed")
+        
+
 
     def send_initial_pose(self):
         # Send initial pose
-        time.sleep(2.0)
+        time.sleep(1.0)
         self.get_logger().info('Sending initial pose')
         pose = PoseWithCovarianceStamped()
         pose.header.frame_id = "map"
+        pose.header.stamp = self.get_clock().now().to_msg()
         pose.pose.pose = self.initial_pose
         self.pub.publish(pose)
 
         self.get_logger().info('Done! Shutting down self.')
-        rclpy.shutdown()
 
 
 def main():
