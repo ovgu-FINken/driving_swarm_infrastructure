@@ -50,15 +50,15 @@ def controller_spawning(context, *args, **kwargs):
     ))
     
     for robot in robots[:int(n_robots)]:
-        controllers.append(Node(
-           package='system_status',
-           executable='scan_delay',
-           namespace=robot['name'],
-           parameters=[{
-              'use_sim_time': use_sim_time,
-           }],
-           output='screen',
-        ))
+        # controllers.append(Node(
+        #    package='system_status',
+        #    executable='scan_delay',
+        #    namespace=robot['name'],
+        #    parameters=[{
+        #       'use_sim_time': use_sim_time,
+        #    }],
+        #    output='screen',
+        # ))
 
         controllers.append(Node(
            package='driving_swarm_nav_graph',

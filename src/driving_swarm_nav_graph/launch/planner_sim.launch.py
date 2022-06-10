@@ -87,7 +87,7 @@ def generate_launch_description():
          'behaviour': 'false',
          'world': 'lndw2022.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'lndw2022.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'lndw2022.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'lndw2022sim.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }

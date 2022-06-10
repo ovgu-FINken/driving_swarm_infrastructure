@@ -43,18 +43,18 @@ def generate_launch_description():
                 {'robot_name': robot_name},
                 {'base_frame': base_frame}
             ],
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
+            remappings=[("/tf", "tf"), ("/tf_static", "tf_static"), ('tf_global', '/tf')]
         ),
-        Node(
-            package='tf_exchange',
-            executable='local_to_global_tf_pub',
-            output='screen',
-            name='local_to_global_tf_pub',
-            namespace=namespace,
-            parameters=[
-                {'robot_name': robot_name}
-            ],
-        ),
+        # Node(
+        #     package='tf_exchange',
+        #     executable='local_to_global_tf_pub',
+        #     output='screen',
+        #     name='local_to_global_tf_pub',
+        #     namespace=namespace,
+        #     parameters=[
+        #         {'robot_name': robot_name}
+        #     ],
+        # ),
         Node(
             package='tf_exchange',
             executable='global_to_local_tf_pub',

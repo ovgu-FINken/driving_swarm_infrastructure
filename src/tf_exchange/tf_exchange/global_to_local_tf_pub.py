@@ -38,8 +38,8 @@ class LocalToGlobalTFPub(Node):
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        if msg.transforms[0].child_frame_id != self.robot_name:
-            self.publisher_.publish(msg)
+        # if msg.transforms[0].child_frame_id != self.robot_name:
+        self.publisher_.publish(msg)
 
 
 def main(args=None):

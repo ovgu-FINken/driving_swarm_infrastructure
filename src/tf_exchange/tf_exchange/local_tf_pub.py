@@ -35,9 +35,14 @@ class LocalTFPub(Node):
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
+        self.publisher = self.create_publisher(TFMessage, 'tf_global', 100)
+        f = self.tfBuffer.wait_for_transform_async(
+            'world', self.base_frame, rclpy.time.Time().to_msg()
+        )
+        rclpy.spin_until_future_complete(self, f)
         TIMER_PERIOD = 0.1  # seconds
         self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
-        self.br = tf2_ros.TransformBroadcaster(self)
+        #self.br = tf2_ros.TransformBroadcaster(self)
 
     def timer_callback(self):
         tf2Msg = TransformStamped()
@@ -46,7 +51,10 @@ class LocalTFPub(Node):
             tf2Msg = self.tfBuffer.lookup_transform(
                 "world", self.base_frame, rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
-            self.br.sendTransform(tf2Msg)
+            msg = TFMessage()
+            msg.transforms = [tf2Msg]
+            self.publisher.publish(msg)
+            #self.br.sendTransform(tf2Msg)
         except Exception as e:
             self.get_logger().info(str(type(e)), once=True)
 
