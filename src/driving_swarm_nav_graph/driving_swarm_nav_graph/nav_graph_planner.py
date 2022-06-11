@@ -99,7 +99,10 @@ class NavGraphLocalPlanner(NavGraphNode):
         
         node = poro.geometry.find_nearest_node(self.env.g, (pose[0], pose[1]))
         if not node or node == 0:
-            self.get_logger().info(f'node: {node}')
+            self.get_logger().warn(f'node: {node}')
+            self.get_logger().warn(f'node found is {self.env.g.nodes()[0]["geometry"].center}')
+            self.get_logger().warn(f'robot is located at {pose[0]}, {pose[1]}')
+            return
         self.cell_publisher.publish(Int32(data=int(node)))
     
     def plan_cb(self, msg):

@@ -124,15 +124,15 @@ def generate_launch_description():
         launch_ros.actions.PushRosNamespace(
             namespace=namespace),
 
-        launch_ros.actions.Node(package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            # namespace=namespace,
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=[urdf],
-            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
-        ),
+        #launch_ros.actions.Node(package='robot_state_publisher',
+        #    executable='robot_state_publisher',
+        #    name='robot_state_publisher',
+        #    # namespace=namespace,
+        #    output='screen',
+        #    parameters=[{'use_sim_time': use_sim_time}],
+        #    arguments=[urdf],
+        #    remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
+        #),
 
         # launching the map server
         IncludeLaunchDescription(
