@@ -44,7 +44,7 @@ class NavGraphNode(Node):
                                                         generator_points=points,
                                                         wx=wx,
                                                         wy=wy,
-                                                        offset=0.2)
+                                                        offset=0.3)
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
 
         self.get_logger().info(f"graph generated {map_file}")
