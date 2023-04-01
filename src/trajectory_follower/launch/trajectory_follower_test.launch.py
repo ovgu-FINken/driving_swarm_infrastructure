@@ -31,6 +31,7 @@ def controller_spawning(context, *args, **kwargs):
               'y': robot['goals']['y'],
               'theta': robot['goals']['theta'],
            }],
+           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
            output='screen',
         ))
         controllers.append(Node(
@@ -48,10 +49,11 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot['name'],
            parameters=[{
             'use_sim_time': use_sim_time,
-            'vehicle_model': 1,
+            'vehicle_model': 3,
             'turn_radius': 0.2,
             'step_size': 0.06
             }],
+           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
            output='screen',
         ))
         controllers.append(Node(
@@ -67,6 +69,7 @@ def controller_spawning(context, *args, **kwargs):
                   "fail_radius": 0.3
               }
            ],
+           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
            output='screen',
         ))
     

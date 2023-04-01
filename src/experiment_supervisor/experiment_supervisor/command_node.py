@@ -4,18 +4,17 @@ import rclpy
 import sys
 import functools
 from termcolor import colored
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class CommandNode(Node):
+class CommandNode(DrivingSwarmNode):
     def __init__(self):
         super().__init__("command_node")
         self.logger_ = self.get_logger()
         # fetch swarm size and robot names
-        self.declare_parameter("robots")
-        self.declare_parameter("run_timeout")
-        self.declare_parameter("init_timeout")
-        self.robots = self.get_parameter("robots")\
-            .get_parameter_value().string_array_value
+        self.declare_parameter("run_timeout", 0.0)
+        self.declare_parameter("init_timeout", 0.0)
+        self.get_list_of_robot_names()
         qos_profile = rclpy.qos.qos_profile_system_default
         qos_profile.reliability = rclpy.qos.QoSReliabilityPolicy\
             .RMW_QOS_POLICY_RELIABILITY_RELIABLE

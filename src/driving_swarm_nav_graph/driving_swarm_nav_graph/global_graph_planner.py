@@ -25,8 +25,6 @@ class NavGraphGlobalPlanner(NavGraphNode):
         self.started = False
         self.current_trajectory = None
 
-        self.declare_parameter('robot_names')
-        self.robots = self.get_parameter('robot_names').get_parameter_value().string_array_value
         qos_profile = rclpy.qos.qos_profile_system_default
         qos_profile.reliability = (
             rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
@@ -34,9 +32,12 @@ class NavGraphGlobalPlanner(NavGraphNode):
         qos_profile.durability = (
             rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
         )
-        self.declare_parameter('planner_config')
+        self.declare_parameter('planner_config', "invalid conflig")
         self.planner_config = self.get_parameter('planner_config').get_parameter_value().string_value
-        self.get_logger().info(f'Planner config: {self.planner_config}')
+        if self.planner_config == 'invalid config':
+            self.get_logger().warn('please specify a planner config via the parameters')
+        else:
+            self.get_logger().info(f'Planner config: {self.planner_config}')
             
 
         self.plans = None

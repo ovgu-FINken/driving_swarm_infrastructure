@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import rclpy
-import PyKDL
 import tf2_ros
-import tf2_kdl
 import tf2_py
 import tf2_geometry_msgs
 import numpy as np
@@ -20,21 +18,19 @@ from trajectory_generator.vehicle_model_node import (
 )
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class DirectPlanner(Node):
+class DirectPlanner(DrivingSwarmNode):
     def __init__(self):
         super().__init__("direct_planner")
-        self.get_logger().info("Starting")
-        self.own_frame = "base_link"
-        self.reference_frame = "map"
         self.goal = None
         self.started = False
         self.current_trajectory = None
 
-        self.declare_parameter("vehicle_model")
-        self.declare_parameter("step_size")
-        self.declare_parameter("turn_radius")
+        self.declare_parameter("vehicle_model", 3)
+        self.declare_parameter("step_size", 0.1)
+        self.declare_parameter("turn_radius", 0.3)
         self.vm = TrajectoryGenerator(
             model=Vehicle(
                 self.get_parameter("vehicle_model")
@@ -49,8 +45,8 @@ class DirectPlanner(Node):
             .double_value,
         )
 
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
+        self.get_frames()
+        self.setup_tf()
 
         qos_profile = rclpy.qos.qos_profile_system_default
         qos_profile.reliability = (
@@ -70,11 +66,7 @@ class DirectPlanner(Node):
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.follow_action_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
-        f = self.tfBuffer.wait_for_transform_async(
-            self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
-        )
-        self.get_logger().info("waiting for transform map -> baselink")
-        rclpy.spin_until_future_complete(self, f)
+        self.wait_for_tf()
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
         self.create_timer(0.1, self.timer_cb)
 
@@ -146,7 +138,7 @@ class DirectPlanner(Node):
         if ti is None or ti == 0:
             ti = 0
             try:
-                trans = self.tfBuffer.lookup_transform(
+                trans = self.tf_buffer.lookup_transform(
                     self.reference_frame,
                     self.own_frame,
                     rclpy.time.Time().to_msg(),

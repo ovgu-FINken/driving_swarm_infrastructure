@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rclpy
-import PyKDL
+import tf_transformations
 import tf2_ros
 import tf2_kdl
 import tf2_py
@@ -299,11 +299,11 @@ class PSOPlanner(Node):
         return image
 
 def yaw_from_orientation(orientation):
-    rot = PyKDL.Rotation.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-    return rot.GetRPY()[2]
+    return tf_transformations.euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])[2]
+
 
 def yaw_to_orientation(yaw):
-    q = PyKDL.Rotation.RPY(0,0,yaw).GetQuaternion()
+    q = tf_transformations.quaternion_from_euler(0, 0, yaw)
     return Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
     
 

@@ -1,10 +1,9 @@
 
 import rclpy
-import PyKDL
+import tf_transformations
 
 # modules need to be imported as plugins for tf2
 import tf2_ros
-import tf2_kdl # noqa F401
 import tf2_py # noqa F401
 import tf2_geometry_msgs # noqa F401
 import numpy as np
@@ -14,20 +13,20 @@ from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from nav_msgs.msg import Path
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class TrajectoryFollower(Node):
+class TrajectoryFollower(DrivingSwarmNode):
     def __init__(self):
         super().__init__('trajectory_follower')
-        self.get_logger().info('Starting trajectory follower')
-        self.reference_frame = 'base_link'
-        self.declare_parameter("dt")
+        self.get_frames()
+        self.declare_parameter("dt", 1.0)
         self.dt = self.get_parameter("dt").get_parameter_value().double_value
-        self.declare_parameter("w1")
+        self.declare_parameter("w1", 0.5)
         self.w1 = self.get_parameter("w1").get_parameter_value().double_value
-        self.declare_parameter("w2")
+        self.declare_parameter("w2", 0.5)
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
-        self.declare_parameter("fail_radius")
+        self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
                                .get_parameter_value().double_value
         self.trajectory = None
@@ -81,10 +80,9 @@ class TrajectoryFollower(Node):
         pose_stamped.pose.position.x = pose2d.x
         pose_stamped.pose.position.y = pose2d.y
         pose_stamped.pose.position.z = 0.0
-        q = Quaternion()
-        q.x, q.y, q.z, q.w = \
-            PyKDL.Rotation.RPY(.0, .0, pose2d.theta).GetQuaternion()
-        pose_stamped.pose.orientation = q
+        pose_stamped.pose.orientation = Quaternion(tf_transformations.quaternion_from_euler(
+            .0, .0, pose2d.theta
+        ))
         return pose_stamped
 
     def poseStamped_to_Pose2D(self, pose_stamped):
@@ -106,7 +104,7 @@ class TrajectoryFollower(Node):
             pose2d.y = pose3d.pose.position.y
             q = pose3d.pose.orientation
             pose2d.theta = \
-                PyKDL.Rotation.Quaternion(q.x, q.y, q.z, q.w).GetRPY()[2]
+                tf_transformations.euler_from_quaternion(q.x, q.y, q.z, q.w)[2]
         except Exception as e:
             self.get_logger().warn(
                 'could not transform pose' +

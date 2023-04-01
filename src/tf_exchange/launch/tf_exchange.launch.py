@@ -30,7 +30,7 @@ def generate_launch_description():
             output='screen',
             name='world_map_tf_static_pub',
             namespace=namespace,
-            arguments=['0', '0', '0', '0', '0', '0', '1', 'world', 'map'],
+            arguments=['--x', '0', '--y', '0', '--z','0', '--qx', '0', '--qy','0', '--qz','0', '--qw', '1', '--frame-id','world', '--child-frame-id','map'],
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
         Node(

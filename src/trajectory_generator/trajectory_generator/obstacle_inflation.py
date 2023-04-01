@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import numpy as np
-import PyKDL
 from skimage import io, segmentation
 from scipy.ndimage import gaussian_filter
 
 import rclpy
 import tf2_ros
+import tf_transformations
 import tf2_geometry_msgs
 import tf2_py
 from rclpy.node import Node
@@ -15,8 +15,7 @@ from nav_msgs.srv import GetMap
 from sensor_msgs.msg import LaserScan
 
 def yaw_from_orientation(orientation):
-    rot = PyKDL.Rotation.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-    return rot.GetRPY()[2]
+    return tf_transformations.euler_from_quaternion((orientation.x, orientation.y, orientation.z, orientation.w))[2]
 
 class InflationNode(Node):
     def __init__(self):

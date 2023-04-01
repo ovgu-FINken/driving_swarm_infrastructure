@@ -24,11 +24,12 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from lifecycle_msgs.srv import GetState
-import PyKDL
 import time
+import tf_transformations
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class Spawner(Node):
+class Spawner(DrivingSwarmNode):
     def __init__(self, args):
         super().__init__(f'spawner_{args.robot_name}')
         self.args = args
@@ -85,7 +86,7 @@ class Spawner(Node):
         request.initial_pose.position.x = args.x
         request.initial_pose.position.y = args.y
         request.initial_pose.position.z = args.z
-        rot = PyKDL.Rotation.RPY(.0, .0, args.yaw).GetQuaternion()
+        rot = tf_transformations.quaternion_from_euler(.0, .0, args.yaw)
         request.initial_pose.orientation.x = rot[0]
         request.initial_pose.orientation.y = rot[1]
         request.initial_pose.orientation.z = rot[2]

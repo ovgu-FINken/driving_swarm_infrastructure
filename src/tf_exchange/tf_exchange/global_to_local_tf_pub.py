@@ -21,16 +21,19 @@ import tf2_ros
 from tf2_msgs.msg import TFMessage
 from geometry_msgs.msg import TransformStamped
 import launch.actions
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class LocalToGlobalTFPub(Node):
+class LocalToGlobalTFPub(DrivingSwarmNode):
     def __init__(self):
         # node
         super().__init__('local_to_global_tf_pub')
 
         # params
-        self.declare_parameter('robot_name')
+        self.declare_parameter('robot_name', 'invalid_name')
         self.robot_name = self.get_parameter('robot_name').value
+        if self.robot_name == 'invalid_name':
+            self.get_logger().warning('robot_name not set')
         self.publisher_ = self.create_publisher(
             TFMessage, 'tf', 100)
         self.subscription = self.create_subscription(

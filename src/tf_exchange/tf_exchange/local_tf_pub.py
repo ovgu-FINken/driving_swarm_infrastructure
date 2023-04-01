@@ -20,24 +20,29 @@ import tf2_ros
 # from tf2_py import *
 from tf2_msgs.msg import TFMessage
 from geometry_msgs.msg import TransformStamped
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class LocalTFPub(Node):
+class LocalTFPub(DrivingSwarmNode):
     def __init__(self):
         # node
         super().__init__('local_tf_pub')
 
         # params
-        self.declare_parameter('robot_name')
+        self.declare_parameter('robot_name', "invalid_robot_name")
         self.robot_name = self.get_parameter('robot_name').value
-        self.declare_parameter('base_frame')
-        self.base_frame = self.get_parameter('base_frame').value
+        if self.robot_name == "invalid_robot_name":
+            self.get_logger().warn("robot_name is not set")
+        self.get_own_frame()
+        self.reference_frame = 'world'
+        # we do not need the reference frame, as we assume world -> map -> ... -> own_frame exists
+        # but we want to reference to world in this case
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.publisher = self.create_publisher(TFMessage, 'tf_global', 100)
         f = self.tfBuffer.wait_for_transform_async(
-            'world', self.base_frame, rclpy.time.Time().to_msg()
+            self.reference_frame, self.own_frame, rclpy.time.Time().to_msg()
         )
         rclpy.spin_until_future_complete(self, f)
         TIMER_PERIOD = 0.1  # seconds

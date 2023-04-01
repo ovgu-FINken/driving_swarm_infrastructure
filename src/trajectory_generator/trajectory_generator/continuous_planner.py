@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import rclpy
-import PyKDL
 import tf2_ros
 import tf2_kdl
 import tf2_py
@@ -17,14 +16,13 @@ from nav_msgs.msg import Path, OccupancyGrid
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 from time import time
 from trajectory_generator.utils import *
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class PSOPlanner(Node):
+class PSOPlanner(DrivingSwarmNode):
     def __init__(self):
         super().__init__('pso_planner')
-        self.get_logger().info('Starting')
-        self.own_frame = 'base_link'
-        self.reference_frame = 'map'
+        self.get_frames()
         self.client_futures = []
         self.current_trajectory = None
         self.population = None
@@ -33,9 +31,9 @@ class PSOPlanner(Node):
         self.w_length = 0.05
         self.w_danger = 0.5
 
-        self.declare_parameter('vehicle_model')
-        self.declare_parameter('step_size')
-        self.declare_parameter('turn_radius')
+        self.declare_parameter('vehicle_model', 3)
+        self.declare_parameter('step_size', 0.1)
+        self.declare_parameter('turn_radius', 0.3)
         self.vm = TrajectoryGenerator(
             model = Vehicle(self.get_parameter('vehicle_model').get_parameter_value().integer_value),
             step = self.get_parameter('step_size').get_parameter_value().double_value,

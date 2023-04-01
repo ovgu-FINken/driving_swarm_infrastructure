@@ -4,10 +4,17 @@
   <name>driving_swarm_bringup</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="nele.traichel@ovgu.de">traichel</maintainer>
+  <maintainer email="sebastian.mai@ovgu.de">traichel</maintainer>
   <license>TODO: License declaration</license>
 
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>turtlebot3_bringup</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>turtlebot3_navigation2</exec_depend>
+  <exec_depend>turtlebot3_teleop</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>tf_transformations</exec_depend>
+  <exec_depend>zenoh_bridge_dds</exec_depend>
   
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

@@ -61,7 +61,7 @@ def initialize_robots(context, *args, **kwargs):
                         parameters=[{
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
-                           'robots': [robot["name"] for robot in robots[:int(n_robots)]],
+                           'robot_names': [robot["name"] for robot in robots[:int(n_robots)]],
                            }])
 
     exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(

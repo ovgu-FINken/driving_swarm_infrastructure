@@ -21,7 +21,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose
 from std_srvs.srv import Empty
 from lifecycle_msgs.srv import GetState
-import PyKDL
+import tf_transformations
 import time
 
 
@@ -37,7 +37,7 @@ class Spawner(Node):
         self.initial_pose.position.x = args.x
         self.initial_pose.position.y = args.y
         self.initial_pose.position.z = args.z
-        rot = PyKDL.Rotation.RPY(.0, .0, args.yaw).GetQuaternion()
+        rot = tf_transformations.quaternion_from_euler(.0, .0, args.yaw)
         self.initial_pose.orientation.x = rot[0]
         self.initial_pose.orientation.y = rot[1]
         self.initial_pose.orientation.z = rot[2]
