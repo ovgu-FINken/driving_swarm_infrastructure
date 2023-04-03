@@ -8,12 +8,12 @@ import tf2_py # noqa F401
 import tf2_geometry_msgs # noqa F401
 import numpy as np
 
-from rclpy.node import Node
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from nav_msgs.msg import Path
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
 from driving_swarm_utils.node import DrivingSwarmNode
+from termcolor import colored
 
 
 class TrajectoryFollower(DrivingSwarmNode):
@@ -58,6 +58,7 @@ class TrajectoryFollower(DrivingSwarmNode):
 
     def update_trajectory_cb(self, request, response):
         # todo: check if trajectories submitted are valid
+        # self.get_logger().info(colored('updating trajectory', 'blue')+f': {request.trajectory}')
         if self.trajectory is None or request.update_index == 0:
             self.trajectory = request.trajectory
         else:
@@ -80,12 +81,17 @@ class TrajectoryFollower(DrivingSwarmNode):
         pose_stamped.pose.position.x = pose2d.x
         pose_stamped.pose.position.y = pose2d.y
         pose_stamped.pose.position.z = 0.0
-        pose_stamped.pose.orientation = Quaternion(tf_transformations.quaternion_from_euler(
-            .0, .0, pose2d.theta
-        ))
+        q = Quaternion()
+        q.x, q.y, q.z, q.w = tf_transformations.quaternion_from_euler(.0, .0, pose2d.theta)
+        pose_stamped.pose.orientation = q
         return pose_stamped
 
     def poseStamped_to_Pose2D(self, pose_stamped):
+        """A function that transforms tha pose_stamped from a plan to a Pose2D in EGO coordinates
+
+        :param pose_stamped: pose from a plan
+        :return: Pose2D in EGO coordinates
+        """
         pose2d = Pose2D()
         try:
             # get the transform so we can read at wich time it was performed
@@ -98,18 +104,18 @@ class TrajectoryFollower(DrivingSwarmNode):
             pose_stamped.header.stamp = t.header.stamp
             pose3d = self.tfBuffer.transform(
                 pose_stamped,
-                self.reference_frame
+                self.own_frame
             )
             pose2d.x = pose3d.pose.position.x
             pose2d.y = pose3d.pose.position.y
             q = pose3d.pose.orientation
             pose2d.theta = \
-                tf_transformations.euler_from_quaternion(q.x, q.y, q.z, q.w)[2]
+                tf_transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))[2]
         except Exception as e:
             self.get_logger().warn(
                 'could not transform pose' +
                 f' in frame {pose_stamped.header.frame_id}' +
-                f' to reference frame {self.reference_frame} \n {e}'
+                f' to reference frame {self.own} \n {e}'
             )
         return pose2d
  
@@ -169,12 +175,14 @@ class TrajectoryFollower(DrivingSwarmNode):
         diff_pose = self.get_target_pose(offset=0.0)
         if diff_pose.x**2 + diff_pose.y**2 > self.fail_radius**2:
             self.set_trajectory_fail()
+            self.get_logger().warn(colored('to far from planned pose', 'red') + f'difference: {diff_pose}')
             return
 
         # compute and publish control output
         control = self.compute_pure_pursuit_output()
         if control is None:
             self.set_trajectory_fail()
+            self.get_logger().warn(colored('control is could not be computed', 'red') + f'diff_pose is: {diff_pose} ')
             return
         
         self.set_cmd_vel(control)

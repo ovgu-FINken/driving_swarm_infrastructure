@@ -19,6 +19,7 @@ from trajectory_generator.vehicle_model_node import (
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
 from driving_swarm_utils.node import DrivingSwarmNode
+from termcolor import colored
 
 
 class DirectPlanner(DrivingSwarmNode):
@@ -110,6 +111,8 @@ class DirectPlanner(DrivingSwarmNode):
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space
+        if not trajectory:
+            self.get_logger().warn(colored("empty trajectory", "red"))
         path = Path()
         path.header.frame_id = self.reference_frame
         path.header.stamp = self.get_clock().now().to_msg()
@@ -123,7 +126,7 @@ class DirectPlanner(DrivingSwarmNode):
             pose3d.pose.orientation = yaw_to_orientation(pose[2])
             path.poses.append(pose3d)
 
-        self.get_logger().info("sending path")
+        self.get_logger().info(colored("sending path", "green"))
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
@@ -142,9 +145,10 @@ class DirectPlanner(DrivingSwarmNode):
                     self.reference_frame,
                     self.own_frame,
                     rclpy.time.Time().to_msg(),
-                )
-                frame = tf2_kdl.transform_to_kdl(trans)
-                start = (frame.p.x(), frame.p.y(), frame.M.GetRPY()[2])
+                ).transform
+                sx, sy = trans.translation.x, trans.translation.y
+                q = trans.rotation
+                start = (sx, sy, tf_transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))[2])
 
             except Exception as e:
                 self.get_logger().info(f"Exception in tf transformations\n{e}")

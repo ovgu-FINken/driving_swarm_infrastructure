@@ -10,4 +10,4 @@ def yaw_from_orientation(orientation):
 def yaw_to_orientation(yaw):
     """Create a quaternion orientation from a yaw angle"""
     q = tf_transformations.quaternion_from_euler(0, 0, yaw)
-    return Quaternion(*q)
+    return Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
