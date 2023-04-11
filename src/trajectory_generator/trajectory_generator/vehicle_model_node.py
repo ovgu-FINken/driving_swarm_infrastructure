@@ -7,6 +7,8 @@ from driving_swarm_messages.srv import VehicleModel as VehicleModelService
 from geometry_msgs.msg import Pose2D
 from enum import IntEnum
 from skimage import io
+from trajectory_generator.dubins_path_planner import plan_dubins_path
+from trajectory_generator.reeds_shepp_path_planning import reeds_shepp_path_planning
 
 class Vehicle(IntEnum):
     DUBINS = 1
@@ -36,6 +38,17 @@ def short_angle_range(phi1: float, phi2: float, r_step:float=0.2):
     
 
 def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS, FIX_ANGLES=False, spline_degree=3):
+    """Create a of poses from the given waypoints, adhering to the given vehicle model.
+
+    :param waypoints: list of waypoint tuples (x, y, phi, v) -- v is optional
+    :param r: radius of the curves (in dubins model), defaults to 1
+    :param step: step size between poses, defaults to 0.1
+    :param r_step: step size for rotation only movements, defaults to 0.2
+    :param model: vehicle model to be used, defaults to Vehicle.DUBINS
+    :param FIX_ANGLES: recompute the angles, defaults to False
+    :param spline_degree: degree of splines for bezier model, defaults to 3
+    :return: list of poses (x, y, phi)
+    """
     path = []
     for wp1, wp2 in zip(waypoints[:-1], waypoints[1:]):
         #set step-size for this segment
@@ -51,12 +64,28 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
         v = np.clip(v, 0.3, 1.0)
         s = step*v
         
-        if model == Vehicle.DUBINS:
-            dbp = dubins.shortest_path(wp1, wp2, r)
-            path = path + dbp.sample_many(s)[0]
-        elif model == Vehicle.DUBINS_ADAPTIVE:
-            dbp = dubins.shortest_path(wp1, wp2, r*v)
-            path = path + dbp.sample_many(s)[0]
+        if model == Vehicle.DUBINS or model == Vehicle.DUBINS_ADAPTIVE:
+            if model == Vehicle.DUBINS_ADAPTIVE:
+                curvature = 1/(r*v)
+            else:
+                curvature = 1 / r
+            # change format of waypoints from multiple np arrays to tuples in a list
+            # we use 1/r as the curvature, as the dubins path planner expects the curvature instead of the radius
+            sx, sy, sphi = wp1[0:3]
+            gx, gy, gphi = wp2[0:3]
+            xs, ys, phis, *_ = plan_dubins_path(sx, sy, sphi, gx, gy, gphi, curvature, step_size=step)
+            path = path + list((x, y, phi) for x, y, phi in zip(xs, ys, phis))
+
+        elif model==Vehicle.REEDS_SHEPP or model==Vehicle.REEDS_SHEPP_ADAPTIVE:
+            if model == Vehicle.REEDS_SHEPP_ADAPTIVE:
+                curvature = 1/(r*v)
+            else:
+                curvature = 1 / r
+            sx, sy, sphi = wp1[0:3]
+            gx, gy, gphi = wp2[0:3]
+            xs, ys, phis, *_ = reeds_shepp_path_planning(sx, sy, sphi, gx, gy, gphi, curvature, step_size=step)
+            path = path + list((x, y, phi) for x, y, phi in zip(xs, ys, phis))
+            
             
         elif model == Vehicle.RTR or model == Vehicle.STRAIGHT:
             # rotate (1)
@@ -105,25 +134,6 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
                 for a in short_angle_range(phi, phi_goal, r_step=r_step):
                     path.append( (x, y, a) )
                     
-        elif model==Vehicle.REEDS_SHEPP or model==Vehicle.REEDS_SHEPP_ADAPTIVE:
-            part = []
-            r_temp = r
-            if model == Vehicle.REEDS_SHEPP_ADAPTIVE:
-                r_temp = r * v
-            sample = reeds_shepp.path_sample(wp1, wp2, r_temp, s)
-            for s in sample:
-                part.append( (s[0], s[1], s[2]) )
-            # cleanup angles
-            if FIX_ANGLES:
-                for i, xy in enumerate(part[:-1]):
-                    dx = xy[0] - part[i+1][0]
-                    dy = xy[1] - part[i+1][1]
-
-                    phi = np.arctan2(dy, dx)
-                    path.append( (xy[0], xy[1], phi) ) 
-                path.append(wp2[0:3])
-            else:
-                path = path + part
         elif model == Vehicle.BEZIER:
             control_point1 = wp1[0] + np.sin(wp1[2])*r, wp1[1] + np.cos(wp1[2])*r
             control_point2 = wp2[0] - np.sin(wp2[2])*r, wp2[1] - np.cos(wp2[2])*r
