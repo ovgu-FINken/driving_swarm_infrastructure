@@ -110,8 +110,14 @@ def generate_launch_description():
         default_value='hex'
     )
 
+    declare_planner_cmd = DeclareLaunchArgument(
+        'planner',
+        default_value='CCR.yml'
+    )
+
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
     ld.add_action(declare_tiling_cmd)
+    ld.add_action(declare_planner_cmd)
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld

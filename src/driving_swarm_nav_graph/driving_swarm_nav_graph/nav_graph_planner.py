@@ -6,19 +6,11 @@ from trajectory_generator.vehicle_model_node import (
     Vehicle,
 )
 
-import tf2_ros
-import tf2_kdl
-import tf2_py
-import tf2_geometry_msgs
 import numpy as np
-import traceback
-from geometry_msgs.msg import PoseStamped, Pose2D, Quaternion
-from nav2_msgs.action import FollowPath
 from nav_msgs.msg import Path
 from std_msgs.msg import String, Int32
 from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
-from trajectory_generator.utils import yaw_from_orientation, yaw_to_orientation
 import polygonal_roadmaps as poro
 import yaml
 
@@ -27,8 +19,7 @@ class NavGraphLocalPlanner(NavGraphNode):
     def __init__(self):
         super().__init__('local_planner')
         self.get_logger().info("Starting")
-        self.own_frame = "base_link"
-        self.reference_frame = "map"
+        self.get_frames()
         self.plan = None
 
         self.started = False
@@ -51,8 +42,7 @@ class NavGraphLocalPlanner(NavGraphNode):
             r_step=1.0,
         )
 
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
+        self.setup_tf()
 
         qos_profile = rclpy.qos.qos_profile_system_default
         qos_profile.reliability = (
@@ -69,32 +59,20 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
+        self.cell_publisher = self.create_publisher(Int32, "nav/cell", 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
+        self.create_subscription(String, "nav/plan", self.plan_cb, 1)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
-        f = self.tfBuffer.wait_for_transform_async(
-            self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
-        )
-        self.get_logger().info("waiting for transform map -> baselink")
-        self.cell_publisher = self.create_publisher(Int32, "nav/cell", 1)
-        rclpy.spin_until_future_complete(self, f)
+        self.wait_for_tf()
+
         self.status_pub.publish(String(data="ready"))
-        self.create_subscription(String, "nav/plan", self.plan_cb, 1)
         self.create_timer(1.0, self.timer_cb)
     
     
     def timer_cb(self):
-        try:
-            trans = self.tfBuffer.lookup_transform(
-                self.reference_frame,
-                self.own_frame,
-                rclpy.time.Time().to_msg(),
-            )
-            frame = tf2_kdl.transform_to_kdl(trans)
-            pose = (frame.p.x(), frame.p.y(), frame.M.GetRPY()[2])
-
-        except Exception as e:
-            self.get_logger().warn(f"Exception in tf transformations\n{e}")
+        pose = self.get_pose()
+        if pose is None:
             return
         
         node = poro.geometry.find_nearest_node(self.env.g, (pose[0], pose[1]))
@@ -126,14 +104,7 @@ class NavGraphLocalPlanner(NavGraphNode):
         path.header.frame_id = self.reference_frame
         path.header.stamp = self.get_clock().now().to_msg()
         for pose in trajectory:
-            pose3d = PoseStamped()
-            pose3d.header.frame_id = self.reference_frame
-            pose3d.header.stamp = self.get_clock().now().to_msg()
-            pose3d.pose.position.x = pose[0]
-            pose3d.pose.position.y = pose[1]
-            pose3d.pose.position.z = 0.0
-            pose3d.pose.orientation = yaw_to_orientation(pose[2])
-            path.poses.append(pose3d)
+            path.poses.append(self.tuple_to_pose_stamped_msg(pose))
 
         self.get_logger().info("sending path")
         if ti == 0:
@@ -150,19 +121,11 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.execute_plan()
         
     def execute_plan(self):
-        try:
-            trans = self.tfBuffer.lookup_transform(
-                self.reference_frame,
-                self.own_frame,
-                rclpy.time.Time().to_msg(),
-            )
-            frame = tf2_kdl.transform_to_kdl(trans)
-            start = (frame.p.x(), frame.p.y(), frame.M.GetRPY()[2])
-
-        except Exception as e:
-            self.get_logger().warn(f"Exception in tf transformations\n{e}")
+        pose = self.get_pose()
+        if pose is None:
             return
-        waypoints = self.gen_rtr_path(start)
+
+        waypoints = self.gen_rtr_path(pose)
 
         self.get_logger().info(f'wps: {waypoints}')
         trajectory = self.vm.tuples_to_path(waypoints)

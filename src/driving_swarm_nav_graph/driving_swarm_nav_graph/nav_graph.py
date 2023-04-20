@@ -7,9 +7,10 @@ from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
 from driving_swarm_messages.srv import SaveToFile
 from polygonal_roadmaps import pathfinding, geometry, polygonal_roadmap
+from driving_swarm_utils.node import DrivingSwarmNode
 
 
-class NavGraphNode(Node):
+class NavGraphNode(DrivingSwarmNode):
     def __init__(self, node_name):
         super().__init__(node_name)
         self.declare_parameter('graph_file')

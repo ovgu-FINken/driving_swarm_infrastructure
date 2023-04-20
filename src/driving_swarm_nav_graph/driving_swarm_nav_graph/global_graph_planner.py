@@ -19,8 +19,7 @@ class NavGraphGlobalPlanner(NavGraphNode):
     def __init__(self):
         super().__init__('global_planner')
         self.get_logger().info("Starting")
-        self.own_frame = "base_link"
-        self.reference_frame = "map"
+        self.get_frames()
         self.goal = None
         self.started = False
         self.current_trajectory = None

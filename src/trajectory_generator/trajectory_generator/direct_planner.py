@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
 import rclpy
-import tf2_ros
-import tf2_py
-import tf2_geometry_msgs
 import numpy as np
-from rclpy.node import Node
-from rclpy.action import ActionClient
-from geometry_msgs.msg import PoseStamped, Pose2D, Quaternion
-from nav2_msgs.action import FollowPath
+from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from std_msgs.msg import String
 from trajectory_generator.utils import *
@@ -92,7 +86,11 @@ class DirectPlanner(DrivingSwarmNode):
             self.set_goal(msg)
 
     def timer_cb(self):
-        if self.started and not self.goal_started:
+        if not self.started:
+            return
+        if self.goal is None:
+            return
+        if not self.goal_started:
             ti, path = self.create_path()
             self.send_path(path, ti=ti)
             self.goal_started = True
@@ -116,16 +114,8 @@ class DirectPlanner(DrivingSwarmNode):
         path = Path()
         path.header.frame_id = self.reference_frame
         path.header.stamp = self.get_clock().now().to_msg()
-        for pose in trajectory:
-            pose3d = PoseStamped()
-            pose3d.header.frame_id = self.reference_frame
-            pose3d.header.stamp = self.get_clock().now().to_msg()
-            pose3d.pose.position.x = pose[0]
-            pose3d.pose.position.y = pose[1]
-            pose3d.pose.position.z = 0.0
-            pose3d.pose.orientation = yaw_to_orientation(pose[2])
-            path.poses.append(pose3d)
-
+        path.poses = [self.tuple_to_pose_stamped_msg(*pose) for pose in trajectory]
+        
         self.get_logger().info(colored("sending path", "green"))
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
@@ -140,18 +130,7 @@ class DirectPlanner(DrivingSwarmNode):
 
         if ti is None or ti == 0:
             ti = 0
-            try:
-                trans = self.tf_buffer.lookup_transform(
-                    self.reference_frame,
-                    self.own_frame,
-                    rclpy.time.Time().to_msg(),
-                ).transform
-                sx, sy = trans.translation.x, trans.translation.y
-                q = trans.rotation
-                start = (sx, sy, tf_transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))[2])
-
-            except Exception as e:
-                self.get_logger().info(f"Exception in tf transformations\n{e}")
+            start = self.get_tf_pose()
         else:
             start = (
                 self.current_trajectory.poses[ti].pose.position.x,

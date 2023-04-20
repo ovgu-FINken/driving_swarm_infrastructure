@@ -49,7 +49,7 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot['name'],
            parameters=[{
             'use_sim_time': use_sim_time,
-            'vehicle_model': 1,
+            'vehicle_model': 4,
             'turn_radius': 0.2,
             'step_size': 0.06
             }],

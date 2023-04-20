@@ -2,6 +2,8 @@ from rclpy.node import Node
 import rclpy
 from termcolor import colored
 import tf2_ros
+import tf_transformations
+from geometry_msgs.msg import PoseStamped
 
 
 class DrivingSwarmNode(Node):
@@ -44,7 +46,37 @@ class DrivingSwarmNode(Node):
             self.reference_frame, self.own_frame, rclpy.time.Time().to_msg()
         )
         rclpy.spin_until_future_complete(self, f)
-        self.get_logger().info('tf available for'+colored(f"{self.name}", 'green'))
+        self.get_logger().info('tf available for '+colored(f"{self.name}", 'green'))
+        
+    def get_tf_pose(self):
+        try:
+            trans = self.tf_buffer.lookup_transform(
+                self.reference_frame,
+                self.own_frame,
+                rclpy.time.Time().to_msg(),
+            ).transform
+            tt = trans.translation
+            q = trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w
+            pose = (tt.x, tt.y, tf_transformations.euler_from_quaternion(q)[2])
+
+        except Exception as e:
+            self.get_logger().warn(f"Exception in tf transformations\n{e}")
+            return None
+        return pose
+    
+    def tuple_to_pose_stamped_msg(self, x, y, yaw):
+        pose = PoseStamped()
+        pose.header.stamp = rclpy.time.Time().to_msg()
+        pose.header.frame_id = self.reference_frame
+        pose.pose.position.x = x
+        pose.pose.position.y = y
+        qx, qy, qz, qw = tf_transformations.quaternion_from_euler(0, 0, yaw)
+        pose.pose.orientation.x = qx
+        pose.pose.orientation.y = qy
+        pose.pose.orientation.z = qz
+        pose.pose.orientation.w = qw
+        return pose
+
 
 
 def main_fn(name, NodeClass):

@@ -109,5 +109,6 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
     ld.add_action(declare_tiling_cmd)
+    ld.add_action(declare_planner_cmd)
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld
