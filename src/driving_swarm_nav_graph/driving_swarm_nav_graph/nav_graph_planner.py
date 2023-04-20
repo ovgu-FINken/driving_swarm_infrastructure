@@ -43,19 +43,8 @@ class NavGraphLocalPlanner(NavGraphNode):
         )
 
         self.setup_tf()
+        self.setup_command_interface()
 
-        qos_profile = rclpy.qos.qos_profile_system_default
-        qos_profile.reliability = (
-            rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
-        )
-        qos_profile.durability = (
-            rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
-        )
-        self.status_pub = self.create_publisher(String, "status", qos_profile)
-
-        self.create_subscription(
-            String, "/command", self.command_cb, qos_profile
-        )
         self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
@@ -65,8 +54,8 @@ class NavGraphLocalPlanner(NavGraphNode):
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         self.wait_for_tf()
+        self.set_state_ready()
 
-        self.status_pub.publish(String(data="ready"))
         self.create_timer(1.0, self.timer_cb)
     
     

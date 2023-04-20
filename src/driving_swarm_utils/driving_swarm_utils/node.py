@@ -4,6 +4,7 @@ from termcolor import colored
 import tf2_ros
 import tf_transformations
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import String
 
 
 class DrivingSwarmNode(Node):
@@ -76,7 +77,34 @@ class DrivingSwarmNode(Node):
         pose.pose.orientation.z = qz
         pose.pose.orientation.w = qw
         return pose
-
+    
+    def setup_command_interface(self, autorun=True):
+        self.autorun = autorun
+        qos_profile = rclpy.qos.qos_profile_system_default
+        qos_profile.reliability = (
+            rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
+        )
+        qos_profile.durability = (
+            rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
+        )
+        self.status_pub = self.create_publisher(String, "status", qos_profile)
+        self.create_subscription(
+            String, "/command", self.command_cb, qos_profile
+        )
+        
+    def set_state_ready(self):
+        self.status_pub.publish(String(data="ready"))
+        
+    def command_cb(self, msg):
+        if msg.data == "go":
+            self.get_logger().info("going")
+            self.started = True
+            if self.autorun:
+                self.status_pub.publish(String(data="running"))
+            
+        elif msg.data == "stop":
+            self.get_logger().info("stopping")
+            raise KeyboardInterrupt()
 
 
 def main_fn(name, NodeClass):
