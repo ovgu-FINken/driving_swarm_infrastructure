@@ -1,8 +1,5 @@
 import rclpy
 from rclpy.node import Node
-from driving_swarm_messages.msg import SystemStatus
-from datetime import datetime
-import psutil
 from geometry_msgs.msg import Twist, Vector3
 from rclpy import qos
 

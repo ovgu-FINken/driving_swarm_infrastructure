@@ -68,10 +68,8 @@ class Spawner(DrivingSwarmNode):
         tree = ET.parse(sdf_file_path)
         root = tree.getroot()
         for plugin in root.iter('plugin'):
-            # TODO(orduno) Handle case if an sdf file from non-turtlebot is provided
-            if 'turtlebot3_diff_drive' in plugin.attrib.values():
-                # The only plugin we care for now is 'diff_drive' which is
-                # broadcasting a transform between`odom` and `base_footprint`
+            # see https://github.com/ovgu-FINken/driving_swarm_infrastructure/issues/40
+            if 'libgazebo_ros_diff_drive.so' in plugin.attrib.values():
                 break
 
         ros_params = plugin.find('ros')
