@@ -54,14 +54,15 @@ class LocalTFPub(DrivingSwarmNode):
 
         try:
             tf2Msg = self.tfBuffer.lookup_transform(
-                "world", self.base_frame, rclpy.time.Time())
+                "world", self.own_frame, rclpy.time.Time())
             tf2Msg.child_frame_id = self.robot_name
             msg = TFMessage()
             msg.transforms = [tf2Msg]
             self.publisher.publish(msg)
             #self.br.sendTransform(tf2Msg)
         except Exception as e:
-            self.get_logger().info(str(type(e)), once=True)
+            self.get_logger().info(str(type(e)))
+            self.get_logger().info(str(e))
 
 
 def main(args=None):
