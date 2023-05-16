@@ -8,26 +8,18 @@ class Watchdog(Node):
         super().__init__('watchdog')
         self.cmd_vel_sub = self.create_subscription(
             Twist, 'cmd_vel', self.vel_callback, qos.qos_profile_system_default)
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 1)
-        WATCH_RATE = 0.3  # s
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos.qos_profile_system_default)
+        WATCH_RATE = 2.0
         self.timer = self.create_timer(WATCH_RATE, self.watch_callback)
-        self.latest_timestamp_vel = 0
-        self.latest_timestamp_wd = 0
-        self.first_cb = True
+        self.cmd_vel_received = False
 
     def vel_callback(self, msg):
-        if self.first_cb:
-            self.latest_timestamp_wd = self.get_clock().now().nanoseconds
-            self.first_cb = False
-        else:
-            self.latest_timestamp_vel = self.get_clock().now().nanoseconds
+        self.cmd_vel_received = True
 
     def watch_callback(self):
-        #TODO: cover the case where the cmd_vel was only send once, i.e. latest_timestamp_vel is still 0 --> maybe with a timer
-        if (not self.latest_timestamp_vel == 0) and (not self.latest_timestamp_wd == 0):
-            if self.latest_timestamp_vel == self.latest_timestamp_wd:
-                self.publish_stop_cmd()
-            self.latest_timestamp_wd = self.latest_timestamp_vel 
+        if not self.cmd_vel_received:
+            self.publish_stop_cmd()
+        self.cmd_vel_received = False
 
     def publish_stop_cmd(self):
         angular = Vector3(x=0.0, y=0.0, z=0.0)

@@ -109,4 +109,11 @@ def generate_launch_description():
             namespace=robot_name,
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
         ),
+
+        Node(
+            package='driving_swarm_bringup',
+            executable='watchdog',
+            namespace=robot_name,
+            output='both'
+        )
     ])
