@@ -62,7 +62,7 @@ rosdep install --from-paths src/ --ignore-src -y
 ```
 Now you need to build the DrivingSwarm packages with `colcon build`.
 
-To use the package you need to set the following variables in `~\.bashrc`:
+To use the package you need to set the following variables in `~/.bashrc`:
 ```
 export TURTLEBOT3_MODEL=burger
 source /usr/share/gazebo/setup.sh
