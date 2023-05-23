@@ -62,7 +62,7 @@ rosdep install --from-paths src/ --ignore-src -y
 ```
 Now you need to build the DrivingSwarm packages with `colcon build`.
 
-To use the package you need to set the following variables in `~\.bashrc`:
+To use the package you need to set the following variables in `~/.bashrc`:
 ```
 export TURTLEBOT3_MODEL=burger
 source /usr/share/gazebo/setup.sh
@@ -70,7 +70,7 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros/driving_swarm_infrastructure/s
 export GAZEBO_RESOURCE_PATH=$GAZEBO_RESOURCE_PATH:~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/worlds/:/opt/ros/humble/share/turtlebot3_gazebo/models
 source /opt/ros/humble/local_setup.bash
 source ~/ros/driving_swarm_infrastructure/install/local_setup.bash
-source ~/ros/introduction_to_robotics_tutorial/install/local_setup.bas
+source ~/ros/introduction_to_robotics_tutorial/install/local_setup.bash
 export PYTHONWARNINGS=ignore:::setuptools.command.install
 ```
 
