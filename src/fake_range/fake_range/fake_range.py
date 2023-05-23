@@ -4,18 +4,16 @@ import tf2_py
 import yaml
 import numpy as np
 
-from rclpy.node import Node
+from driving_swarm_utils.node import DrivingSwarmNode
 from driving_swarm_messages.msg import Range
 
 
-class FakeRange(Node):
+class FakeRange(DrivingSwarmNode):
 
     def __init__(self):
         super().__init__('range_node')
-        self.tfBuffer = tf2_ros.Buffer(cache_time=rclpy.time.Duration(seconds=3.0))
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
-        self.reference_frame = 'world'
-        self.own_frame = 'base_link'
+        self.get_frames()
+        self.setup_tf()
         self.declare_parameter('anchor_list',
                                 '''
 - {x: 0.0, y: 0.0, z: 1.0}
@@ -42,20 +40,15 @@ class FakeRange(Node):
         rate = self.get_parameter('rate').get_parameter_value().double_value
         self.t = 0
         
-        f = self.tfBuffer.wait_for_transform_async(
-            self.own_frame, self.reference_frame, rclpy.time.Time().to_msg()
-        )
-        self.get_logger().info(f"waiting for transform map -> {self.reference_frame}")
-        rclpy.spin_until_future_complete(self, f)
+        self.wait_for_tf()
 
         self.range_pub = self.create_publisher(Range, 'range', 10)
         self.create_timer(rate, self.timer_cb)
-        self.get_logger().info('ranging node started')
         
     def timer_cb(self):
         # get robot position
         try:
-            trans = self.tfBuffer.lookup_transform(
+            trans = self.tf_buffer.lookup_transform(
                 self.reference_frame,
                 self.own_frame,
                 rclpy.time.Time().to_msg(),
