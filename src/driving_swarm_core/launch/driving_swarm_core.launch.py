@@ -29,13 +29,18 @@ from launch_ros.actions import Node
 import re
 import yaml
 import ast
-from system_status import utils
+
+
+def get_robot_name(prefix=None):
+    prefix = prefix or ''
+    robot_id = os.environ['HOSTNAME']
+    return f'{prefix}{robot_id }'
 
 
 def edit_param_file_namespace(param_file_dir):
     with open(param_file_dir, 'r') as f:
         data = yaml.safe_load(f)
-        name = utils.get_robot_name('robot') + "':"
+        name = get_robot_name('robot') + "':"
         # for every robotXXX you find in the data, replace with the name
         replaced = re.sub(r'robot[^\s]*', name, str(data))
         # str->dict
