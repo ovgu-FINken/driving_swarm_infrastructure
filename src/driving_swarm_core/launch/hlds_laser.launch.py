@@ -21,18 +21,14 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.actions import LogInfo
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-import subprocess
-import re
-from system_status import utils
 
 
 def generate_launch_description():
     port = LaunchConfiguration('port', default='/dev/ttyUSB0')
     frame_id = LaunchConfiguration('frame_id', default='laser')
-    robot_name = LaunchConfiguration('robot_name', default=os.environ['HOSTNAME'])
+    robot_name = LaunchConfiguration('robot_name', default=os.uname()[1])
 
     return LaunchDescription([
 

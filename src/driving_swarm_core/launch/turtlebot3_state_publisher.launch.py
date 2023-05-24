@@ -28,7 +28,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     urdf_file_name = 'turtlebot3_burger.urdf'
-    robot_name =  LaunchConfiguration('robot_name', default=os.environ['HOSTNAME'])
+    robot_name =  LaunchConfiguration('robot_name', default=os.uname()[1])
 
     print("urdf_file_name : {}".format(urdf_file_name))
 
