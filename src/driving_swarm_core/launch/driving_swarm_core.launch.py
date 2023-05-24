@@ -26,33 +26,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import ThisLaunchFileDir
 from launch_ros.actions import Node
-import re
-import yaml
-import ast
-
-
-def get_robot_name(prefix=None):
-    prefix = prefix or ''
-    robot_id = os.environ['HOSTNAME']
-    return f'{prefix}{robot_id }'
-
-
-def edit_param_file_namespace(param_file_dir):
-    with open(param_file_dir, 'r') as f:
-        data = yaml.safe_load(f)
-        name = get_robot_name('robot') + "':"
-        # for every robotXXX you find in the data, replace with the name
-        replaced = re.sub(r'robot[^\s]*', name, str(data))
-        # str->dict
-        replaced = ast.literal_eval(replaced)
-
-    with open(param_file_dir, 'w') as f:
-        yaml.dump(replaced, f)
 
 
 def generate_launch_description():
     default_param_dir = os.path.join(
-        get_package_share_directory('system_status'),
+        get_package_share_directory('driving_swarm_core'),
         'params',
         'burger.yaml'
     )
@@ -61,12 +39,10 @@ def generate_launch_description():
         'tb3_param_dir',
         default=default_param_dir
     )
-    # ATTENTION: this is editing the parameter file's content!
-    edit_param_file_namespace(default_param_dir)
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    robot_name = LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    robot_name = LaunchConfiguration('robot_name', default='rename_me')
 
     return LaunchDescription([
         DeclareLaunchArgument(

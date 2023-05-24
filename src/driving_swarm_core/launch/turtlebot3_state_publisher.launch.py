@@ -23,13 +23,12 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from system_status import utils
 
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     urdf_file_name = 'turtlebot3_burger.urdf'
-    robot_name =  LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    robot_name =  LaunchConfiguration('robot_name', default='rename_me')
 
     print("urdf_file_name : {}".format(urdf_file_name))
 
