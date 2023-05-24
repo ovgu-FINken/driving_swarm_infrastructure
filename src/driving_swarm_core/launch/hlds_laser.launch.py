@@ -32,7 +32,7 @@ from system_status import utils
 def generate_launch_description():
     port = LaunchConfiguration('port', default='/dev/ttyUSB0')
     frame_id = LaunchConfiguration('frame_id', default='laser')
-    robot_name = LaunchConfiguration('robot_name', default=utils.get_robot_name('robot'))
+    robot_name = LaunchConfiguration('robot_name', default=os.environ['HOSTNAME'])
 
     return LaunchDescription([
 

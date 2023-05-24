@@ -28,6 +28,15 @@ from launch.substitutions import ThisLaunchFileDir
 from launch_ros.actions import Node
 
 
+def edit_param_file_namespace(param_file_dir):
+    with open(param_file_dir, 'r') as f:
+        lines = f.readlines()
+
+    lines[0] = f"{os.environ('HOSTNAME')}:"
+    with open(param_file_dir, 'w') as f:
+        f.writelines(lines)
+
+
 def generate_launch_description():
     default_param_dir = os.path.join(
         get_package_share_directory('driving_swarm_core'),
@@ -42,7 +51,7 @@ def generate_launch_description():
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    robot_name = LaunchConfiguration('robot_name', default='rename_me')
+    robot_name = LaunchConfiguration('robot_name', default=os.environ['HOSTNAME'])
 
     return LaunchDescription([
         DeclareLaunchArgument(
