@@ -32,7 +32,7 @@ def edit_param_file_namespace(param_file_dir):
     with open(param_file_dir, 'r') as f:
         lines = f.readlines()
 
-    lines[0] = f"{os.uname()[1]}:"
+    lines[0] = f"{os.uname()[1]}:\n"
     with open(param_file_dir, 'w') as f:
         f.writelines(lines)
 
@@ -51,7 +51,7 @@ def generate_launch_description():
 
     # ATTENTION: this is editing the parameter file's content!
     edit_param_file_namespace(default_param_dir)
-    
+
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     robot_name = LaunchConfiguration('robot_name', default=os.uname()[1])
