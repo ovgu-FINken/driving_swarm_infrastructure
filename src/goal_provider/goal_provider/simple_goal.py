@@ -3,9 +3,9 @@
 import rclpy
 import tf_transformations
 import tf2_ros
-import tf2_geometry_msgs
-from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Quaternion
+import tf2_geometry_msgs # import needed to transform geometry_msgs with tf2
+import yaml
+from geometry_msgs.msg import PoseStamped
 from driving_swarm_utils.node import DrivingSwarmNode
 from termcolor import colored
 
@@ -17,15 +17,28 @@ class SimpleGoalProvider(DrivingSwarmNode):
         self.goal_list = []
         self.goal_dist = 0.2
         self.current_goal_index = 0
-        self.declare_parameter('x', [0.0])
-        self.declare_parameter('y', [0.0])
-        self.declare_parameter('theta', [0.0])
-        xs = self.get_parameter('x').get_parameter_value().double_array_value
-        ys = self.get_parameter('y').get_parameter_value().double_array_value
-        thetas = self.get_parameter('theta').get_parameter_value().double_array_value
-
         self.get_frames()
-        for x,y,theta in zip(xs, ys, thetas):
+        
+        # declare parameters
+        # if parameter goals is given (non-empty string), it will be used
+        self.declare_parameter('waypoints', '')
+
+        # if parameter goals is not given, a list of goals will be created from the following parameters
+        # x, y, theta (list of double)
+        self.declare_parameter('x', [])
+        self.declare_parameter('y', [])
+        self.declare_parameter('theta', [])
+        waypoints = self.get_parameter('waypoints').get_parameter_value().string_value
+        
+        if waypoints == '':
+            xs = self.get_parameter('x').get_parameter_value().double_array_value
+            ys = self.get_parameter('y').get_parameter_value().double_array_value
+            thetas = self.get_parameter('theta').get_parameter_value().double_array_value
+            goals = zip(xs, ys, thetas)
+        else:
+            goals = yaml.load(waypoints)
+
+        for x,y,theta in goals:
             p = PoseStamped()
             p.header.frame_id = self.reference_frame
             #p.header.stamp = rclpy.time.Time().to_msg()
@@ -38,6 +51,7 @@ class SimpleGoalProvider(DrivingSwarmNode):
             p.pose.orientation.z = q[2]
             p.pose.orientation.w = q[3]
             self.goal_list.append(p)
+        assert(len(self.goal_list) > 0)
 
         self.get_logger().info(f"{self.goal_list}")
         self.setup_tf()
@@ -51,7 +65,7 @@ class SimpleGoalProvider(DrivingSwarmNode):
     
     def increment_goal(self):
         self.current_goal_index = (self.current_goal_index + 1) % len(self.goal_list)
-        self.get_logger().info(f"goal completed, going to goal {self.current_goal_index}")
+        self.get_logger().info(colored("goal completed", "green") + f"going to goal {self.current_goal_index}")
     
     def check_goal(self):
         goal = self.goal_list[self.current_goal_index]

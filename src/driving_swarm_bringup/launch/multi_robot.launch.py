@@ -24,6 +24,7 @@ one robot.
 import os
 import yaml
 
+
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
@@ -35,12 +36,6 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 
 
-def get_robot_config(robots_file):
-    robots = []
-    with open(robots_file, 'r') as stream:
-        robots = yaml.safe_load(stream)
-    return robots
-
 
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
@@ -50,13 +45,18 @@ def initialize_robots(context, *args, **kwargs):
     n_robots = LaunchConfiguration('n_robots').perform(context)
     run_timeout = LaunchConfiguration('run_timeout')
     init_timeout = LaunchConfiguration('init_timeout')
-    robots_file = LaunchConfiguration('robots_file').perform(context)
+    poses_file = LaunchConfiguration('poses_file').perform(context)
+    robot_name_file = LaunchConfiguration('robot_name_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
         'single_robot_launch_file', 
         default=os.path.join(bringup_dir, 'launch', "single_robot.launch.py")
         ).perform(context)
-    robots = get_robot_config(robots_file)
+    with open(poses_file, 'r') as stream:
+        poses = yaml.safe_load(stream)
+    with open(robot_name_file, 'r') as stream:
+        robot_names = yaml.safe_load(stream)
+        
     command_node = Node(package="experiment_supervisor",
                         executable="command_node",
                         output="screen",
@@ -64,7 +64,7 @@ def initialize_robots(context, *args, **kwargs):
                            'use_sim_time': LaunchConfiguration('use_sim_time'),
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
-                           'robot_names': [robot["name"] for robot in robots[:int(n_robots)]],
+                           'robot_names': robot_names[:int(n_robots)],
                            }])
 
     exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
@@ -76,18 +76,18 @@ def initialize_robots(context, *args, **kwargs):
     spawn_robots_cmds = [
         command_node, exit_event_handler
     ]
-    for robot in robots[:int(n_robots)]:
+    for name, pose in list(zip(robot_names, poses))[:int(n_robots)]:
         spawn_robots_cmds.append(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     single_robot_launch_file
                 ),
                 launch_arguments={
-                    'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                    'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                    'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                    'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
-                    'robot_name': robot['name'],
+                    'x_pose': TextSubstitution(text=str(pose[0])),
+                    'y_pose': TextSubstitution(text=str(pose[1])),
+                    'z_pose': TextSubstitution(text="0.0"),
+                    'yaw_pose': TextSubstitution(text=str(pose[2])),
+                    'robot_name': name,
                     'base_frame': TextSubstitution(text=base_frame),
                     'turtlebot_type': TextSubstitution(text='burger')
                 }.items()
@@ -105,9 +105,14 @@ def generate_launch_description():
         default_value='2'
     )
 
-    declare_robots_file_cmd = DeclareLaunchArgument(
-        'robots_file',
-        default_value=os.path.join(bringup_dir, 'params', 'tb3_world_sim.yaml')
+    declare_poses_file_cmd = DeclareLaunchArgument(
+        'poses_file',
+        default_value=os.path.join(bringup_dir, 'params', 'tb3_world_poses.yaml')
+    )
+    
+    declare_robot_name_file_cmd = DeclareLaunchArgument(
+        'robot_name_file',
+        default_value=os.path.join(bringup_dir, 'params', 'robot_names_sim.yaml')
     )
 
     declare_base_frame_cmd = DeclareLaunchArgument(
@@ -151,11 +156,12 @@ def generate_launch_description():
 
     # Add declarations for launch file arguments
     ld.add_action(declare_n_robots_cmd)
-    ld.add_action(declare_robots_file_cmd)
+    ld.add_action(declare_poses_file_cmd)
     ld.add_action(declare_base_frame_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_run_timeout_cmd)
     ld.add_action(declare_init_timeout_cmd)
+    ld.add_action(declare_robot_name_file_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
