@@ -14,6 +14,7 @@
   <exec_depend>turtlebot3_teleop</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>tf_transformations</exec_depend>
+  <exec_depend>transforms3d</exec_depend>
   <exec_depend>zenoh_bridge_dds</exec_depend>
   
   <test_depend>ament_copyright</test_depend>

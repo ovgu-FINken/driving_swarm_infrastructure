@@ -1,12 +1,10 @@
 import rclpy
-from rclpy.node import Node
 
-import shapely
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
 from driving_swarm_messages.srv import SaveToFile
-from polygonal_roadmaps import pathfinding, geometry, polygonal_roadmap
+from polygonal_roadmaps import geometry, polygonal_roadmap
 from driving_swarm_utils.node import DrivingSwarmNode
 
 
