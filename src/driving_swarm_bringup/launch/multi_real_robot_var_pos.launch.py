@@ -21,8 +21,6 @@ The robots co-exist on a shared environment and are controlled by independent na
 """
 
 import os
-import subprocess
-import re
 import yaml
 
 from ament_index_python.packages import get_package_share_directory
@@ -38,17 +36,11 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution, ThisLaun
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     base_frame = LaunchConfiguration('base_frame').perform(context)
-    robot_name_list = []
-    robot_name_list_dir = os.path.join(
-        get_package_share_directory('system_status'), 'local_ips.yaml')
-
-    with open(robot_name_list_dir, 'r') as f:
-        data = yaml.safe_load(f)
-        robot_name_list = data[0]['local_ips']
+    with open(LaunchConfiguration('robot_names_file').perform(context), 'r') as f:
+        robots = yaml.safe_load(f)
 
     nav_bringup_cmds = []
-    for robot_name in robot_name_list:
-        robot_name = 'robot'+robot_name
+    for robot_name in robots:
         nav_bringup_cmds.append(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([
@@ -66,7 +58,7 @@ def initialize_robots(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    spawner_dir = get_package_share_directory('driving_swarm_bringup')
+    bringup_dir = get_package_share_directory('driving_swarm_bringup')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
     declare_n_robots_cmd = DeclareLaunchArgument(
@@ -74,8 +66,8 @@ def generate_launch_description():
         default_value='2'
     )
     declare_robots_file_cmd = DeclareLaunchArgument(
-        'robots_file',
-        default_value=os.path.join(spawner_dir, 'params', 'swarmlab_two_walls_real.yaml')
+        'robot_names_file',
+        default_value=os.path.join(bringup_dir, 'params', 'robot_names_real.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',

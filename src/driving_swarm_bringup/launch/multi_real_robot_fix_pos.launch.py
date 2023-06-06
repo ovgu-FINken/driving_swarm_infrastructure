@@ -29,13 +29,6 @@ from launch.events import Shutdown
 from launch.event_handlers import OnProcessExit
 
 
-def get_robot_config(robots_file):
-    robots = []
-    with open(robots_file, 'r') as stream:
-        robots = yaml.safe_load(stream)
-    return robots
-
-
 def initialize_robots(context, *args, **kwargs):
     """initialize robots"""
     # Names and poses of the robots
@@ -43,7 +36,8 @@ def initialize_robots(context, *args, **kwargs):
     n_robots = LaunchConfiguration('n_robots').perform(context)
     run_timeout = LaunchConfiguration('run_timeout')
     init_timeout = LaunchConfiguration('init_timeout')
-    robots_file = LaunchConfiguration('robots_file').perform(context)
+    robots_file = LaunchConfiguration('robot_names_file').perform(context)
+    poses_file = LaunchConfiguration('poses_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
         'single_robot_launch_file', 
@@ -53,7 +47,10 @@ def initialize_robots(context, *args, **kwargs):
             'single_real_robot.launch.py'
             )
         ).perform(context)
-    robots = get_robot_config(robots_file)
+    with open(robots_file, 'r') as f:
+        robots = yaml.safe_load(f)
+    with open(poses_file, 'r') as f:
+        poses = yaml.safe_load(f)
 
     command_node = Node(package="experiment_supervisor",
                         executable="command_node",
@@ -61,7 +58,7 @@ def initialize_robots(context, *args, **kwargs):
                         parameters=[{
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
-                           'robot_names': [robot["name"] for robot in robots[:int(n_robots)]],
+                           'robot_names': robots[:int(n_robots)],
                            }])
 
     exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
@@ -74,7 +71,7 @@ def initialize_robots(context, *args, **kwargs):
         command_node, exit_event_handler
     ]
     i = 1
-    for robot in robots:
+    for robot, pose in zip(robots, poses):
         if i <= int(n_robots):
             nav_bringup_cmds.append(
                 IncludeLaunchDescription(
@@ -82,11 +79,11 @@ def initialize_robots(context, *args, **kwargs):
                         single_robot_launch_file
                     ),
                     launch_arguments={
-                        'x_pose': TextSubstitution(text=str(robot['x_pose'])),
-                        'y_pose': TextSubstitution(text=str(robot['y_pose'])),
-                        'z_pose': TextSubstitution(text=str(robot['z_pose'])),
-                        'yaw_pose': TextSubstitution(text=str(robot['yaw_pose'])),
-                        'robot_name': TextSubstitution(text=str(robot['name'])),
+                        'x_pose': TextSubstitution(text=str(pose[0])),
+                        'y_pose': TextSubstitution(text=str(pose[1])),
+                        'z_pose': TextSubstitution(text=str(0.0)),
+                        'yaw_pose': TextSubstitution(text=str(pose[2])),
+                        'robot_name': TextSubstitution(text=str(robot)),
                         'base_frame': TextSubstitution(text=base_frame),
                         'turtlebot_type': TextSubstitution(text='burger'),
                         'n_robots': n_robots
