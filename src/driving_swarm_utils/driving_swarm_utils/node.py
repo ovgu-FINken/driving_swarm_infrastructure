@@ -92,18 +92,22 @@ class DrivingSwarmNode(Node):
             String, "/command", self.command_cb, qos_profile
         )
         
+    def set_state(self, state: str):
+        self.get_logger().info("setting state to " + colored(str(state), "blue"))
+        self.status_pub.publish(String(data=str(state)))
+        
     def set_state_ready(self):
-        self.status_pub.publish(String(data="ready"))
+        self.set_state("ready")
         
     def command_cb(self, msg):
         if msg.data == "go":
             self.get_logger().info("going")
             self.started = True
             if self.autorun:
-                self.status_pub.publish(String(data="running"))
+                self.set_state("running")
             
         elif msg.data == "stop":
-            self.get_logger().info("stopping")
+            self.set_state("stopped")
             raise KeyboardInterrupt()
 
 
