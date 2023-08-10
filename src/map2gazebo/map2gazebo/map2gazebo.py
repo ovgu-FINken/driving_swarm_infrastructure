@@ -49,10 +49,12 @@ class MapConverter(Node):
             with open(export_dir + "/map.stl", 'wb') as f:
                 mesh.export(f, "stl")
             self.get_logger().info("Exported STL.  You can shut down this node now")
+            self.get_logger().info("/tmp/map.stl")
         elif mesh_type == "dae":
             with open(export_dir + "/map.dae", 'wb') as f:
                 f.write(trimesh.exchange.dae.export_collada(mesh))
             self.get_logger().info("Exported DAE.  You can shut down this node now")
+            self.get_logger().info("/tmp/map.dae")
 
     def publish_test_map(self, points, metadata, map_header):
         """
