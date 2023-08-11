@@ -22,7 +22,7 @@ class ReactiveController(DrivingSwarmNode):
         if self.forward_distance > 0.4:
             self.clear = True
         if self.forward_distance > 0.3:
-            msg.linear.x = 0.15
+            msg.linear.x = 0.10
             msg.angular.z = 0.0
         else:
             if self.clear:
