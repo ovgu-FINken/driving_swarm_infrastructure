@@ -16,28 +16,29 @@ def controller_spawning(context, *args, **kwargs):
 
     n_robots = LaunchConfiguration('n_robots').perform(context)
     robots_file = LaunchConfiguration('robots_file').perform(context)
+    waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
     use_sim_time = TextSubstitution(text='true')
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
+    with open(waypoints_file, 'r') as stream:
+         waypoints = yaml.safe_load(stream)
     
-    for robot in robots[:int(n_robots)]:
+    for wp, robot in zip(waypoints[:int(n_robots)], robots[:int(n_robots)]):
         controllers.append(Node(
            package='goal_provider',
            executable='simple_goal',
-           namespace=robot['name'],
+           namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
-              'x': robot['goals']['x'],
-              'y': robot['goals']['y'],
-              'theta': robot['goals']['theta'],
+              'waypoints': yaml.dump(wp['waypoints']),
            }],
-           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
+           remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
         ))
         controllers.append(Node(
            package='system_status',
            executable='scan_delay',
-           namespace=robot['name'],
+           namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
            }],
@@ -46,20 +47,20 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_generator',
            executable='direct_planner',
-           namespace=robot['name'],
+           namespace=robot,
            parameters=[{
             'use_sim_time': use_sim_time,
             'vehicle_model': 4,
             'turn_radius': 0.2,
             'step_size': 0.06
             }],
-           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
+           remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
         ))
         controllers.append(Node(
            package='trajectory_follower',
            executable='trajectory_follower',
-           namespace=robot['name'],
+           namespace=robot,
            parameters=[
               {
                   "use_sim_time": use_sim_time,
@@ -69,7 +70,7 @@ def controller_spawning(context, *args, **kwargs):
                   "fail_radius": 0.3
               }
            ],
-           remappings=[('/tf',f"/{robot['name']}/tf"), ('/tf_static',f"/{robot['name']}/tf_static")],
+           remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
         ))
     
@@ -79,9 +80,11 @@ def controller_spawning(context, *args, **kwargs):
 def generate_launch_description():
     args = {
          'behaviour': 'false',      
-         'world': 'swarmlab_two_walls.world',
-         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'swarmlab_two_walls.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'swarmlab_two_walls_real.yaml'),
+         'world': 'icra2024.world',
+         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
+         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
+         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_waypoints.yaml'),
+         'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
