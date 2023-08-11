@@ -7,6 +7,7 @@ from driving_swarm_messages.srv import VehicleModel as VehicleModelService
 from geometry_msgs.msg import Pose2D
 from enum import IntEnum
 from skimage import io
+from trajectory_generator.bezier_path import calc_bezier_path
 from trajectory_generator.dubins_path_planner import plan_dubins_path
 from trajectory_generator.reeds_shepp_path_planning import reeds_shepp_path_planning
 
@@ -138,11 +139,8 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
             control_point1 = wp1[0] + np.sin(wp1[2])*r, wp1[1] + np.cos(wp1[2])*r
             control_point2 = wp2[0] - np.sin(wp2[2])*r, wp2[1] - np.cos(wp2[2])*r
             points = []
-            nodes = np.asfortranarray([
-                [wp1[0], control_point1[0], control_point2[0], wp2[0]],
-                [wp1[1], control_point1[1], control_point2[1], wp2[1]]
-            ])
-            curve = bezier.Curve(nodes, degree=3)
+            nodes = [ wp1[0:2], control_point1, control_point2, wp2[0:2] ]
+            curve = calc_bezier_path(nodes, degree=3)
             l = np.linspace(0.0, 1.0, num=int(curve.length / s))
             points = curve.evaluate_multi(l)
             angles = []
