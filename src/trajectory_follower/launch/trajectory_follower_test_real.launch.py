@@ -16,42 +16,33 @@ def controller_spawning(context, *args, **kwargs):
     controllers = []
 
     n_robots = LaunchConfiguration("n_robots").perform(context)
-    robots_file = LaunchConfiguration("robots_file").perform(context)
+    robots_file = LaunchConfiguration('robots_file').perform(context)
+    waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
     use_sim_time = TextSubstitution(text="false")
     with open(robots_file, "r") as stream:
         robots = yaml.safe_load(stream)
+    with open(waypoints_file, 'r') as stream:
+         waypoints = yaml.safe_load(stream)
 
-    for robot in robots[: int(n_robots)]:
+    for wp, robot in zip(waypoints[:int(n_robots)], robots[:int(n_robots)]):
         controllers.append(
             Node(
                 package="goal_provider",
                 executable="simple_goal",
-                namespace=robot["name"],
-                parameters=[
-                    {
-                        "use_sim_time": use_sim_time,
-                        "x": robot["goals"]["x"],
-                        "y": robot["goals"]["y"],
-                        "theta": robot["goals"]["theta"],
-                    }
-                ],
-                output="screen",
+                namespace=robot,
+                parameters=[{
+                      'use_sim_time': use_sim_time,
+                      'waypoints': yaml.dump(wp['waypoints']),
+                   }],
+               remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
+               output="screen",
             )
         )
-        controllers.append(Node(
-           package='system_status',
-           executable='scan_delay',
-           namespace=robot['name'],
-           parameters=[{
-              'use_sim_time': use_sim_time,
-           }],
-           output='screen',
-        ))
         controllers.append(
             Node(
                 package="trajectory_generator",
                 executable="direct_planner",
-                namespace=robot["name"],
+                namespace=robot,
                 parameters=[
                     {
                         "use_sim_time": use_sim_time,

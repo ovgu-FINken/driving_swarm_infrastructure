@@ -65,10 +65,13 @@ class DrivingSwarmNode(Node):
             return None
         return pose
     
-    def tuple_to_pose_stamped_msg(self, x, y, yaw):
+    def tuple_to_pose_stamped_msg(self, x, y, yaw, frame=None):
         pose = PoseStamped()
         pose.header.stamp = rclpy.time.Time().to_msg()
-        pose.header.frame_id = self.reference_frame
+        if frame is None:
+            pose.header.frame_id = self.reference_frame
+        else:
+            pose.header.frame_id = frame
         pose.pose.position.x = x
         pose.pose.position.y = y
         qx, qy, qz, qw = tf_transformations.quaternion_from_euler(0, 0, yaw)
@@ -77,6 +80,14 @@ class DrivingSwarmNode(Node):
         pose.pose.orientation.z = qz
         pose.pose.orientation.w = qw
         return pose
+    
+    def pose_stamped_to_tuple(self, pose: PoseStamped):
+        return pose.pose.position.x, pose.pose.position.y, tf_transformations.euler_from_quaternion((
+            pose.pose.orientation.x,
+            pose.pose.orientation.y,
+            pose.pose.orientation.z,
+            pose.pose.orientation.w
+        ))[2]
     
     def setup_command_interface(self, autorun=True):
         self.autorun = autorun
@@ -119,5 +130,5 @@ def main_fn(name, NodeClass):
     except KeyboardInterrupt:
         node.get_logger().info("Shutting Down")
         node.destroy_node()
-    rclpy.shutdown()
+    rclpy.shutdown() 
 
