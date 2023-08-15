@@ -69,7 +69,16 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
               'use_sim_time': use_sim_time,
            }, {
-              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),}],
+              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml')},
+            {
+               'vehicle_model' : 3,
+               'step_size' : 0.1,
+               'turn_radius' : 0.1,
+               'turn_speed' : 1.0
+
+            }
+              
+              ],
            output='screen',
         ))
     

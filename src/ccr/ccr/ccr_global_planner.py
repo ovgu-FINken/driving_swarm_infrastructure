@@ -26,6 +26,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.state = None
         self.goal = None
+        self.update_path = False
          
         points = None 
         if map_file.endswith(".yaml"):
@@ -66,14 +67,23 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.publish_plan()
 
     def goal_cb(self, msg):
+        if msg.data == self.goal:
+            return
         self.goal = msg.data
+        self.update_path = True
         self.get_logger().info(f"received goal {self.goal}")
 
     def state_cb(self, msg):
+        if msg.data == self.state:
+            return
         self.state = msg.data
+        self.update_path = True
         self.get_logger().info(f"received state {self.state}")
     
     def create_plan(self):
+        if not self.update_path:
+            return
+        self.update_path = False
         self.plan =  nx.shortest_path(self.env.g, self.state, self.goal)
         self.get_logger().info(f"plan: {self.plan}")
     

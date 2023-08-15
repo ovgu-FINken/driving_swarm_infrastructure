@@ -3,8 +3,10 @@ from polygonal_roadmaps import geometry, environment
 
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, PoseStamped
+from nav_msgs.msg import Path
 from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
-from driving_swarm_messages.srv import SaveToFile
+from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
+from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -18,6 +20,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_frames()
         self.setup_tf()
 
+        # parse a map file to generate navigation graph
         self.declare_parameter('graph_file', 'graph.yaml')
         self.declare_parameter('x_min', -2.0)
         self.declare_parameter('x_max', 3.0)
@@ -30,9 +33,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
-         
-        points = None 
+
+        self.state = None 
         self.goal = None
+        self.plan = None
+        
+        points = None 
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         if map_file.endswith(".yaml"):
             grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
@@ -54,14 +60,39 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=0.18)
+        
+        self.declare_parameter("vehicle_model", int(Vehicle.RTR))
+        self.declare_parameter("step_size", 0.1)
+        self.declare_parameter("turn_radius", 0.1)
+        self.declare_parameter("turn_speed",0.2)
+        # set up vehicle model with parameters
+        self.vm = TrajectoryGenerator(
+            model=Vehicle(
+                self.get_parameter("vehicle_model")
+                .get_parameter_value()
+                .integer_value
+            ),
+            step=self.get_parameter("step_size").get_parameter_value().double_value,
+            r=self.get_parameter("turn_radius")
+            .get_parameter_value()
+            .double_value,
+            r_step=self.get_parameter("turn_speed").get_parameter_value().double_value,
+        )
+
+        # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
+        self.follow_client = self.create_client(
+            UpdateTrajectory, "nav/follow_trajectory"
+        )
 
         self.get_logger().info(f"graph generated {map_file}")
         self.wait_for_tf()
+        self.follow_client.wait_for_service()
+        self.get_logger().info("connected to trajectory follower service")
         self.create_timer(1.0, self.timer_cb)
         self.set_state_ready()
     
@@ -128,13 +159,55 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.publish_goal()
 
     def plan_cb(self, msg):
-        plan = msg.data
-        self.get_logger().info(f'new plan {plan}')
-        self.plan = plan
+        if list(msg.data) == self.plan:
+            return
+        self.plan = list(msg.data)
+        self.get_logger().info(f'new plan {self.plan}')
+        self.execute_plan()
+        
+    def execute_plan(self):
+        if not len(self.plan):
+            self.get_logger().info('empty plan')
+            return
+        self.get_logger().info(f'executing plan {self.plan}')
+        plan = self.plan
+        # TODO: replace with planning in feasible area. This is a placeholder to test stuff and get something running
+
+        # in case we only have one node in the plan, this is the goal node and we want to go to the center of this node
+        # otherwise we want to go to the next node (i.e. skip the first one)
+        
+        if len(plan) > 1:
+            plan = plan[1:]
+        # --
+        wps = [self.get_tf_pose()]
+        for node in plan:
+            wp = self.env.g.nodes()[node]['geometry'].center
+            wps.append((wp.x, wp.y, 0.0))
+
+        # --
+        trajectory = self.vm.tuples_to_path(wps)
+        self.send_path(trajectory)
+
+    def send_path(self, trajectory, ti=0):
+        # convert trajectory to correct space
+        if trajectory is None:
+            return
+        path = Path()
+        path.header.frame_id = self.reference_frame
+        path.header.stamp = self.get_clock().now().to_msg()
+        for pose in trajectory:
+            path.poses.append(self.tuple_to_pose_stamped_msg(*pose))
+
+        self.get_logger().info("sending path")
+        if ti == 0:
+            path.header.stamp = self.get_clock().now().to_msg()
+        request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
+        self.follow_client.call_async(request)
         
 
 def main():
     main_fn('ccr_local_planner', CCRLocalPlanner)
+
 
 if __name__ == '__main__':
     main()
