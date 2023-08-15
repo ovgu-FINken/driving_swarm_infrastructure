@@ -15,19 +15,14 @@ class CommandNode(DrivingSwarmNode):
         self.declare_parameter("run_timeout", 0.0)
         self.declare_parameter("init_timeout", 0.0)
         self.get_list_of_robot_names()
-        qos_profile = rclpy.qos.qos_profile_system_default
-        qos_profile.reliability = rclpy.qos.QoSReliabilityPolicy\
-            .RMW_QOS_POLICY_RELIABILITY_RELIABLE
-        qos_profile.durability = rclpy.qos.QoSDurabilityPolicy\
-            .RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
-        self.cmd_pub = self.create_publisher(String, "/command", qos_profile)
+        self.cmd_pub = self.create_publisher(String, "/command", 10)
 
         self.robot_status = {robot: None for robot in self.robots}
         for robot in self.robots:
             self.create_subscription(
                 String, f"/{robot}/status",
                 functools.partial(self.robot_cb, robot),
-                qos_profile
+                10
             )
             self.logger_.info(f"subscribing /{robot}/status")
         self.run_timeout = self.get_parameter("run_timeout")\

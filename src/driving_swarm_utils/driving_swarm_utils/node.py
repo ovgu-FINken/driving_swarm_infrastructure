@@ -12,7 +12,7 @@ class DrivingSwarmNode(Node):
         super().__init__(name)
         self.get_logger().info("starting node "+colored(f"{name}", "green"))
         self.name = name
-        self.robo_name = self.get_namespace().strip("/")
+        self.robot_name = self.get_namespace().strip("/")
 
 
     def get_list_of_robot_names(self):
@@ -92,16 +92,11 @@ class DrivingSwarmNode(Node):
     
     def setup_command_interface(self, autorun=True):
         self.autorun = autorun
-        qos_profile = rclpy.qos.qos_profile_system_default
-        qos_profile.reliability = (
-            rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
-        )
-        qos_profile.durability = (
-            rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
-        )
-        self.status_pub = self.create_publisher(String, "status", qos_profile)
+        if autorun:
+            self.started = False
+        self.status_pub = self.create_publisher(String, "status", 10)
         self.create_subscription(
-            String, "/command", self.command_cb, qos_profile
+            String, "/command", self.command_cb, 10
         )
         
     def set_state(self, state: str):

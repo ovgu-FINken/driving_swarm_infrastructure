@@ -28,16 +28,7 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
             'use_sim_time': use_sim_time,
             }],
-           output='screen',
-        ))
-        controllers.append(Node(
-           package='reactive_behaviour',
-           executable='scoring',
-           namespace=robot,
-           parameters=[{
-            'use_sim_time': use_sim_time,
-            }],
-           remappings=[('/tf', f'tf'), ('/tf_static', f'tf_static')],
+           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
            output='screen',
         ))
     
