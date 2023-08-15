@@ -2,6 +2,7 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment
 from std_msgs.msg import Int32, Int32MultiArray
 import networkx as nx
+import functools
 
 class CCRGlobalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -11,6 +12,11 @@ class CCRGlobalPlanner(DrivingSwarmNode):
 
     def __init__(self, name):
         super().__init__(name)
+
+        # robot names needed to subscribe to other plans
+        self.declare_parameter('robot_names', ['invalid_name'])
+        self.other_robots = self.get_parameter('robot_names').get_parameter_value().string_array_value
+        self.other_robots.remove(self.robot_name)
 
         self.declare_parameter('graph_file', 'graph.yaml')
         self.declare_parameter('x_min', -2.0)
@@ -52,6 +58,16 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb,1)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 1)
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 1)
+        
+        
+        self.robot_status = {robot: None for robot in self.robots}
+        for robot in self.robots:
+            self.create_subscription(
+                Int32MultiArray, f"/{robot}/nav/plan",
+                functools.partial(self.robot_cb, robot),
+                10
+            )
+            self.logger_.info(f"subscribing /{robot}/status")
         
         #TODO subscribe to other plans
         

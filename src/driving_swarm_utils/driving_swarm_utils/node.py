@@ -12,6 +12,7 @@ class DrivingSwarmNode(Node):
         super().__init__(name)
         self.get_logger().info("starting node "+colored(f"{name}", "green"))
         self.name = name
+        self.robo_name = self.get_namespace().strip("/")
 
 
     def get_list_of_robot_names(self):

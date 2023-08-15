@@ -15,15 +15,24 @@ def controller_spawning(context, *args, **kwargs):
     controllers = []
 
     n_robots = LaunchConfiguration('n_robots').perform(context)
+    n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robots_file').perform(context)
     waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
     use_sim_time = TextSubstitution(text='true')
+    grid_params = {
+              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),
+              'x_min': -2.25,
+              'x_max': 2.75,
+              'y_min': -1.75,
+              'y_max': 1.25,
+              'grid_type': 'square',
+              'grid_size': 0.5,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
          waypoints = yaml.safe_load(stream)
     
-    for wp, robot in zip(waypoints[:int(n_robots)], robots[:int(n_robots)]):
+    for wp, robot in zip(waypoints[:n_robots], robots[:n_robots]):
         controllers.append(Node(
            package='goal_provider',
            executable='simple_goal',
@@ -57,8 +66,8 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
-           }, {
-              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),}],
+           }, grid_params
+             ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
         ))
@@ -68,16 +77,8 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
-           }, {
-              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml')},
-            {
-               'vehicle_model' : 3,
-               'step_size' : 0.1,
-               'turn_radius' : 0.1,
-               'turn_speed' : 1.0
-
-            }
-              
+              'robot_names': robots[:n_robots],
+           }, grid_params
               ],
            output='screen',
         ))
