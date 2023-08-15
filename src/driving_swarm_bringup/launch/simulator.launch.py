@@ -6,7 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
                             IncludeLaunchDescription, LogInfo)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 
 
 def generate_launch_description():
@@ -25,7 +25,7 @@ def generate_launch_description():
 
     declare_simulator_cmd = DeclareLaunchArgument(
         'simulator',
-        default_value='gazebo',
+        default_value=EnvironmentVariable('ROS_SIMULATOR', default_value='gazebo'),
         description='The simulator to use (gazebo or gzserver, i.e. with or without GUI)')
 
     # Start Gazebo with plugin providing the robot spawing service

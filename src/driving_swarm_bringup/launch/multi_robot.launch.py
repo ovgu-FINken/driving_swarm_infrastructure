@@ -32,7 +32,7 @@ from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 from launch_ros.actions import Node
 
 
@@ -102,7 +102,7 @@ def generate_launch_description():
 
     declare_n_robots_cmd = DeclareLaunchArgument(
         'n_robots',
-        default_value='2'
+        default_value=EnvironmentVariable('N_ROBOTS', default_value='2')
     )
 
     declare_poses_file_cmd = DeclareLaunchArgument(
