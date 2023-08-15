@@ -27,6 +27,8 @@ from lifecycle_msgs.srv import GetState
 import time
 import tf_transformations
 from driving_swarm_utils.node import DrivingSwarmNode
+import random
+import time
 
 
 class Spawner(DrivingSwarmNode):
@@ -165,6 +167,10 @@ def main():
 
     args, _ = parser.parse_known_args()
 
+    #Generates the random value in the given range.
+    sleep_time = random.uniform(0, 5)
+
+    time.sleep(sleep_time)
     rclpy.init()
     node = Spawner(args)
     node.wait_for_localization()
