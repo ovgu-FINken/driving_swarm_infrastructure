@@ -27,17 +27,9 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
             }],
+           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
            output='screen',
            arguments=['--ros-args','--log-level','warn']
-        ))
-        controllers.append(Node(
-           package='reactive_behaviour',
-           executable='scoring',
-           namespace=robot,
-           parameters=[{
-            }],
-           remappings=[('/tf', f'tf'), ('/tf_static', f'tf_static')],
-           output='screen',
         ))
     
     return controllers
