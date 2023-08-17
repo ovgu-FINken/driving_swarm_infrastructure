@@ -24,6 +24,7 @@ find_package(std_msgs REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 
 set(msg_files
+  "msg/BeliefState.msg"
   "msg/SystemStatus.msg"
   "msg/FloatArray.msg"
   "msg/FloatArrayStamped.msg"
