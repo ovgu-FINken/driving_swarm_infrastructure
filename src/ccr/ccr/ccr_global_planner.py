@@ -32,6 +32,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
+        self.declare_parameter('inflation_size', 0.2)
         self.state = None
         self.goal = None
         self.update_path = False
@@ -57,7 +58,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         generator_points=points,
                                                         wx=wx,
                                                         wy=wy,
-                                                        offset=0.18)
+                                                        offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         self.planning_problem_parameters = environment.PlanningProblemParameters()
         self.cache = planning.SpaceTimeAStarCache(self.env.g)
         self.g = self.env.get_graph().to_directed()

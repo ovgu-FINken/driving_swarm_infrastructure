@@ -8,6 +8,7 @@ from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
 from std_srvs.srv import Empty
 from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
+import numpy as np
 
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -34,6 +35,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
+        self.declare_parameter('inflation_size', 0.2)
 
         self.state = None 
         self.goal = None
@@ -60,7 +62,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         generator_points=points,
                                                         wx=wx,
                                                         wy=wy,
-                                                        offset=0.18)
+                                                        offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
         self.declare_parameter("step_size", 0.1)
@@ -199,7 +201,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         path_poly = geometry.poly_from_path(self.env.g,self.plan)
         result_path = geometry.find_shortest_path(path_poly, start, end)
         wps = [self.get_tf_pose()]
-        wp = [(i.x,i.y,0.0) for i in result_path]
+        wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
         trajectory = self.vm.tuples_to_path(wps)
         self.send_path(trajectory)
