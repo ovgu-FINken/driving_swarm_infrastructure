@@ -181,20 +181,14 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         self.get_logger().info(f'executing plan {self.plan}')
         plan = self.plan
-        # TODO: replace with planning in feasible area. This is a placeholder to test stuff and get something running
-
-        # in case we only have one node in the plan, this is the goal node and we want to go to the center of this node
-        # otherwise we want to go to the next node (i.e. skip the first one)
         
-        if len(plan) > 1:
-            plan = plan[1:]
-        # --
+        start = self.env.g.nodes()[plan[0]]['geometry'].center
+        end = self.env.g.nodes()[plan[-1]]['geometry'].center
+        path_poly = geometry.poly_from_path(self.env.g,self.plan)
+        result_path = geometry.find_shortest_path(path_poly, start, end)
         wps = [self.get_tf_pose()]
-        for node in plan:
-            wp = self.env.g.nodes()[node]['geometry'].center
-            wps.append((wp.x, wp.y, 0.0))
-
-        # --
+        wp = [(i.x,i.y,0.0) for i in result_path]
+        wps += wp
         trajectory = self.vm.tuples_to_path(wps)
         self.send_path(trajectory)
 

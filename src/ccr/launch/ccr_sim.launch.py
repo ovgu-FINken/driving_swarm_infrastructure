@@ -18,7 +18,7 @@ def controller_spawning(context, *args, **kwargs):
     n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robots_file').perform(context)
     waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
-    use_sim_time = TextSubstitution(text='true')
+    use_sim_time = TextSubstitution(text='True')
     grid_params = {
               'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),
               'x_min': -2.25,
