@@ -33,6 +33,11 @@ class CommandNode(DrivingSwarmNode):
         self.init_timer = None
         if self.init_timeout > 0:
             self.init_timer = self.create_timer(self.init_timeout, self.init_timeout_callback)
+        self.create_timer(10.0, self.timer_cb)
+    
+    def timer_cb(self):
+        for robot in self.robots:
+            self.get_logger().info(f"{robot}: {self.robot_status[robot]}")
     
     def run_timeout_callback(self):
         self.logger_.info(f"run timer is due with status {self.status}")

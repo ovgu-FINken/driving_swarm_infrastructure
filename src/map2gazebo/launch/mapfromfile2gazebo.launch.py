@@ -17,7 +17,7 @@ def generate_launch_description():
             parameters=[
                 {
                     'yaml_filename':
-                        os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', launch.substitutions.LaunchConfiguration('map_file').perform()),
+                        os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml',)
                 }
             ],
             remappings=[

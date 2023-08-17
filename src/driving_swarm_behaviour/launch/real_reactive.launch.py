@@ -25,11 +25,10 @@ def controller_spawning(context, *args, **kwargs):
            package='driving_swarm_behaviour',
            executable='reactive',
            namespace=robot,
-           parameters=[{
+           parameters=[{'synchronise' : True
             }],
            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
            output='screen',
-           arguments=['--ros-args','--log-level','warn']
         ))
     
     return controllers
