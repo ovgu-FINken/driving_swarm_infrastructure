@@ -151,6 +151,13 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.get_logger().info(f"plan: {self.plan}")
     
     def publish_plan(self):
+        # feasibility check
+        if self.plan:
+            for n1, n2 in zip(self.plan[:-1], self.plan[1:]):
+                if not (n1, n2) in self.g.edges():
+                    self.get_logger().warn(f"plan is not feasible")
+                    self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
+                    self.get_logger().warn(f"path: self.plan")
         msg = Int32MultiArray()
         msg.data = self.plan
         self.plan_pub.publish(msg)

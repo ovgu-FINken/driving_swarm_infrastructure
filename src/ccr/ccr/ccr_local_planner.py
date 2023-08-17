@@ -5,6 +5,7 @@ from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import Path
 from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
+from std_srvs.srv import Empty
 from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 
@@ -82,6 +83,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
@@ -131,6 +133,13 @@ class CCRLocalPlanner(DrivingSwarmNode):
             poly_msg.markers.append(marker)
 
         return poly_msg
+
+    def replan_callback(self, _, res):
+        if not self.plan:
+            return
+        self.get_logger().info('got replanning request, which we will do')
+        self.execute_plan()
+        return res
         
     def save_graph(self, req, res):
         self.g.save(req.filename)
@@ -163,6 +172,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         self.plan = list(msg.data)
         self.get_logger().info(f'new plan {self.plan}')
+            
+        self.execute_plan()
+        
+    def execute_plan(self):
         # if there is a wait action within the plan, only execute the plan up to the wait action
         visited = set()
         plan = []
@@ -172,15 +185,14 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 plan.append(node)
             else:
                 break
-            
-        self.execute_plan(plan)
-        
-    def execute_plan(self, plan):
         if not len(plan):
             self.get_logger().info('empty plan')
             return
+        
+        remainder = self.plan[len(plan):]
         self.get_logger().info(f'executing plan {self.plan}')
-        plan = self.plan
+        if remainder:
+            self.get_logger().info(f'\t remaining plan after wait actions {remainder}')
         
         start = self.env.g.nodes()[plan[0]]['geometry'].center
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
