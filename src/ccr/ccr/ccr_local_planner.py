@@ -163,10 +163,20 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         self.plan = list(msg.data)
         self.get_logger().info(f'new plan {self.plan}')
-        self.execute_plan()
+        # if there is a wait action within the plan, only execute the plan up to the wait action
+        visited = set()
+        plan = []
+        for node in self.plan:
+            if node not in visited:
+                visited.add(node)
+                plan.append(node)
+            else:
+                break
+            
+        self.execute_plan(plan)
         
-    def execute_plan(self):
-        if not len(self.plan):
+    def execute_plan(self, plan):
+        if not len(plan):
             self.get_logger().info('empty plan')
             return
         self.get_logger().info(f'executing plan {self.plan}')

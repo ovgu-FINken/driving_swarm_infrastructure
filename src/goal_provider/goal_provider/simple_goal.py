@@ -8,12 +8,15 @@ import yaml
 from geometry_msgs.msg import PoseStamped
 from driving_swarm_utils.node import DrivingSwarmNode
 from termcolor import colored
+from std_msgs.msg import Int32
 
 
 class SimpleGoalProvider(DrivingSwarmNode):
     def __init__(self):
         super().__init__('simple_goal_provider')
-        self.publisher = self.create_publisher(PoseStamped, 'nav/goal', 9)
+        self.publisher = self.create_publisher(PoseStamped, 'nav/goal', 10)
+        self.completed_publisher = self.create_publisher(Int32, 'nav/goal_completed', 10)
+        self.completed = 0
         self.goal_list = []
         self.goal_dist = 0.2
         self.current_goal_index = 0
@@ -64,8 +67,11 @@ class SimpleGoalProvider(DrivingSwarmNode):
         self.publisher.publish(self.goal_list[self.current_goal_index])
     
     def increment_goal(self):
-        self.current_goal_index = (self.current_goal_index + 1) % len(self.goal_list)
-        self.get_logger().info(colored("goal completed", "green") + f"going to goal {self.current_goal_index}")
+        self.completed += 1
+        self.current_goal_index = self.completed % len(self.goal_list)
+        completed_str = f"completed {self.completed} goal "
+        self.get_logger().info(colored(completed_str, "green") + f" -> going to goal index {self.current_goal_index}")
+        self.completed_publisher.publish(Int32(data=self.completed))
     
     def check_goal(self):
         goal = self.goal_list[self.current_goal_index]
