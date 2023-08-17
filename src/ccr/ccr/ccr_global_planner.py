@@ -35,6 +35,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.state = None
         self.goal = None
         self.update_path = False
+        self.cdm_triggered = {}
          
         points = None 
         if map_file.endswith(".yaml"):
@@ -108,7 +109,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if msg.data == self.goal:
             return
         self.goal = msg.data
-        self.get_logger().info(f"received goal {self.goal}")
+        self.get_logger().info(f"received goal node {self.goal}")
         self.ccr_agent.update_goal(self.goal)
         self.update_plan()
 
@@ -122,11 +123,14 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         
     def trigger_cdm(self):
         options = self.ccr_agent.get_cdm_node()
+        # do not re-trigger cdm for a node
+        options = options - set(self.cdm_triggered.keys())
         if len(options) == 0:
             self.get_logger().warn(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
+        self.cdm_triggered[node] = self.get_clock().now()
         self.cdm_pub.publish(Int32(data=int(node)))
 
     def update_plan(self):
@@ -170,9 +174,11 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         return planning.BeliefState(state=msg.state, priorities={n: p for n, p in zip(msg.neighbours, msg.priorities)})
     
     def cdm_cb(self, msg):
+        self.cdm_triggered[msg.data] = self.get_clock().now()
         opinion = self.ccr_agent.get_cdm_opinion(msg.data)
         self.get_logger().info(f"own opinion is {opinion.priorities}")
-        bs_msg = self.belief_to_msg(opinion) 
+        # self.ccr_agent.set_belief(opinion.state, opinion)
+        bs_msg = self.belief_to_msg(opinion)
         self.opinion_pub.publish(bs_msg)
         
     def opinion_cb(self, msg):
