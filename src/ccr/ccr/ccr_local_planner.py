@@ -40,7 +40,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.state = None 
         self.goal = None
         self.plan = None
-        
+        self.path_poly = None
         points = None 
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         if map_file.endswith(".yaml"):
@@ -135,6 +135,17 @@ class CCRLocalPlanner(DrivingSwarmNode):
             poly_msg.markers.append(marker)
 
         return poly_msg
+    def feasible_region_marker(self, polygon):
+        poly_msg = MarkerArray()
+        marker = Marker(action=Marker.ADD, ns="polygon", id=0, type=Marker.LINE_STRIP)
+        marker.header.frame_id = 'map'
+        marker.scale.x = 0.01
+        coords = polygon.exterior.coords
+
+        marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
+        marker.colors = [ColorRGBA(r=0.5, g=0.3, b=0.3, a=0.3) for _ in coords]
+        poly_msg.markers.append(marker)
+        return poly_msg
 
     def replan_callback(self, _, res):
         if not self.plan:
@@ -161,6 +172,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_goal()
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
+        try:
+            self.poly_pub.publish(self.feasible_region_marker(self.path_poly))
+        except Exception:
+            pass
 
     def goal_cb(self, msg):
         goal = self.pose_stamped_to_tuple(msg)
@@ -198,8 +213,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         start = self.env.g.nodes()[plan[0]]['geometry'].center
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
-        path_poly = geometry.poly_from_path(self.env.g,self.plan)
-        result_path = geometry.find_shortest_path(path_poly, start, end)
+        self.path_poly = geometry.poly_from_path(self.env.g,self.plan)
+        result_path = geometry.find_shortest_path(self.path_poly, start, end)
         wps = [self.get_tf_pose()]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
