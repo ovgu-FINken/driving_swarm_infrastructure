@@ -24,7 +24,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.dt = self.get_parameter("dt").get_parameter_value().double_value
         self.declare_parameter("w1", 0.5)
         self.w1 = self.get_parameter("w1").get_parameter_value().double_value
-        self.declare_parameter("w2", 0.5)
+        self.declare_parameter("w2", 1.0)
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
         self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
@@ -141,13 +141,19 @@ class TrajectoryFollower(DrivingSwarmNode):
         diff_pose = self.get_target_pose(offset=self.dt)
         vel = Twist()
         vel.linear.x = diff_pose.x / self.dt
+
+        # compute angular velocity
         # dy is for path deviation
         dy = 0
         # no division by 0.0
         if diff_pose.x != 0.0:
             dy = np.arctan(diff_pose.y / diff_pose.x) / self.dt
         # dtheta is for angular deviation
+
+        # dy is the component which steers the robot towards the path
+        # dtheta is the component which steers the robot towards the desired orientation
         dtheta = diff_pose.theta / self.dt
+        
         vel.angular.z = self.w1 * dy + self.w2 * dtheta
         return vel
     
@@ -177,7 +183,7 @@ class TrajectoryFollower(DrivingSwarmNode):
             self.set_trajectory_fail()
             self.get_logger().warn(colored('to far from planned pose', 'red') + f'difference: {diff_pose}')
             return
-
+        
         # compute and publish control output
         control = self.compute_pure_pursuit_output()
         if control is None:
