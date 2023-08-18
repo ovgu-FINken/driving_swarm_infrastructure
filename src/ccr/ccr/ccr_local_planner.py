@@ -7,8 +7,11 @@ from nav_msgs.msg import Path
 from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
 from std_srvs.srv import Empty
 from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
+from sensor_msgs.msg import LaserScan
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 import numpy as np
+import rclpy
+from shapely import Polygon
 
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -85,6 +88,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
@@ -237,6 +241,22 @@ class CCRLocalPlanner(DrivingSwarmNode):
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
         self.follow_client.call_async(request)
+        
+    def scan_cb(self, msg):
+        # convert laser scan to polygon
+        r = msg.ranges
+        r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
+        
+        px, py, pt = self.get_tf_pose()
+        # convert scan ranges to xy coordinates
+        points = []
+        for i, r in enumerate(r):
+            angle = msg.angle_min + i * msg.angle_increment + pt
+            x = r * np.cos(angle) + px
+            y = r * np.sin(angle) + py
+            points.append((x,y))
+
+        self.scan_poly = Polygon(points)
         
 
 def main():

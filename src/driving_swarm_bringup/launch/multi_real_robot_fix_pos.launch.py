@@ -103,8 +103,12 @@ def generate_launch_description():
         default_value='2'
     )
     declare_robots_file_cmd = DeclareLaunchArgument(
-        'robots_file',
-        default_value=os.path.join(bringup_dir, 'params', 'swarmlab_two_walls_real.yaml')
+        'robot_names_file',
+        default_value=os.path.join(bringup_dir, 'params', 'robot_names_real.yaml')
+    )
+    declare_robots_file_cmd = DeclareLaunchArgument(
+        'poses_file',
+        default_value=os.path.join(bringup_dir, 'params', 'icra2024.yaml')
     )
     declare_base_frame_cmd = DeclareLaunchArgument(
         'base_frame',

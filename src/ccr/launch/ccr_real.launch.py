@@ -16,7 +16,7 @@ def controller_spawning(context, *args, **kwargs):
 
     n_robots = LaunchConfiguration('n_robots').perform(context)
     n_robots = int(n_robots)
-    robots_file = LaunchConfiguration('robots_file').perform(context)
+    robots_file = LaunchConfiguration('robot_names_file').perform(context)
     waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
     use_sim_time = TextSubstitution(text='true')
     grid_params = {
@@ -87,7 +87,7 @@ def generate_launch_description():
          'behaviour': 'false',      
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
-         'robots_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_real.yaml'),
+         'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_real.yaml'),
          'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_waypoints.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
