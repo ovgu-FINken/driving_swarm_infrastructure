@@ -211,7 +211,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if remainder:
             self.get_logger().info(f'\t remaining plan after wait actions {remainder}')
         
-        start = self.env.g.nodes()[plan[0]]['geometry'].center
+        start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         self.path_poly = geometry.poly_from_path(self.env.g,self.plan)
         result_path = geometry.find_shortest_path(self.path_poly, start, end)
