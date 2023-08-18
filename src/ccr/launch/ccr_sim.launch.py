@@ -53,7 +53,7 @@ def controller_spawning(context, *args, **kwargs):
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
                   "w1": 0.5,
-                  "w2": 0.5,
+                  "w2": 1.0,
                   "fail_radius": 0.3
               }
            ],

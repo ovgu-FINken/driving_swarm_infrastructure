@@ -67,7 +67,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
         self.declare_parameter("step_size", 0.1)
         self.declare_parameter("turn_radius", 0.1)
-        self.declare_parameter("turn_speed",0.2)
+        self.declare_parameter("turn_speed",0.1)
         # set up vehicle model with parameters
         self.vm = TrajectoryGenerator(
             model=Vehicle(
@@ -135,6 +135,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             poly_msg.markers.append(marker)
 
         return poly_msg
+
     def feasible_region_marker(self, polygon):
         poly_msg = MarkerArray()
         marker = Marker(action=Marker.ADD, ns="polygon", id=0, type=Marker.LINE_STRIP)
@@ -213,8 +214,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
-        self.path_poly = geometry.poly_from_path(self.env.g,self.plan)
-        result_path = geometry.find_shortest_path(self.path_poly, start, end)
+        self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01)
+        result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01)
         wps = [self.get_tf_pose()]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
