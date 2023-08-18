@@ -21,7 +21,7 @@ def controller_spawning(context, *args, **kwargs):
     use_sim_time = TextSubstitution(text='true')
     grid_params = {
               'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),
-              'x_min': -.25,
+              'x_min': -2.25,
               'x_max': 2.75,
               'y_min': -1.75,
               'y_max': 1.25,
@@ -45,7 +45,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_follower',
-           executable='pure_pursuit',
+           executable='pid',
            namespace=robot,
            parameters=[
               {

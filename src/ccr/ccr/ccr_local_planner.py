@@ -140,9 +140,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         return poly_msg
 
-    def feasible_region_marker(self, polygon):
+    def publish_polygon_marker(self, polygon, ns="feasible", id=0):
         poly_msg = MarkerArray()
-        marker = Marker(action=Marker.ADD, ns="polygon", id=0, type=Marker.LINE_STRIP)
+        marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
         marker.header.frame_id = 'map'
         marker.scale.x = 0.01
         coords = polygon.exterior.coords
@@ -178,9 +178,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
         try:
-            self.poly_pub.publish(self.feasible_region_marker(self.path_poly))
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly))
         except Exception:
             pass
+        self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
 
     def goal_cb(self, msg):
         goal = self.pose_stamped_to_tuple(msg)
@@ -256,7 +257,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             y = r * np.sin(angle) + py
             points.append((x,y))
 
-        self.scan_poly = Polygon(points)
+        self.scan_poly = Polygon(points).buffer(-0.1)
         
 
 def main():
