@@ -88,7 +88,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
-        self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
@@ -99,6 +98,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         self.get_logger().info(f"graph generated {map_file}")
         self.wait_for_tf()
+        self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         self.create_timer(1.0, self.timer_cb)
@@ -140,9 +140,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         return poly_msg
 
-    def feasible_region_marker(self, polygon):
+    def publish_polygon_marker(self, polygon, ns="feasible", id=0):
         poly_msg = MarkerArray()
-        marker = Marker(action=Marker.ADD, ns="polygon", id=0, type=Marker.LINE_STRIP)
+        marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
         marker.header.frame_id = 'map'
         marker.scale.x = 0.01
         coords = polygon.exterior.coords
@@ -178,9 +178,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
         try:
-            self.poly_pub.publish(self.feasible_region_marker(self.path_poly))
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly))
         except Exception:
             pass
+        self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
 
     def goal_cb(self, msg):
         goal = self.pose_stamped_to_tuple(msg)
@@ -256,7 +257,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             y = r * np.sin(angle) + py
             points.append((x,y))
 
-        self.scan_poly = Polygon(points)
+        self.scan_poly = Polygon(points).buffer(-0.1)
         
 
 def main():
