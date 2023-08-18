@@ -88,7 +88,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
-        self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
@@ -99,6 +98,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         self.get_logger().info(f"graph generated {map_file}")
         self.wait_for_tf()
+        self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         self.create_timer(1.0, self.timer_cb)
