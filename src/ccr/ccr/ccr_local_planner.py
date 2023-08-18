@@ -12,7 +12,7 @@ from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 import numpy as np
 import rclpy
 from shapely import Polygon
-
+import shapely
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
     The local planner will publish the next waypoint, current node and the graph to the global planner, which in turn is able to generate a discrete plan by uing CCR.
@@ -220,6 +220,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01)
+        self.path_poly = shapely.intersection(self.path_poly,self.scan_poly)
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01)
         wps = [self.get_tf_pose()]
         wp = [(i.x,i.y,np.nan) for i in result_path]
