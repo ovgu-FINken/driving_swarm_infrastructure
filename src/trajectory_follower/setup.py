@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'trajectory_follower = trajectory_follower.trajectory_follower:main'
+            'pid = trajectory_follower.pid:main'
+            'pure_pursuit = trajectory_follower.pure_pursuit:main'
         ],
     },
 )

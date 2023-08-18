@@ -75,7 +75,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_follower',
-           executable='trajectory_follower',
+           executable='pure_pursuit',
            namespace=robot['name'],
            parameters=[
               {
