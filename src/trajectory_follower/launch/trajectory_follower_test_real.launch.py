@@ -31,7 +31,6 @@ def controller_spawning(context, *args, **kwargs):
                 executable="simple_goal",
                 namespace=robot,
                 parameters=[{
-                      'use_sim_time': use_sim_time,
                       'waypoints': yaml.dump(wp['waypoints']),
                    }],
                remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
@@ -45,7 +44,6 @@ def controller_spawning(context, *args, **kwargs):
                 namespace=robot,
                 parameters=[
                     {
-                        "use_sim_time": use_sim_time,
                         "vehicle_model": 1,
                         "turn_radius": 0.2,
                         "step_size": 0.06,
@@ -62,7 +60,6 @@ def controller_spawning(context, *args, **kwargs):
                 namespace=robot["name"],
                 parameters=[
                     {
-                        "use_sim_time": use_sim_time,
                         "dt": 2.0,
                         "w1": 0.5,
                         "w2": 0.5,
@@ -91,12 +88,12 @@ def generate_launch_description():
             "map": os.path.join(
                 get_package_share_directory("driving_swarm_bringup"),
                 "maps",
-                "icra2021_map.yaml",
+                "icra2024.yaml",
             ),
             "robots_file": os.path.join(
                 get_package_share_directory("driving_swarm_bringup"),
                 "params",
-                "icra2021_demo.yaml",
+                "robot_names_real.yaml",
             ),
             "rosbag_topics_file": os.path.join(
                 get_package_share_directory("trajectory_follower"),
