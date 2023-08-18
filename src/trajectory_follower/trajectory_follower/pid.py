@@ -35,11 +35,31 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.iy = 0
         self.itheta = 0
         self.name = self.get_namespace()[1:]
+        
+        
+        # Initialize previous errors and integrals
+        self.prev_distance = 0
+        self.integral_distance = 0
+        self.prev_dtheta = 0
+        self.integral_dtheta = 0
+
+        # Robot's state and thresholds
+        self.state = "MOVING"
+        self.position_threshold = 0.025  # Distance threshold to switch from moving to rotating
+        self.orientation_threshold = 0.04  # Orientation threshold to consider rotation complete
+        self.max_linear_velocity = 0.1
+        self.max_angular_velocity = 1
+
+        # PID coefficients for distance and dtheta. They need to be tuned.
+        self.kp_distance, self.ki_distance, self.kd_distance = 0.4, 0.0, 0.0
+        self.kp_dtheta, self.ki_dtheta, self.kd_dtheta = 0.9, 0.0, 0.0
+
+
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.cmd_vel = Twist()
-        self.max_accel_x = 0.025
+        self.max_accel_x = 0.05
         self.max_accel_z = 0.032
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = \
@@ -134,23 +154,63 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.cmd_vel = Twist()
         self.cmd_publisher.publish(self.cmd_vel)
         
+    # def compute_pure_pursuit_output(self) -> Twist:
+    #     if self.trajectory is None:
+    #         return None
+    #     # get the target pose at the correct time in ego_coordinates
+    #     diff_pose = self.get_target_pose(offset=self.dt)
+    #     vel = Twist()
+    #     vel.linear.x = diff_pose.x / self.dt
+    #     # dy is for path deviation
+    #     dy = 0
+    #     # no division by 0.0
+    #     if diff_pose.x != 0.0:
+    #         dy = np.arctan(diff_pose.y / diff_pose.x) / self.dt
+    #     # dtheta is for angular deviation
+    #     dtheta = diff_pose.theta / self.dt
+    #     vel.angular.z = self.w1 * dy + self.w2 * dtheta
+    #     return vel
+    
     def compute_pure_pursuit_output(self) -> Twist:
         if self.trajectory is None:
             return None
-        # get the target pose at the correct time in ego_coordinates
+
         diff_pose = self.get_target_pose(offset=self.dt)
         vel = Twist()
-        vel.linear.x = diff_pose.x / self.dt
-        # dy is for path deviation
-        dy = 0
-        # no division by 0.0
-        if diff_pose.x != 0.0:
-            dy = np.arctan(diff_pose.y / diff_pose.x) / self.dt
-        # dtheta is for angular deviation
-        dtheta = diff_pose.theta / self.dt
-        vel.angular.z = self.w1 * dy + self.w2 * dtheta
+
+        # Angular velocity control (rotation)
+        # Error is the angle between current heading and desired heading.
+        dtheta = diff_pose.theta
+        proportional_dtheta = dtheta
+        self.integral_dtheta += dtheta * self.dt
+        derivative_dtheta = (dtheta - self.prev_dtheta) / self.dt
+
+        # Compute angular speed using PID for dtheta.
+        vel.angular.z = float(min(max(self.kp_dtheta * proportional_dtheta + 
+                                    self.ki_dtheta * self.integral_dtheta + 
+                                    self.kd_dtheta * derivative_dtheta, 
+                                    -self.max_angular_velocity), 
+                                    self.max_angular_velocity))
+        self.prev_dtheta = dtheta
+
+        # Linear velocity control (forward movement)
+        # Error is the distance to the next waypoint.
+        distance_to_target = np.sqrt(diff_pose.x**2 + diff_pose.y**2)
+        proportional_distance = distance_to_target
+        self.integral_distance += distance_to_target * self.dt
+        derivative_distance = (distance_to_target - self.prev_distance) / self.dt
+
+        # Compute linear speed using PID for distance.
+        vel.linear.x = float(min(max(self.kp_distance * proportional_distance + 
+                                    self.ki_distance * self.integral_distance + 
+                                    self.kd_distance * derivative_distance, 
+                                    0), 
+                                    self.max_linear_velocity))
+        self.prev_distance = distance_to_target
+
         return vel
-    
+
+        
     def set_cmd_vel(self, control):
         # todo: respect limits (acceleration + max vel)
         # self.cmd_vel = control
@@ -170,12 +230,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         if self.trajectory is None:
             self.cmd_vel = Twist()
             self.cmd_publisher.publish(self.cmd_vel)
-            return
-
-        diff_pose = self.get_target_pose(offset=0.0)
-        if diff_pose.x**2 + diff_pose.y**2 > self.fail_radius**2:
-            self.set_trajectory_fail()
-            self.get_logger().warn(colored('to far from planned pose', 'red') + f'difference: {diff_pose}')
             return
 
         # compute and publish control output
