@@ -323,10 +323,17 @@ class CCRLocalPlanner(DrivingSwarmNode):
         return now_index + int(10 * 0.4)
     
     def resolve_multi_polygon(self, mp):
-        """ If the argument is a multi-polygon, return the polygon with the robot inside - if the robot is not inside, return the closest. """
-        
-        assert poly.geom_type == 'Polygon'
-        return poly
+        position = self.get_tf_pose()
+        robot_point = ShapelyPoint(position[0], position[1])
+        if mp.geom_type != 'MultiPolygon':
+            return mp
+        for poly in mp.geoms:
+            if poly.contains(robot_point):
+                assert poly.geom_type == 'Polygon'
+                return poly
+        closest_polygon = min(mp.geoms, key=lambda poly: poly.distance(robot_point))
+        assert closest_polygon.geom_type == 'Polygon'
+        return closest_polygon
         
 
 
