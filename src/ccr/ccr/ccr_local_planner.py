@@ -11,7 +11,7 @@ from sensor_msgs.msg import LaserScan
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 import numpy as np
 import rclpy
-from shapely import Polygon
+from shapely import Polygon, simplify
 from shapely import Point as ShapelyPoint
 import shapely
 class CCRLocalPlanner(DrivingSwarmNode):
@@ -74,8 +74,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
         self.declare_parameter("step_size", 0.1)
-        self.declare_parameter("turn_radius", 0.1)
-        self.declare_parameter("turn_speed",0.1)
+        self.declare_parameter("turn_radius", .2)
+        self.declare_parameter("turn_speed", 0.2)
         # set up vehicle model with parameters
         self.vm = TrajectoryGenerator(
             model=Vehicle(
@@ -125,7 +125,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         for i, j, e in self.env.g.edges(data=True):
             if e['geometry'].borderPoly is None:
                 continue
-            if  e['geometry'].borderPoly.geometryType() != 'Polygon':
+            if  e['geometry'].borderPoly.geom_type != 'Polygon':
                 continue
             idx += 1
             marker = Marker(action=Marker.ADD, ns="transition", id=idx, type=Marker.LINE_STRIP)
@@ -242,21 +242,14 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.pose_stamped_to_tuple(s)
         else:
             start = self.get_tf_pose()
-        self.get_logger().info(f'starting at {start}')
-        self.get_logger().info(f'pose is {self.get_tf_pose()}')
-        
-            
 
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         previous = [n for n in [self.state, self.last_state] if n is not None]
         self.path_poly = geometry.poly_from_path(self.env.g, previous + self.plan, eps=0.01)
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
-        # TODO: if path_poly is Multi-Polygon or Emptyt, we need to react
-        # -- do not use intersection, but adapt path in best effort way
-        # if goal not in feasible area, we need to send a shorter path
-        # -- add previous transition to path
-        # - replan moreoften (in case feasible region changes, we need to replan)
+        self.path_poly = simplify(self.path_poly, 0.01)
+
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         
         if self.path_poly.is_empty:
@@ -319,7 +312,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return None
         if len(self.trajectory.poses) <= now_index + 10:
             return None
-        self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
+        #self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
         return now_index + int(10 * 0.4)
     
     def resolve_multi_polygon(self, mp):

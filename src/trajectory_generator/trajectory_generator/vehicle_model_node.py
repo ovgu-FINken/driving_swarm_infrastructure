@@ -166,9 +166,10 @@ class TrajectoryGenerator:
         self.r = r
         self.step = step
         self.costmap = None
+        self.r_step = r_step
 
     def tuples_to_path(self, waypoints_tuples):
-        tuples = waypoints_to_path(waypoints_tuples, r=self.r, model=self.model, step=self.step)
+        tuples = waypoints_to_path(waypoints_tuples, r=self.r, model=self.model, step=self.step, r_step=self.r_step)
         if np.isnan(tuples[-1][2]):
             return tuples[:-1]
         return tuples

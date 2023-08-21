@@ -63,7 +63,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
-        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False)
+        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5)
         self.cache = planning.SpaceTimeAStarCache(self.env.g)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
@@ -134,6 +134,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         options = options - set(self.cdm_triggered.keys())
         if len(options) == 0:
             self.get_logger().warn(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
+            self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
             return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
