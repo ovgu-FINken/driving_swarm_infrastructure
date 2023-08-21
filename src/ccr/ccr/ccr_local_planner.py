@@ -125,7 +125,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         for i, j, e in self.env.g.edges(data=True):
             if e['geometry'].borderPoly is None:
                 continue
-            if  e['geometry'].borderPoly.geometryType() != 'Polygon':
+            if  e['geometry'].borderPoly.geom_type != 'Polygon':
                 continue
             idx += 1
             marker = Marker(action=Marker.ADD, ns="transition", id=idx, type=Marker.LINE_STRIP)
@@ -242,10 +242,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.pose_stamped_to_tuple(s)
         else:
             start = self.get_tf_pose()
-        self.get_logger().info(f'starting at {start}')
-        self.get_logger().info(f'pose is {self.get_tf_pose()}')
-        
-            
 
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
@@ -316,7 +312,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return None
         if len(self.trajectory.poses) <= now_index + 10:
             return None
-        self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
+        #self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
         return now_index + int(10 * 0.4)
     
     def resolve_multi_polygon(self, mp):
