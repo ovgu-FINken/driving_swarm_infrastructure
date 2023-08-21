@@ -182,6 +182,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         except Exception:
             pass
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
+        if self.plan:
+            self.execute_plan()
 
     def goal_cb(self, msg):
         goal = self.pose_stamped_to_tuple(msg)
@@ -213,15 +215,22 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         
         remainder = self.plan[len(plan):]
-        self.get_logger().info(f'executing plan {self.plan}')
+        self.get_logger().debug(f'executing plan {self.plan}')
         if remainder:
             self.get_logger().info(f'\t remaining plan after wait actions {remainder}')
         
         start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01)
-        self.path_poly = shapely.intersection(self.path_poly,self.scan_poly)
-        result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01)
+        self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
+        # TODO: if path_poly is Multi-Polygon or Emptyt, we need to react
+        # -- do not use intersection, but adapt path in best effort way
+        # if goal not in feasible area, we need to send a shorter path
+        # -- add previous transition to path
+        # - replan more often (in case feasible region changes, we need to replan)
+        if self.path_poly.geom_type == 'MultiPolygon':
+            self.path_poly = self.path_poly.geoms[0]
+        result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [self.get_tf_pose()]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
@@ -238,7 +247,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         for pose in trajectory:
             path.poses.append(self.tuple_to_pose_stamped_msg(*pose))
 
-        self.get_logger().info("sending path")
+        self.get_logger().debug("sending path")
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
@@ -259,6 +268,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             points.append((x,y))
 
         self.scan_poly = Polygon(points).buffer(-0.1)
+        if self.scan_poly.geom_type == 'MultiPolygon':
+            for poly in self.scan_poly.geoms:
+                if poly.contains(Point(*self.get_tf_pose()[:2])):
+                    self.scan_poly = poly
+                    break
         
 
 def main():
