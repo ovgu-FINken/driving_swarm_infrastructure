@@ -213,7 +213,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             end_point = self.env.g.nodes()[val]['geometry'].center
             marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
             marker.header.frame_id = 'map'
-            marker.scale.x = 0.05
+            marker.scale.x = 0.02
             marker.points = [Point(x=start_point.x, y=start_point.y, z=0.0),
                  Point(x=end_point.x, y=end_point.y, z=0.0)]
             marker.colors = [ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0) for _ in range(2)]

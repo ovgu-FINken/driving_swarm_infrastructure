@@ -13,6 +13,7 @@ import numpy as np
 import rclpy
 from shapely import Polygon, simplify
 from shapely import Point as ShapelyPoint
+from math import atan2, degrees
 import shapely
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -48,6 +49,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.goal = None
         self.plan = None
         self.path_poly = None
+        self.path_poly2 = None
         self.trajectory = None
         points = None 
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
@@ -192,6 +194,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.poly_pub.publish(self.graph_to_marker_array())
         try:
             self.poly_pub.publish(self.publish_polygon_marker(self.path_poly))
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="feasible2"))
         except Exception:
             pass
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
@@ -247,6 +250,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         previous = [n for n in [self.state, self.last_state] if n is not None]
         self.path_poly = geometry.poly_from_path(self.env.g, previous + self.plan, eps=0.01)
+        self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
 
@@ -314,20 +318,44 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return None
         #self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
         return now_index + int(10 * 0.4)
-    
+
     def resolve_multi_polygon(self, mp):
+        
+        def angle_between_points(p1, p2):
+            return degrees(atan2(p2[1] - p1[1], p2[0] - p1[0]))
+
+        def normalize(value, max_value, min_value):
+            return (value - min_value) / (max_value - min_value)
+        
         position = self.get_tf_pose()
         robot_point = ShapelyPoint(position[0], position[1])
+        robot_orientation = position[2]
+
         if mp.geom_type != 'MultiPolygon':
             return mp
-        for poly in mp.geoms:
-            if poly.contains(robot_point):
-                assert poly.geom_type == 'Polygon'
-                return poly
-        closest_polygon = min(mp.geoms, key=lambda poly: poly.distance(robot_point))
-        assert closest_polygon.geom_type == 'Polygon'
-        return closest_polygon
-        
+
+        distances = [poly.distance(robot_point) for poly in mp.geoms]
+        max_distance = max(distances)
+        min_distance = min(distances)
+
+        def score_polygon(poly):
+            centroid = poly.centroid
+            angle_to_polygon = angle_between_points((robot_point.x, robot_point.y), (centroid.x, centroid.y))
+            angle_difference = abs(robot_orientation - angle_to_polygon)
+
+            normalized_distance = normalize(poly.distance(robot_point), max_distance, min_distance)
+            normalized_angle_difference = normalize(angle_difference, 180, 0)  # angles can vary between 0 and 180 degrees
+
+            # Define weights
+            distance_weight = 0.5
+            angle_weight = 0.5
+
+            return distance_weight * normalized_distance + angle_weight * normalized_angle_difference
+
+        target_polygon = min(mp.geoms, key=score_polygon)
+        assert target_polygon.geom_type == 'Polygon'
+        return target_polygon
+
 
 
 def main():
