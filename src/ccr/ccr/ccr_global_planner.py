@@ -2,10 +2,14 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
 from std_msgs.msg import Int32, Int32MultiArray
 from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
 import networkx as nx
 import numpy as np
 import functools
 from termcolor import colored
+from visualization_msgs.msg import MarkerArray, Marker
+from geometry_msgs.msg import Point
+
 
 class CCRGlobalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -37,7 +41,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.goal = None
         self.update_path = False
         self.cdm_triggered = {}
-         
+        self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         points = None 
         if map_file.endswith(".yaml"):
             grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
@@ -80,7 +84,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.create_subscription(Int32, "/nav/cdm", self.cdm_cb, 1)
         self.opinion_pub = self.create_publisher(BeliefStateMsg, "/nav/opinion", 1)
         self.create_subscription(BeliefStateMsg, "/nav/opinion", self.opinion_cb, 1)
-        
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
                 Int32MultiArray, f"/{robot}/nav/plan",
@@ -105,6 +108,9 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if self.goal is None:
             return
         self.publish_plan()
+        self.poly_pub.publish(self.publish_high_priority_edge())
+
+    
         
     def goal_cb(self, msg):
         if msg.data == self.goal:
@@ -198,6 +204,24 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.get_logger().info(f"new belief:\n{self.ccr_agent.belief[bs.state]}")
         self.update_plan()
             
+    def publish_high_priority_edge(self, ns="high_priority", id=1):
+        priority = {key: max(value.priorities) for key, value in self.ccr_agent.belief.items()}
+        edge_msg = MarkerArray()
+        for key, val in priority.items():
+            start_point = self.env.g.nodes()[key]['geometry'].center
+            end_point = self.env.g.nodes()[val]['geometry'].center
+            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
+            marker.header.frame_id = 'map'
+            marker.scale.x = 0.05
+            marker.points = [Point(x=start_point.x, y=start_point.y, z=0.0),
+                 Point(x=end_point.x, y=end_point.y, z=0.0)]
+            marker.colors = [ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0) for _ in range(2)]
+            edge_msg.markers.append(marker)
+            id += 1 
+
+        return edge_msg
+
+
 
 def main():
     main_fn("ccr_global_planner", CCRGlobalPlanner)
