@@ -12,6 +12,7 @@ from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 import numpy as np
 import rclpy
 from shapely import Polygon
+from shapely import Point as ShapelyPoint
 import shapely
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -39,8 +40,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
+        self.declare_parameter('laser_inflation_size', 0.2)
+        self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
         self.state = None 
+        self.last_state = None
         self.goal = None
         self.plan = None
         self.path_poly = None
@@ -172,6 +176,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
     def publish_state(self):
         state = self.env.find_nearest_node(self.get_tf_pose()[:2])
         self.state_pub.publish(Int32(data=int(state)))  
+        if state != self.state:
+            self.last_state = self.state
+            self.state = state
+            self.get_logger().info(f'new state {self.state}')
 
     def timer_cb(self):
         self.publish_goal()
@@ -221,7 +229,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
-        self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01)
+        # include last state, so transition area is within feasible region, while the robot is still with in the transition area
+        previous = [n for n in [self.state, self.last_state] if n is not None]
+        self.path_poly = geometry.poly_from_path(self.env.g, previous + self.plan, eps=0.01)
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         # TODO: if path_poly is Multi-Polygon or Emptyt, we need to react
         # -- do not use intersection, but adapt path in best effort way
@@ -267,10 +277,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
             y = r * np.sin(angle) + py
             points.append((x,y))
 
-        self.scan_poly = Polygon(points).buffer(-0.1)
+        self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
         if self.scan_poly.geom_type == 'MultiPolygon':
             for poly in self.scan_poly.geoms:
-                if poly.contains(Point(*self.get_tf_pose()[:2])):
+                if poly.contains(ShapelyPoint(self.get_tf_pose()[:2])):
                     self.scan_poly = poly
                     break
         
