@@ -146,6 +146,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
     def publish_polygon_marker(self, polygon, ns="feasible", id=0):
         poly_msg = MarkerArray()
+        if polygon.geom_type == 'MultiPolygon':
+            self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
+            polygon = polygon.geoms[0]
         marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
         marker.header.frame_id = 'map'
         marker.scale.x = 0.01
@@ -240,6 +243,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # - replan more often (in case feasible region changes, we need to replan)
         if self.path_poly.geom_type == 'MultiPolygon':
             self.path_poly = self.path_poly.geoms[0]
+        if self.path_poly.is_empty:
+            self.get_logger().warn('path is empty, will not send path')
+            self.get_logger().info(f'plan is: {plan}')
+            return
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [self.get_tf_pose()]
         wp = [(i.x,i.y,np.nan) for i in result_path]
