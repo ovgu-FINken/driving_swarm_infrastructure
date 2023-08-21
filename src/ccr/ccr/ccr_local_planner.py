@@ -256,14 +256,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # -- do not use intersection, but adapt path in best effort way
         # if goal not in feasible area, we need to send a shorter path
         # -- add previous transition to path
-        # - replan more often (in case feasible region changes, we need to replan)
-        if self.path_poly.geom_type == 'MultiPolygon':
-            for poly in self.path_poly.geoms:
-                if poly.geom_type != 'Polygon':
-                    continue
-                if poly.contains(ShapelyPoint(self.get_tf_pose()[:2])):
-                    self.path_poly = poly
-                    break
+        # - replan moreoften (in case feasible region changes, we need to replan)
+        self.path_poly = self.resolve_multi_polygon(self.path_poly)
+        
         if self.path_poly.is_empty:
             self.get_logger().warn('path is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
@@ -308,11 +303,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             points.append((x,y))
 
         self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
-        if self.scan_poly.geom_type == 'MultiPolygon':
-            for poly in self.scan_poly.geoms:
-                if poly.contains(ShapelyPoint(self.get_tf_pose()[:2])):
-                    self.scan_poly = poly
-                    break
+        self.scan_poly = self.resolve_multi_polygon(self.scan_poly)
     
     def trajectory_cb(self, msg):
         self.trajectory = msg
@@ -330,6 +321,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return None
         self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
         return now_index + int(10 * 0.4)
+    
+    def resolve_multi_polygon(self, mp):
+        """ If the argument is a multi-polygon, return the polygon with the robot inside - if the robot is not inside, return the closest. """
+        
+        assert poly.geom_type == 'Polygon'
+        return poly
         
 
 
