@@ -27,7 +27,7 @@ def controller_spawning(context, *args, **kwargs):
               'y_max': 1.25,
               'grid_type': 'square',
               'grid_size': 0.5,
-              'inflation_size': 0.15,
+              'inflation_size': 0.10,
               'laser_inflation_size': 0.2,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
