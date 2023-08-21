@@ -14,7 +14,6 @@ class DrivingSwarmNode(Node):
         self.name = name
         self.robot_name = self.get_namespace().strip("/")
 
-
     def get_list_of_robot_names(self):
         self.declare_parameter('robot_names', ['invalid_name'])
         self.robots = self.get_parameter('robot_names').get_parameter_value().string_array_value
@@ -100,11 +99,15 @@ class DrivingSwarmNode(Node):
         )
         
     def set_state(self, state: str):
+        self._state = state
         self.get_logger().info("setting state to " + colored(str(state), "blue"))
         self.status_pub.publish(String(data=str(state)))
         
     def set_state_ready(self):
         self.set_state("ready")
+    
+    def set_state_running(self):
+        self.set_state("running")
         
     def command_cb(self, msg):
         if msg.data == "go":

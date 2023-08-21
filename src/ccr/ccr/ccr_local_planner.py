@@ -48,6 +48,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.goal = None
         self.plan = None
         self.path_poly = None
+        self.trajectory = None
         points = None 
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         if map_file.endswith(".yaml"):
@@ -92,6 +93,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
@@ -206,7 +208,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
     def plan_cb(self, msg):
         if list(msg.data) == self.plan:
             return
-        self.plan = list(msg.data)
+        plan = list(msg.data)
+        if self.plan is None and plan:
+            self.set_state_running()
+        self.plan = plan
         self.get_logger().info(f'new plan {self.plan}')
             
         self.execute_plan()
@@ -230,7 +235,18 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if remainder:
             self.get_logger().info(f'\t remaining plan after wait actions {remainder}')
         
-        start = self.get_tf_pose()
+        start = None
+        cutoff = self.get_cutoff_point()
+        if cutoff is not None:
+            s = self.trajectory.poses[cutoff]
+            start = self.pose_stamped_to_tuple(s)
+        else:
+            start = self.get_tf_pose()
+        self.get_logger().info(f'starting at {start}')
+        self.get_logger().info(f'pose is {self.get_tf_pose()}')
+        
+            
+
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         previous = [n for n in [self.state, self.last_state] if n is not None]
@@ -242,22 +258,29 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # -- add previous transition to path
         # - replan more often (in case feasible region changes, we need to replan)
         if self.path_poly.geom_type == 'MultiPolygon':
-            self.path_poly = self.path_poly.geoms[0]
+            for poly in self.path_poly.geoms:
+                if poly.geom_type != 'Polygon':
+                    continue
+                if poly.contains(ShapelyPoint(self.get_tf_pose()[:2])):
+                    self.path_poly = poly
+                    break
         if self.path_poly.is_empty:
             self.get_logger().warn('path is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
             return
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
-        wps = [self.get_tf_pose()]
+        wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
         trajectory = self.vm.tuples_to_path(wps)
-        self.send_path(trajectory)
+        self.send_path(trajectory, ti=cutoff)
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space
         if trajectory is None:
             return
+        if ti is None:
+            ti = 0
         path = Path()
         path.header.frame_id = self.reference_frame
         path.header.stamp = self.get_clock().now().to_msg()
@@ -267,7 +290,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().debug("sending path")
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
-        request = UpdateTrajectory.Request(trajectory=path, update_index=ti)
+        request = UpdateTrajectory.Request(trajectory=path, update_index=int(ti))
         self.follow_client.call_async(request)
         
     def scan_cb(self, msg):
@@ -290,7 +313,25 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 if poly.contains(ShapelyPoint(self.get_tf_pose()[:2])):
                     self.scan_poly = poly
                     break
+    
+    def trajectory_cb(self, msg):
+        self.trajectory = msg
         
+    def get_cutoff_point(self):
+        if self.trajectory is None:
+            return None
+        trajectory_time = self.trajectory.header.stamp.sec + self.trajectory.header.stamp.nanosec * 1e-9
+        now = self.get_clock().now().to_msg()
+        now_time = now.sec + now.nanosec * 1e-9
+        now_index = int(np.floor((now_time - trajectory_time) * 10))
+        if now_index < 0:
+            return None
+        if len(self.trajectory.poses) <= now_index + 10:
+            return None
+        self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
+        return now_index + int(10 * 0.4)
+        
+
 
 def main():
     main_fn('ccr_local_planner', CCRLocalPlanner)
