@@ -4,7 +4,7 @@ from polygonal_roadmaps import geometry, environment
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import Path
-from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
 from std_srvs.srv import Empty
 from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
 from sensor_msgs.msg import LaserScan
@@ -44,6 +44,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
+        self.begin = 1
+        self.initial_pos = None
+        self.allow_goal_publish = True
         self.state = None 
         self.last_state = None
         self.goal = None
@@ -75,7 +78,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
-        self.declare_parameter("step_size", 0.1)
+        self.declare_parameter("step_size", 0.15)
         self.declare_parameter("turn_radius", .2)
         self.declare_parameter("turn_speed", 0.2)
         # set up vehicle model with parameters
@@ -95,8 +98,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
         self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
+        self.reset_pub = self.create_publisher(String, "/reset_flag", 1)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
@@ -111,7 +116,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().info("connected to trajectory follower service")
         self.create_timer(1.0, self.timer_cb)
         self.set_state_ready()
-    
+        self.create_subscription(String, "/command", self.command_callback, 10)
     def graph_to_marker_array(self):
         poly_msg = MarkerArray()
         for i, v in self.env.g.nodes(data=True):
@@ -178,6 +183,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.goal is None:
             return
         goal = self.env.find_nearest_node(self.goal[:2])
+        #self.get_logger().info(str(self.initial_pos)+" "+str(self.goal))
         self.goal_pub.publish(Int32(data=int(goal)))
 
     def publish_state(self):
@@ -187,7 +193,13 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.last_state = self.state
             self.state = state
             self.get_logger().info(f'new state {self.state}')
-
+    def command_callback(self, msg):
+        self.variable = msg.data
+        if self.variable == "reset":
+            self.allow_goal_publish = False
+            self.goal = self.initial_pos
+            self.get_logger().info(f'Reset activated')
+            self.publish_goal()
     def timer_cb(self):
         self.publish_goal()
         self.publish_state()
@@ -200,13 +212,13 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
         if self.plan:
             self.execute_plan()
-
     def goal_cb(self, msg):
-        goal = self.pose_stamped_to_tuple(msg)
-        if self.goal != goal:
-            self.goal = goal
-            self.get_logger().info(f'new goal {self.goal}')
-            self.publish_goal()
+        if self.allow_goal_publish:
+            goal = self.pose_stamped_to_tuple(msg)
+            if self.goal != goal:
+                self.goal = goal
+                self.get_logger().info(f'new goal {self.goal}')
+                self.publish_goal()
 
     def plan_cb(self, msg):
         if list(msg.data) == self.plan:
@@ -216,7 +228,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.set_state_running()
         self.plan = plan
         self.get_logger().info(f'new plan {self.plan}')
-            
+        self.get_logger().info(str(len(self.plan)))
+        if len(self.plan) == 1 and not self.allow_goal_publish:
+            self.get_logger().info(f'Reset flag raised')
+            self.reset_pub.publish(String(data=str("restart")))
+            self.allow_goal_publish = True
         self.execute_plan()
         
     def execute_plan(self):
@@ -245,6 +261,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.pose_stamped_to_tuple(s)
         else:
             start = self.get_tf_pose()
+            
+        if self.begin:
+                self.initial_pos = self.get_tf_pose()
+                self.begin = 0
 
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
@@ -253,13 +273,19 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
-
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
-        
         if self.path_poly.is_empty:
             self.get_logger().warn('path is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
             return
+        # current_pose = self.get_tf_pose()
+        # if current_pose is not None:
+        #     x, y, orientation = current_pose  # Unpack the tuple
+        #     current_point = ShapelyPoint(x, y)
+        #     if not self.path_poly.contains(current_point):
+        #         self.get_logger().warn('Your position is not in the feasible region.')
+        # else:
+        #     self.get_logger().warn('Failed to retrieve current pose.')
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
