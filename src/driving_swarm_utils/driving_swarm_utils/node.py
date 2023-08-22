@@ -123,8 +123,8 @@ class DrivingSwarmNode(Node):
 
 def main_fn(name, NodeClass):
     rclpy.init()
-    node = NodeClass(name)
     try:
+        node = NodeClass(name)
         rclpy.spin(node)
     except KeyboardInterrupt:
         node.get_logger().info("Shutting Down")
