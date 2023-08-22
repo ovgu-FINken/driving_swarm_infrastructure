@@ -215,7 +215,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             marker.header.frame_id = 'map'
             marker.scale.x = 0.02
             marker.points = [Point(x=start_point.x, y=start_point.y, z=0.0),
-                 Point(x=end_point.x, y=end_point.y, z=0.0)]
+                 Point(x=(end_point.x+start_point.x)/2, y=(end_point.y+start_point.y)/2, z=0.0)]
             marker.colors = [ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0) for _ in range(2)]
             edge_msg.markers.append(marker)
             id += 1 
