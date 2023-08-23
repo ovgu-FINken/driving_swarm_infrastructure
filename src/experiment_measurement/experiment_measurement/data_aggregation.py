@@ -21,27 +21,27 @@ def aggregate_tables(df, table_column_config, step_size):
     res = {}
     xmin = df['timestamp'][0] + step_size
     xmax = df['timestamp'].iloc[-1] + step_size
-
     robots = {
-        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
+        itm[0] for itm in df['name'].str.findall(r'\/((turtle|ro)bot[^\/]*)\/') if len(itm) > 0
     }
     for robot in robots:
-        robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
+        robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot[0]))]
         robot_ret_df = pd.DataFrame(
             range(xmin, xmax, step_size), columns=['timestamp']
         )
 
         for topic in table_column_config:
             tmp_col = []
-
             if topic.topic_name.startswith('/'):
                 robot_df_topic = df[
                     df['name'].str.match(topic.topic_name)
                 ]
+                #print(robot_df_topic)
             else:
                 robot_df_topic = robot_df[
                     robot_df['name'].str.match(r'\/.*\/{}'.format(topic.topic_name))
                 ]
+                
 
             for t in range(xmin, xmax, step_size):
                 conf = data_aggregation_helper.TableConfig(
@@ -67,10 +67,12 @@ def aggregate_tables_by_msg_header(df, table_column_config, msg_topic):
     res = {}
 
     robots = {
-        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
+        itm[0] for itm in df['name'].str.findall(r'\/((turtle|ro)bot[^\/]*)\/') if len(itm) > 0
     }
+
     for robot in robots:
         robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
+        
         t_min = df['timestamp'][0]
         timestamps_abs = [t_min]
         if not msg_topic.startswith('/'):
@@ -122,7 +124,7 @@ def aggregate_tables_by_msg_timestamps(df, table_column_config, msg_topic):
     res = {}
 
     robots = {
-        itm[0] for itm in df['name'].str.findall(r'\/(robot[^\/]*)\/') if len(itm) > 0
+        itm[0] for itm in df['name'].str.findall(r'\/((turtle|ro)bot[^\/]*)\/') if len(itm) > 0
     }
     for robot in robots:
         robot_df = df[df['name'].str.match(r'\/{}\/.*'.format(robot))]
@@ -229,7 +231,7 @@ def main():
             print(r_data)
         else:
             csv_output_path = os.path.join(
-                output_folder_path, export_path_prefix.replace(':', '-') + '_' + robot + '.csv'
+                output_folder_path, export_path_prefix.replace(':', '-') + '_' + str(robot[0]) + '.csv'
             )
             if os.path.exists(csv_output_path):
                 raise Exception('File {} exists!'.format(csv_output_path))
