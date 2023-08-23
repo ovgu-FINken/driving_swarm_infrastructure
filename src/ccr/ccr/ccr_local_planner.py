@@ -230,9 +230,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().info(f'new plan {self.plan}')
         self.get_logger().info(str(len(self.plan)))
         if len(self.plan) == 1 and not self.allow_goal_publish:
-            self.get_logger().info(f'Reset flag raised')
+            self.get_logger().info(f'Robot Turned Back')
             self.reset_pub.publish(String(data=str("restart")))
-            self.allow_goal_publish = True
         self.execute_plan()
         
     def execute_plan(self):
