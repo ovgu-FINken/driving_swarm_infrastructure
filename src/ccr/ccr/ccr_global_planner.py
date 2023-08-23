@@ -37,6 +37,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
+        self._published_plan = []
         self.state = None
         self.plan = []
         self.goal = None
@@ -67,6 +68,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
+        self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
         self.ccr_agent = planning.CCRAgent(self.g, self.state, self.goal, self.planning_problem_parameters, index=self.robot_names.index(self.robot_name), limit=self.env.planning_horizon)
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb,1)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 1)
@@ -94,18 +96,16 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             )
             self.get_logger().info(f"subscribing /{robot}/nav/plan")
         
-        self.create_timer(1.0, self.timer_cb)
+        self.create_timer(2.0, self.timer_cb)
         
     def timer_cb(self):
         if self.state is None:
             return
         if self.goal is None:
             return
-        self.publish_plan()
+        self.publish_plan(change_only=False)
         self.poly_pub.publish(self.publish_high_priority_edge())
 
-    
-        
     def goal_cb(self, msg):
         if msg.data == self.goal:
             return
@@ -118,7 +118,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if msg.data == self.state:
             return
         self.state = msg.data
-        self.get_logger().info(f"received state {self.state}")
+        # self.get_logger().info(f"received state {self.state}")
         self.ccr_agent.update_state(self.state)
         self.update_plan()
         
@@ -136,25 +136,25 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.cdm_pub.publish(Int32(data=int(node)))
 
     def update_plan(self):
-        self.get_logger().info(f"updating plan: {self.state} -> {self.goal}")
+        #self.get_logger().info(f"updating plan: {self.state} -> {self.goal}")
         if self.state is None or self.goal is None:
             return
         self.ccr_agent.make_plan_consistent()
 
         if not self.plan or self.plan != self.ccr_agent.get_plan():
-            
-            self.plan = self.ccr_agent.get_plan()
-            self.publish_plan()
-            self.get_logger().info(f"new plan: {self.plan}")
+            plan = self.ccr_agent.get_plan()
+            if plan != self.plan:
+                self.plan = plan
+                self.publish_plan()
+                self.get_logger().info(f"new plan: {self.plan}")
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
             self.get_logger().info(f"plan is consistent and not conflict free, triggering CDM")
             self.trigger_cdm()
             
-    def publish_plan(self):
+    def publish_plan(self, change_only=True):
         # feasibility check
-
         if self.plan:
             for n1, n2 in zip(self.plan[:-1], self.plan[1:]):
                 if not (n1, n2) in self.g.edges():
@@ -163,7 +163,10 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                     self.get_logger().warn(f"path: self.plan")
         msg = Int32MultiArray()
         msg.data = self.plan
+        if change_only and self._published_plan == self.plan:
+            return
         self.plan_pub.publish(msg)
+        self._published_plan = self.plan
 
     def robot_cb(self, robot, msg):
         # check if plan has changed
@@ -172,7 +175,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if other_index in self.ccr_agent.other_paths:
             if plan == self.ccr_agent.other_paths[other_index]:
                 return
-        self.get_logger().info(f"received plan from {robot}: {plan}")
+        #self.get_logger().info(f"received plan from {robot}: {plan}")
         self.ccr_agent.update_other_paths({self.robot_names.index(robot): list(msg.data)})
         self.update_plan()
         

@@ -15,6 +15,8 @@ from shapely import Polygon, simplify
 from shapely import Point as ShapelyPoint
 from math import atan2, degrees
 import shapely
+
+
 class CCRLocalPlanner(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
     The local planner will publish the next waypoint, current node and the graph to the global planner, which in turn is able to generate a discrete plan by uing CCR.
@@ -117,6 +119,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_timer(1.0, self.timer_cb)
         self.set_state_ready()
         self.create_subscription(String, "/command", self.command_callback, 10)
+
     def graph_to_marker_array(self):
         poly_msg = MarkerArray()
         for i, v in self.env.g.nodes(data=True):
@@ -193,6 +196,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.last_state = self.state
             self.state = state
             self.get_logger().info(f'new state {self.state}')
+            
     def command_callback(self, msg):
         self.variable = msg.data
         if self.variable == "reset":
@@ -200,6 +204,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated')
             self.publish_goal()
+            
     def timer_cb(self):
         self.publish_goal()
         self.publish_state()
@@ -212,6 +217,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
         if self.plan:
             self.execute_plan()
+    
     def goal_cb(self, msg):
         if self.allow_goal_publish:
             goal = self.pose_stamped_to_tuple(msg)
@@ -227,8 +233,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.plan is None and plan:
             self.set_state_running()
         self.plan = plan
-        self.get_logger().info(f'new plan {self.plan}')
-        self.get_logger().info(str(len(self.plan)))
+        #self.get_logger().info(f'new plan {self.plan}')
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.get_logger().info(f'Robot Turned Back')
             self.reset_pub.publish(String(data=str("restart")))
@@ -277,14 +282,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().warn('path is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
             return
-        # current_pose = self.get_tf_pose()
-        # if current_pose is not None:
-        #     x, y, orientation = current_pose  # Unpack the tuple
-        #     current_point = ShapelyPoint(x, y)
-        #     if not self.path_poly.contains(current_point):
-        #         self.get_logger().warn('Your position is not in the feasible region.')
-        # else:
-        #     self.get_logger().warn('Failed to retrieve current pose.')
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
