@@ -38,6 +38,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
         self.state = None
+        self.plan = []
         self.goal = None
         self.update_path = False
         self.cdm_triggered = {}
@@ -64,16 +65,9 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5)
-        self.cache = planning.SpaceTimeAStarCache(self.env.g)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
-        self.weight = "weight"
-        astar_kwargs = {
-            'limit': self.env.planning_horizon,
-            'wait_action_cost': self.env.planning_problem_parameters.wait_action_cost,
-        }
-        self.cache = planning.SpaceTimeAStarCache(self.g, kwargs=astar_kwargs)
-        self.ccr_agent = planning.CCRAgent(self.g, self.state, self.goal, self.planning_problem_parameters, index=self.robot_names.index(self.robot_name), sta_star_cache=self.cache)
+        self.ccr_agent = planning.CCRAgent(self.g, self.state, self.goal, self.planning_problem_parameters, index=self.robot_names.index(self.robot_name), limit=self.env.planning_horizon)
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb,1)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 1)
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 1)
@@ -146,20 +140,21 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if self.state is None or self.goal is None:
             return
         self.ccr_agent.make_plan_consistent()
-        if not self.ccr_agent.is_consistent():
-            self.get_logger().warn(f"plan is not consistent, triggering CDM")
+
+        if not self.plan or self.plan != self.ccr_agent.get_plan():
             
+            self.plan = self.ccr_agent.get_plan()
+            self.publish_plan()
+            self.get_logger().info(f"new plan: {self.plan}")
+
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
             self.get_logger().info(f"plan is consistent and not conflict free, triggering CDM")
             self.trigger_cdm()
             
-        self.plan = self.ccr_agent.get_plan()
-        self.publish_plan()
-        self.get_logger().info(f"plan: {self.plan}")
-    
     def publish_plan(self):
         # feasibility check
+
         if self.plan:
             for n1, n2 in zip(self.plan[:-1], self.plan[1:]):
                 if not (n1, n2) in self.g.edges():
