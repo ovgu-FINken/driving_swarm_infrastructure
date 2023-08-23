@@ -17,8 +17,7 @@ class CommandNode(DrivingSwarmNode):
         self.reset_timer = None
         self.status = None
 
-        self.single_experiment_time = 60.0 #in seconds
-        self.counter = 0
+        self.single_experiment_time = 120.0 #in seconds
 
         # Fetch swarm size and robot names
         self.declare_parameter("run_timeout", 0.0)
@@ -75,8 +74,8 @@ class CommandNode(DrivingSwarmNode):
     def reset_flag_callback(self, msg):
         self.logger_.info(f"flag raised")
         self.counter += 1
-        if self.counter == len(self.robots):
-            self.exit()
+        # if self.counter == len(self.robots):
+        #     self.exit()
 
     def robot_cb(self, robot, msg):
         self.logger_.info(colored(f"{robot}: {msg.data}", "yellow"))

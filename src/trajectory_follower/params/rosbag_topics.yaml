@@ -6,10 +6,10 @@
 # for namespaced topics, WITHOUT leading slash
 - 'tf'
 - 'status'
-- 'amcl_pose'
 - 'cmd_vel'
 - 'scan'
 - 'nav/desired'
-- 'scan_delay'
 - 'nav/cell'
 - 'nav/plan'
+- 'nav/cdm'
+- 'nav/opinion'

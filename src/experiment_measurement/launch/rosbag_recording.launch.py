@@ -32,7 +32,7 @@ def start_rosbag(context, *args, **kwargs):
     #TODO: include -a for recording all topics
 
     if rosbag_topics_file != "NONE":
-        robots_file = LaunchConfiguration('robots_file').perform(context)
+        robots_file = LaunchConfiguration('robot_names_file').perform(context)
         n_robots = LaunchConfiguration('n_robots').perform(context)
         qos_override_file = LaunchConfiguration('qos_override_file', default=None).perform(context)
         ts = datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
@@ -48,7 +48,7 @@ def start_rosbag(context, *args, **kwargs):
                 rosbag_topics.append(topic.strip())
             else:
                 for robot in robots[:int(n_robots)]:
-                    rosbag_topics.append('/' + str(robot['name']) + '/' + topic.strip())
+                    rosbag_topics.append('/' + str(robot) + '/' + topic.strip())
 
             # TODO: 
             # * create an ad-hoc qos override file, including the scan topic for each robot namespace
