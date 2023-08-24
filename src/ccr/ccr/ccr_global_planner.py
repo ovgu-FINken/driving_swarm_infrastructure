@@ -43,6 +43,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.goal = None
         self.update_path = False
         self.cdm_triggered = {}
+        self.cdm_opinions = {}
         self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
         points = None 
         if map_file.endswith(".yaml"):
@@ -70,16 +71,16 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
         self.ccr_agent = planning.CCRAgent(self.g, self.state, self.goal, self.planning_problem_parameters, index=self.robot_names.index(self.robot_name), limit=self.env.planning_horizon)
-        self.create_subscription(Int32, "nav/goal_node", self.goal_cb,1)
-        self.create_subscription(Int32, "nav/current_node", self.state_cb, 1)
-        self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 1)
+        self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
+        self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
+        self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
 
         # trigger CDM for specific node
-        self.cdm_pub = self.create_publisher(Int32, "/nav/cdm", 1)
+        self.cdm_pub = self.create_publisher(Int32, "/nav/cdm", 10)
         ## -- once a message is received here, the robot will publish its opinion on the given node
-        self.create_subscription(Int32, "/nav/cdm", self.cdm_cb, 1)
-        self.opinion_pub = self.create_publisher(BeliefStateMsg, "/nav/opinion", 1)
-        self.create_subscription(BeliefStateMsg, "/nav/opinion", self.opinion_cb, 1)
+        self.create_subscription(Int32, "/nav/cdm", self.cdm_cb, 10)
+        self.opinion_pub = self.create_publisher(BeliefStateMsg, "/nav/opinion", 10)
+        self.create_subscription(BeliefStateMsg, "/nav/opinion", self.opinion_cb, 10)
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
                 Int32MultiArray, f"/{robot}/nav/plan",
@@ -122,19 +123,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.ccr_agent.update_state(self.state)
         self.update_plan()
         
-    def trigger_cdm(self):
-        options = self.ccr_agent.get_cdm_node()
-        # do not re-trigger cdm for a node
-        options = options - set(self.cdm_triggered.keys())
-        if len(options) == 0:
-            self.get_logger().warn(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
-            self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
-            return
-        node = np.random.choice(list(options))
-        self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
-        self.cdm_triggered[node] = self.get_clock().now()
-        self.cdm_pub.publish(Int32(data=int(node)))
-
     def update_plan(self):
         #self.get_logger().info(f"updating plan: {self.state} -> {self.goal}")
         if self.state is None or self.goal is None:
@@ -150,7 +138,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
-            self.get_logger().info(f"plan is consistent and not conflict free, triggering CDM")
+            # self.get_logger().info(f"plan is consistent and not conflict free, triggering CDM")
             self.trigger_cdm()
             
     def publish_plan(self, change_only=True):
@@ -179,6 +167,24 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.ccr_agent.update_other_paths({self.robot_names.index(robot): list(msg.data)})
         self.update_plan()
         
+
+    ############################
+    # CDM
+    ############################
+
+    def trigger_cdm(self):
+        options = self.ccr_agent.get_cdm_node()
+        # do not re-trigger cdm for a node
+        options = options - set(self.cdm_triggered.keys())
+        if len(options) == 0:
+            # self.get_logger().warn(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
+            # self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
+            return
+        node = np.random.choice(list(options))
+        self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
+        self.cdm_triggered[node] = self.get_clock().now()
+        self.cdm_pub.publish(Int32(data=int(node)))
+        
     def belief_to_msg(self, bs):
         prios = list(bs.priorities.items())
         return BeliefStateMsg(state=bs.state, priorities=[p[1] for p in prios], neighbours=[p[0] for p in prios], robot_name=self.robot_name)
@@ -189,18 +195,25 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def cdm_cb(self, msg):
         self.cdm_triggered[msg.data] = self.get_clock().now()
         opinion = self.ccr_agent.get_cdm_opinion(msg.data)
-        self.get_logger().info(f"own opinion is {opinion.priorities}")
-        # self.ccr_agent.set_belief(opinion.state, opinion)
+        self.get_logger().info(f"opinion {self.robot_name} for node {opinion.state} is {opinion.priorities}")
         bs_msg = self.belief_to_msg(opinion)
         self.opinion_pub.publish(bs_msg)
         
     def opinion_cb(self, msg):
         bs = self.msg_to_belief(msg)
-        self.get_logger().info(f"update opinion:\n{msg}")
-        if bs.state in self.ccr_agent.belief:
-            bs += self.ccr_agent.belief[bs.state]
-        self.ccr_agent.set_belief(bs.state, bs)
-        self.get_logger().info(f"new belief:\n{self.ccr_agent.belief[bs.state]}")
+        if not bs.state in self.cdm_opinions:
+            self.cdm_opinions[bs.state] = {}
+        self.cdm_opinions[bs.state][msg.robot_name] = self.msg_to_belief(msg)
+        if len(self.cdm_opinions[bs.state]) == len(self.robot_names):
+            self.update_belief(bs)
+
+    def update_belief(self, bs):
+        bel = planning.BeliefState(state=bs.state, priorities={n: 0.0 for n in bs.priorities.keys()})
+        for opinion in self.cdm_opinions[bs.state].values():
+            bel += opinion
+        self.ccr_agent.set_belief(bel.state, bel)
+        s = f"belief robot: {self.robot_name}, state:{bel.state}"
+        self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
         self.update_plan()
             
     def publish_high_priority_edge(self, ns="high_priority", id=1):
