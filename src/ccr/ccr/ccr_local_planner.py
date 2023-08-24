@@ -46,6 +46,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
+        self.wall = None
         self.initial_pos = None
         self.allow_goal_publish = True
         self.state = None 
@@ -103,6 +104,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
+        self.wall_pub = self.create_publisher(String, "nav/wall", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
         self.follow_client = self.create_client(
@@ -112,6 +114,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().info(f"graph generated {map_file}")
         self.wait_for_tf()
         self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
+        self.create_subscription(LaserScan, 'scan', self.wall_cb, rclpy.qos.qos_profile_sensor_data)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         self.initial_pos = self.get_tf_pose()
@@ -227,7 +230,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.plan is None and plan:
             self.set_state_running()
         self.plan = plan
-        #self.get_logger().info(f'new plan {self.plan}')
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.set_state("done")
         self.execute_plan()
@@ -245,7 +247,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(plan):
             self.get_logger().info('empty plan')
             return
-        
         remainder = self.plan[len(plan):]
         self.get_logger().debug(f'executing plan {self.plan}')
         if remainder:
@@ -258,8 +259,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.pose_stamped_to_tuple(s)
         else:
             start = self.get_tf_pose()
-            
-
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         previous = [n for n in [self.state, self.last_state] if n is not None]
@@ -313,6 +312,18 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
         self.scan_poly = self.resolve_multi_polygon(self.scan_poly)
+        
+    def wall_cb(self, msg):
+        r = msg.ranges
+        r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
+        if r[80] < 0.3 and r[100] < 0.3:
+            self.wall ="Left"
+        elif r[260] < 0.3 and r[280] < 0.3:
+            self.wall ="Right"
+        else:
+            self.wall =None
+        self.wall_pub.publish(String(data=str(self.wall)))
+
     
     def trajectory_cb(self, msg):
         self.trajectory = msg

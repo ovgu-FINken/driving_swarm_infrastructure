@@ -22,9 +22,9 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.get_frames()
         self.declare_parameter("dt", 1.0)
         self.dt = self.get_parameter("dt").get_parameter_value().double_value
-        self.declare_parameter("w1", 0.5)
+        self.declare_parameter("w1", 0.9)
         self.w1 = self.get_parameter("w1").get_parameter_value().double_value
-        self.declare_parameter("w2", 1.0)
+        self.declare_parameter("w2", 0.7)
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
         self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
@@ -35,7 +35,9 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.iy = 0
         self.itheta = 0
         self.name = self.get_namespace()[1:]
+        self.angular = None
 
+    
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.cmd_vel = Twist()
