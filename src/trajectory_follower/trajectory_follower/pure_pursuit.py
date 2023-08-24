@@ -62,6 +62,12 @@ class TrajectoryFollower(DrivingSwarmNode):
         if self.trajectory is None or request.update_index == 0:
             self.trajectory = request.trajectory
         else:
+            if request.update_index > len(self.trajectory.poses):
+                self.get_logger().warn(
+                    'update index is larger than trajectory length'
+                )
+                response.accepted = False
+                return response
             self.co0.publish(self.trajectory.poses[request.update_index - 1])
             self.co1.publish(request.trajectory.poses[0])
             self.trajectory.poses = \

@@ -134,7 +134,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             if plan != self.plan:
                 self.plan = plan
                 self.publish_plan()
-                self.get_logger().info(f"new plan: {self.plan}")
+                # self.get_logger().info(f"new plan: {self.plan}")
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):

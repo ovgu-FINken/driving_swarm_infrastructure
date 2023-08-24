@@ -249,7 +249,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         remainder = self.plan[len(plan):]
         self.get_logger().debug(f'executing plan {self.plan}')
         if remainder:
-            self.get_logger().info(f'\t remaining plan after wait actions {remainder}')
+            self.get_logger().debug(f'\t remaining plan after wait actions {remainder}')
         
         start = None
         cutoff = self.get_cutoff_point()
