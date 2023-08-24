@@ -118,12 +118,12 @@ def generate_launch_description():
 
     declare_run_timeout_cmd = DeclareLaunchArgument(
         'run_timeout',
-        default_value=EnvironmentVariable('RUN_TIMEOUT', default_value=0.0)
+        default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")
     )
 
     declare_init_timeout_cmd = DeclareLaunchArgument(
         'init_timeout',
-        default_value=EnvironmentVariable('INIT_TIMOUT', default_value=0.0)
+        default_value=EnvironmentVariable('INIT_TIMEOUT', default_value="0.0")
     )
     
     declare_reset_timeout_cmd = DeclareLaunchArgument(
