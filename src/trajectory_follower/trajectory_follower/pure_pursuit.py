@@ -7,7 +7,7 @@ import tf2_ros
 import tf2_py # noqa F401
 import tf2_geometry_msgs # noqa F401
 import numpy as np
-
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from nav_msgs.msg import Path
 from driving_swarm_messages.srv import UpdateTrajectory
@@ -46,6 +46,7 @@ class TrajectoryFollower(DrivingSwarmNode):
             self.create_publisher(PoseStamped, 'nav/desired', 9)
         self.co0 = self.create_publisher(PoseStamped, 'nav/cutoff_0', 9)
         self.co1 = self.create_publisher(PoseStamped, 'nav/cutoff_1', 9)
+        self.sign_pub = self.create_publisher(Int32, "nav/sign", 1)
         self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
         self.create_service(
             UpdateTrajectory,
@@ -154,6 +155,8 @@ class TrajectoryFollower(DrivingSwarmNode):
         # no division by 0.0
         if diff_pose.x != 0.0:
             dy = np.arctan(diff_pose.y / diff_pose.x) / self.dt
+            if diff_pose.x < 0:
+                dy -= np.pi
         # dtheta is for angular deviation
 
         # dy is the component which steers the robot towards the path
@@ -161,6 +164,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         dtheta = diff_pose.theta / self.dt
         
         vel.angular.z = self.w1 * dy + self.w2 * dtheta
+        self.sign_pub.publish(Int32(data=int(np.sign(vel.angular.z))))
         return vel
     
     def set_cmd_vel(self, control):
