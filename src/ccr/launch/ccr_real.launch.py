@@ -47,12 +47,12 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_follower',
-           executable='pid',
+           executable='pure_pursuit',
            namespace=robot,
            parameters=[
               {
-                  "dt": 2.0,
-                  "w1": 0.5,
+                  "dt": 1.4,
+                  "w1": 1.0,
                   "w2": 1.0,
                   "fail_radius": 0.3
               }

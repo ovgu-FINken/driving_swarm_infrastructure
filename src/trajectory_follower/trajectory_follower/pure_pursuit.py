@@ -143,25 +143,23 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.cmd_vel = Twist()
         self.cmd_publisher.publish(self.cmd_vel)
         
-    def compute_pure_pursuit_output(self) -> Twist:
+    def compute_pure_pursuit_output(self, dt) -> Twist:
         if self.trajectory is None:
             return None
 
         # get the target pose at the correct time in ego_coordinates
-        diff_pose = self.get_target_pose(offset=self.dt)
-        vel = Twist()
-        vel.linear.x = diff_pose.x / self.dt
+        diff_pose = self.get_target_pose(offset=dt)
+        vel = diff_pose.x / dt
         
         # Calculate the angle to the target pose using arctan2 for better accuracy
-        dy = np.arctan2(diff_pose.y, diff_pose.x) / self.dt
+        dy = np.arctan2(diff_pose.y, diff_pose.x) / dt * vel
 
-        dtheta = diff_pose.theta / self.dt
-
-        vel.angular.z = self.w1 * dy + self.w2 * dtheta
-        self.sign_pub.publish(Int32(data=int(np.sign(vel.angular.z))))
-
-        return vel
-
+        # dy is the component which steers the robot towards the path
+        # dtheta is the component which steers the robot towards the desired orientation
+        dtheta = diff_pose.theta / dt
+        
+        rot = self.w1 * dy + self.w2 * dtheta
+        return vel, rot
     
     def set_cmd_vel(self, control):
         # todo: respect limits (acceleration + max vel)
@@ -191,7 +189,11 @@ class TrajectoryFollower(DrivingSwarmNode):
             return
         
         # compute and publish control output
-        control = self.compute_pure_pursuit_output()
+        control = [self.compute_pure_pursuit_output(dt) for dt in [self.dt - 0.2, self.dt, self.dt + 0.2]]
+        c = Twist()
+        c.linear.x = np.mean([c[0] for c in control])
+        c.angular.z = np.mean([c[1] for c in control])
+        control = c
         if control is None:
             self.set_trajectory_fail()
             self.get_logger().warn(colored('control is could not be computed', 'red') + f'diff_pose is: {diff_pose} ')
