@@ -68,6 +68,7 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
+              'robot_names': robots[:n_robots],
            }, grid_params
              ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],

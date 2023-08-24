@@ -38,6 +38,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         map_file = self.get_parameter('graph_file').get_parameter_value().string_value
         self.get_logger().info(f'loading graph from {map_file}')
         
+        self.declare_parameter('robot_names', ['invalid_name'])
+        self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
+        
+        
         wx = (self.get_parameter('x_min').get_parameter_value().double_value, self.get_parameter('x_max').get_parameter_value().double_value)
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
@@ -192,7 +196,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
     def publish_state(self):
         state = self.env.find_nearest_node(self.get_tf_pose()[:2])
-        self.state_pub.publish(Int32(data=int(state)))  
+        self.state_pub.publish(Int32(data=int(state))) 
         if state != self.state:
             self.last_state = self.state
             self.state = state
@@ -207,8 +211,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
         try:
-            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly))
-            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="feasible2"))
+            for robot in self.robot_names:
+                self.poly_pub.publish(self.publish_polygon_marker(self.path_poly,ns="{}_feasible".format(robot)))
+                self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(robot)))
         except Exception:
             pass
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
