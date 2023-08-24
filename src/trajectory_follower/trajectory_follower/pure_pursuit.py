@@ -70,6 +70,7 @@ class TrajectoryFollower(DrivingSwarmNode):
                     'update index is larger than trajectory length'
                 )
                 response.accepted = False
+                self.set_trajectory_fail()
                 return response
             self.co0.publish(self.trajectory.poses[request.update_index - 1])
             self.co1.publish(request.trajectory.poses[0])
@@ -134,9 +135,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         return self.get_desired_pose(offset=offset)
     
     def set_trajectory_fail(self):
-        self.get_logger().info(
-            'canceling goal because to far from planned pose'
-        )
+        self.get_logger().info(colored('replan request', 'red'))
         self.trajectory = None
         request = Empty.Request()
         self.replan_client.call_async(request)
@@ -184,8 +183,8 @@ class TrajectoryFollower(DrivingSwarmNode):
 
         diff_pose = self.get_target_pose(offset=0.0)
         if diff_pose.x**2 + diff_pose.y**2 > self.fail_radius**2:
-            self.set_trajectory_fail()
             self.get_logger().warn(colored('to far from planned pose', 'red') + f'difference: {diff_pose}')
+            self.set_trajectory_fail()
             return
         
         # compute and publish control output

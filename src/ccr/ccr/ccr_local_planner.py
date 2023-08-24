@@ -11,7 +11,7 @@ from sensor_msgs.msg import LaserScan
 from trajectory_generator.vehicle_model_node import TrajectoryGenerator, Vehicle
 import numpy as np
 import rclpy
-from shapely import Polygon, simplify
+from shapely import Polygon, simplify, LineString
 from shapely import Point as ShapelyPoint
 from math import atan2, degrees
 import shapely
@@ -246,6 +246,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 break
         if not len(plan):
             self.get_logger().info('empty plan')
+            self.send_path([], ti=0)
             return
         remainder = self.plan[len(plan):]
         self.get_logger().debug(f'executing plan {self.plan}')
@@ -270,6 +271,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.path_poly.is_empty:
             self.get_logger().warn('path is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
+            self.send_path([], ti=cutoff)
             return
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [start]
@@ -280,8 +282,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space
-        if trajectory is None:
-            return
+        if not len(trajectory):
+            trajectory = [self.get_tf_pose()]
+            ti = 0
         if ti is None:
             ti = 0
         path = Path()
@@ -323,10 +326,17 @@ class CCRLocalPlanner(DrivingSwarmNode):
         else:
             self.wall =None
         self.wall_pub.publish(String(data=str(self.wall)))
-
     
     def trajectory_cb(self, msg):
         self.trajectory = msg
+        # if we do have a trajectory, but do not have a plan, we should stop (this should not happen)
+        if not len(self.plan):
+            self.get_logger().info("no plan, stopping trajectory")
+            self.send_path([], ti=0)
+
+        # TODO check if the trajectory is valid with respect to our plan
+        # in case the cut-off point was set wrongly, or some other problem happens, we could end up with a trajectory that is not valid
+        # in that case, we will send a new path
         
     def get_cutoff_point(self):
         if self.trajectory is None:
