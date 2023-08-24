@@ -46,7 +46,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
-        self.begin = 1
         self.initial_pos = None
         self.allow_goal_publish = True
         self.state = None 
@@ -103,7 +102,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
-        self.reset_pub = self.create_publisher(String, "/reset_flag", 1)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
@@ -116,9 +114,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
+        self.initial_pos = self.get_tf_pose()
         self.create_timer(1.0, self.timer_cb)
         self.set_state_ready()
-        self.create_subscription(String, "/command", self.command_callback, 10)
 
     def graph_to_marker_array(self):
         poly_msg = MarkerArray()
@@ -197,15 +195,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.state = state
             self.get_logger().info(f'new state {self.state}')
             
-    def command_callback(self, msg):
-        self.variable = msg.data
-        if self.variable == "reset":
+    def timer_cb(self):
+        if self._command == "reset":
             self.allow_goal_publish = False
             self.goal = self.initial_pos
-            self.get_logger().info(f'Reset activated')
-            self.publish_goal()
-            
-    def timer_cb(self):
+            self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
         self.publish_goal()
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
@@ -235,8 +229,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.plan = plan
         #self.get_logger().info(f'new plan {self.plan}')
         if len(self.plan) == 1 and not self.allow_goal_publish:
-            self.get_logger().info(f'Robot Turned Back')
-            self.reset_pub.publish(String(data=str("restart")))
+            self.set_state("done")
         self.execute_plan()
         
     def execute_plan(self):
@@ -266,9 +259,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         else:
             start = self.get_tf_pose()
             
-        if self.begin:
-                self.initial_pos = self.get_tf_pose()
-                self.begin = 0
 
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area

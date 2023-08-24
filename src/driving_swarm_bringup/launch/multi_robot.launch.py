@@ -64,6 +64,7 @@ def initialize_robots(context, *args, **kwargs):
                            'use_sim_time': LaunchConfiguration('use_sim_time'),
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
+                           'reset_timeout': LaunchConfiguration('reset_timeout'),
                            'robot_names': robot_names[:int(n_robots)],
                            }])
 
@@ -135,6 +136,11 @@ def generate_launch_description():
         default_value='0.0'
     )
 
+    declare_reset_timeout_cmd = DeclareLaunchArgument(
+        'reset_timeout',
+        default_value=EnvironmentVariable('RESET_TIMEOUT', default_value="0.0")
+    )
+
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -162,6 +168,7 @@ def generate_launch_description():
     ld.add_action(declare_run_timeout_cmd)
     ld.add_action(declare_init_timeout_cmd)
     ld.add_action(declare_robot_name_file_cmd)
+    ld.add_action(declare_reset_timeout_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)

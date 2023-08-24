@@ -91,6 +91,8 @@ class DrivingSwarmNode(Node):
     
     def setup_command_interface(self, autorun=True):
         self.autorun = autorun
+        self._state = "undefined"
+        self._command = "undefined"
         if autorun:
             self.started = False
         self.status_pub = self.create_publisher(String, "status", 10)
@@ -110,6 +112,7 @@ class DrivingSwarmNode(Node):
         self.set_state("running")
         
     def command_cb(self, msg):
+        self._command = msg.data
         if msg.data == "go":
             self.get_logger().info("going")
             self.started = True

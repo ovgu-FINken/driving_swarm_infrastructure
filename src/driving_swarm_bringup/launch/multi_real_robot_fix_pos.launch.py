@@ -23,7 +23,7 @@ from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
                             IncludeLaunchDescription, LogInfo, OpaqueFunction,
                             RegisterEventHandler, EmitEvent)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 from launch_ros.actions import Node
 from launch.events import Shutdown
 from launch.event_handlers import OnProcessExit
@@ -59,6 +59,7 @@ def initialize_robots(context, *args, **kwargs):
                            'run_timeout': run_timeout,
                            'init_timeout': init_timeout,
                            'robot_names': robots[:int(n_robots)],
+                           'reset_timeout': LaunchConfiguration('reset_timeout'),
                            }])
 
     exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
@@ -117,12 +118,17 @@ def generate_launch_description():
 
     declare_run_timeout_cmd = DeclareLaunchArgument(
         'run_timeout',
-        default_value='0.0'
+        default_value=EnvironmentVariable('RUN_TIMEOUT', default_value=0.0)
     )
 
     declare_init_timeout_cmd = DeclareLaunchArgument(
         'init_timeout',
-        default_value='0.0'
+        default_value=EnvironmentVariable('INIT_TIMOUT', default_value=0.0)
+    )
+    
+    declare_reset_timeout_cmd = DeclareLaunchArgument(
+        'reset_timeout',
+        default_value=EnvironmentVariable('RESET_TIMEOUT', default_value="0.0")
     )
 
     rosbag_recording = IncludeLaunchDescription(
@@ -141,6 +147,7 @@ def generate_launch_description():
     ld.add_action(declare_base_frame_cmd)
     ld.add_action(declare_run_timeout_cmd)
     ld.add_action(declare_init_timeout_cmd)
+    ld.add_action(declare_reset_timeout_cmd)
 
     # Add the actions to start rosbag recording
     ld.add_action(rosbag_recording)

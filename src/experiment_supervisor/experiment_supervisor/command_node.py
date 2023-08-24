@@ -17,12 +17,11 @@ class CommandNode(DrivingSwarmNode):
         self.reset_timer = None
         self.status = None
 
-        self.single_experiment_time = 120.0 #in seconds
 
         # Fetch swarm size and robot names
         self.declare_parameter("run_timeout", 0.0)
         self.declare_parameter("init_timeout", 0.0)
-        self.declare_parameter("reset_timeout", self.single_experiment_time)
+        self.declare_parameter("reset_timeout", 0.0)
 
         self.get_list_of_robot_names()
         self.cmd_pub = self.create_publisher(String, "/command", 10)
@@ -35,7 +34,6 @@ class CommandNode(DrivingSwarmNode):
             )
             self.logger_.info(f"subscribing /{robot}/status")
         # Subscribe to the reset_flag topic
-        self.create_subscription(String, "/reset_flag", self.reset_flag_callback, 10)
         self.run_timeout = self.get_parameter("run_timeout").get_parameter_value().double_value
         self.init_timeout = self.get_parameter("init_timeout").get_parameter_value().double_value
         self.reset_timeout = self.get_parameter("reset_timeout").get_parameter_value().double_value
@@ -47,6 +45,7 @@ class CommandNode(DrivingSwarmNode):
             self.init_timer = self.create_timer(self.init_timeout, self.init_timeout_callback)
             
         self.create_timer(10.0, self.timer_cb)
+
     def timer_cb(self):
         for robot in self.robots:
             self.get_logger().info(f"{robot}: {self.robot_status[robot]}")
@@ -71,12 +70,6 @@ class CommandNode(DrivingSwarmNode):
             self.reset_timer.cancel()
             self.reset_timer = None
     
-    def reset_flag_callback(self, msg):
-        self.logger_.info(f"flag raised")
-        self.counter += 1
-        # if self.counter == len(self.robots):
-        #     self.exit()
-
     def robot_cb(self, robot, msg):
         self.logger_.info(colored(f"{robot}: {msg.data}", "yellow"))
         self.robot_status[robot] = msg.data
@@ -97,6 +90,10 @@ class CommandNode(DrivingSwarmNode):
                     self.init_timer.cancel()
                     self.init_timer.destroy()
                     self.init_timer = None
+        
+        if self.status == "reset":
+            if all([status == "done" for status in self.robot_status.values()]):
+                self.exit()
                 
     def set_status(self, status):
         self.status = status
