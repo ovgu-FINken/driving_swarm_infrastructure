@@ -46,7 +46,7 @@ def initialize_robots(context, *args, **kwargs):
     run_timeout = LaunchConfiguration('run_timeout')
     init_timeout = LaunchConfiguration('init_timeout')
     poses_file = LaunchConfiguration('poses_file').perform(context)
-    robot_name_file = LaunchConfiguration('robot_name_file').perform(context)
+    robot_names_file = LaunchConfiguration('robot_names_file').perform(context)
     base_frame = LaunchConfiguration('base_frame').perform(context)
     single_robot_launch_file = LaunchConfiguration(
         'single_robot_launch_file', 
@@ -54,7 +54,7 @@ def initialize_robots(context, *args, **kwargs):
         ).perform(context)
     with open(poses_file, 'r') as stream:
         poses = yaml.safe_load(stream)
-    with open(robot_name_file, 'r') as stream:
+    with open(robot_names_file, 'r') as stream:
         robot_names = yaml.safe_load(stream)
         
     command_node = Node(package="experiment_supervisor",
@@ -111,7 +111,7 @@ def generate_launch_description():
     )
     
     declare_robot_name_file_cmd = DeclareLaunchArgument(
-        'robot_name_file',
+        'robot_names_file',
         default_value=os.path.join(bringup_dir, 'params', 'robot_names_sim.yaml')
     )
 
