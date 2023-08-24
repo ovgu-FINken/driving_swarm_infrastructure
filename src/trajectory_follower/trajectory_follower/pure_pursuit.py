@@ -144,28 +144,22 @@ class TrajectoryFollower(DrivingSwarmNode):
     def compute_pure_pursuit_output(self) -> Twist:
         if self.trajectory is None:
             return None
+
         # get the target pose at the correct time in ego_coordinates
         diff_pose = self.get_target_pose(offset=self.dt)
         vel = Twist()
         vel.linear.x = diff_pose.x / self.dt
-
-        # compute angular velocity
-        # dy is for path deviation
-        dy = 0
-        # no division by 0.0
-        if diff_pose.x != 0.0:
-            dy = np.arctan(diff_pose.y / diff_pose.x) / self.dt
-            if diff_pose.x < 0:
-                dy -= np.pi
-        # dtheta is for angular deviation
-
-        # dy is the component which steers the robot towards the path
-        # dtheta is the component which steers the robot towards the desired orientation
-        dtheta = diff_pose.theta / self.dt
         
+        # Calculate the angle to the target pose using arctan2 for better accuracy
+        dy = np.arctan2(diff_pose.y, diff_pose.x) / self.dt
+
+        dtheta = diff_pose.theta / self.dt
+
         vel.angular.z = self.w1 * dy + self.w2 * dtheta
         self.sign_pub.publish(Int32(data=int(np.sign(vel.angular.z))))
+
         return vel
+
     
     def set_cmd_vel(self, control):
         # todo: respect limits (acceleration + max vel)
