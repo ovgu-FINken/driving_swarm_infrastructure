@@ -32,7 +32,6 @@ def aggregate_tables(df, table_column_config, step_size):
         robot_ret_df = pd.DataFrame(
             range(xmin, xmax, step_size), columns=['timestamp']
         )
-
         for topic in table_column_config:
             tmp_col = []
             if topic.topic_name.startswith('/'):

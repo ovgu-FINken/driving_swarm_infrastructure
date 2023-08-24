@@ -4,13 +4,14 @@ import numpy as np
 from driving_swarm_utils.node import DrivingSwarmNode
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
 class ReactiveController(DrivingSwarmNode):
 
     def __init__(self):
         super().__init__('reactive_controller')
         self.declare_parameter('synchronise', True)
         self.synchronise = self.get_parameter('synchronise').get_parameter_value().bool_value
+        self.sign_pub = self.create_publisher(Int32, "nav/sign", 1)
         self.get_frames()
         self.setup_tf()
         self.setup_command_interface(autorun=True)
@@ -50,6 +51,7 @@ class ReactiveController(DrivingSwarmNode):
                         self.clear = False
                 msg.linear.x = 0.0
                 msg.angular.z = self.sign * 1.0
+        self.sign_pub.publish(Int32(data=int(self.sign)))
         self.publisher.publish(msg)
     
     def laser_cb(self, msg):
