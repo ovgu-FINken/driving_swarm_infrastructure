@@ -71,4 +71,11 @@ table_column_config = [
             data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
         ),
     ),
+    data_aggregation_helper.TableColumn(
+        'nav/sign',
+        'rotation_sign',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
+            'data'
+        ].data
+    )
 ]
