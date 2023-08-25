@@ -352,6 +352,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(self.plan):
             self.get_logger().info("no plan, stopping trajectory")
             self.send_path([], ti=0)
+            return
+        
+        if not len(self.trajectory.poses) > 1:
+            self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
+            self.execute_plan(use_cutoff=False)
+            return
 
         # TODO check if the trajectory is valid with respect to our plan
         # in case the cut-off point was set wrongly, or some other problem happens, we could end up with a trajectory that is not valid
