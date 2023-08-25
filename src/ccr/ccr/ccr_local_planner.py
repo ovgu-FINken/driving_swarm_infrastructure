@@ -281,22 +281,31 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.get_tf_pose()
         end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
-        previous = [n for n in [self.state, self.last_state] if n is not None]
-        self.path_poly = geometry.poly_from_path(self.env.g, previous + self.plan, eps=0.01)
+
+        previous = None
+        if self.plan[0] == self.state:
+            previous = self.last_state
+        if self.plan[0] != self.state:
+            previous = self.state
+        if (previous, plan[0]) not in self.env.g.edges():
+            previous = None
+        self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01, previous_node=previous)
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         if self.path_poly.is_empty:
-            self.get_logger().warn('path is empty, will not send path')
+            self.get_logger().warn('feasible_area is empty, will not send path')
             self.get_logger().info(f'plan is: {plan}')
-            self.send_path([], ti=cutoff)
+            self.send_path([], ti=0)
             return
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
         trajectory = self.vm.tuples_to_path(wps)
+        if not len(trajectory):
+            self.get_logger().warn('trajectory is empty')
         self.send_path(trajectory, ti=cutoff)
 
     def send_path(self, trajectory, ti=0):
@@ -354,8 +363,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.send_path([], ti=0)
             return
         
-        if not len(self.trajectory.poses) > 1:
+        if not len(self.trajectory.poses) > 1 and self.plan[0] != self.plan[1]:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
+            self.get_logger().info(f"plan is: {self.plan}")
             self.execute_plan(use_cutoff=False)
             return
 
@@ -392,7 +402,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if mp.geom_type != 'MultiPolygon':
             return mp
 
-        distances = [poly.distance(robot_point) for poly in mp.geoms]
+        distances = [poly.distance(robot_point) for poly in mp.geoms if not poly.is_empty]
         max_distance = max(distances)
         min_distance = min(distances)
 
