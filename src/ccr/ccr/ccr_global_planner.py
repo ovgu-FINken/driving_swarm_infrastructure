@@ -44,7 +44,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.update_path = False
         self.cdm_triggered = {}
         self.cdm_opinions = {}
-        self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
+        self.poly_pub2 = self.create_publisher(MarkerArray, '/cells', 10)
         points = None 
         if map_file.endswith(".yaml"):
             grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
@@ -105,7 +105,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         if self.goal is None:
             return
         self.publish_plan(change_only=False)
-        self.poly_pub.publish(self.publish_high_priority_edge())
+        self.poly_pub2.publish(self.publish_high_priority_edge())
 
     def goal_cb(self, msg):
         if msg.data == self.goal:
