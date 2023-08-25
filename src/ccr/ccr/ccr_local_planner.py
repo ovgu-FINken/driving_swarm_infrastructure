@@ -61,7 +61,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly2 = None
         self.trajectory = None
         points = None 
-        self.poly_pub = self.create_publisher(MarkerArray, 'cells', 10)
+        self.poly_pub = self.create_publisher(MarkerArray, '/cells', 10)
         if map_file.endswith(".yaml"):
             grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
             tiling = self.get_parameter('grid_type').get_parameter_value().string_value
@@ -191,7 +191,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.goal is None:
             return
         goal = self.env.find_nearest_node(self.goal[:2])
-        #self.get_logger().info(str(self.initial_pos)+" "+str(self.goal))
         self.goal_pub.publish(Int32(data=int(goal)))
 
     def publish_state(self):
@@ -210,12 +209,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_goal()
         self.publish_state()
         self.poly_pub.publish(self.graph_to_marker_array())
-        try:
-            for robot in self.robot_names:
-                self.poly_pub.publish(self.publish_polygon_marker(self.path_poly,ns="{}_feasible".format(robot)))
-                self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(robot)))
-        except Exception:
-            pass
+        if self.path_poly is not None and self.path_poly2 is not None:
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly,ns="{}_feasible".format(self.robot_name)))
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(self.robot_name)))
         self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
         if self.plan:
             self.execute_plan()
@@ -240,6 +236,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.execute_plan()
         
     def execute_plan(self):
+        self.get_logger().info(f'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         # if there is a wait action within the plan, only execute the plan up to the wait action
         visited = set()
         plan = []
