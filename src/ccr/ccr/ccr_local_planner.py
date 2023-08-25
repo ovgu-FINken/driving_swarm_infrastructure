@@ -180,7 +180,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not self.plan:
             return
         self.get_logger().info('got replanning request, which we will do')
-        self.execute_plan()
+        self.execute_plan(use_cutoff=False)
         return res
         
     def save_graph(self, req, res):
@@ -234,12 +234,27 @@ class CCRLocalPlanner(DrivingSwarmNode):
         plan = list(msg.data)
         if self.plan is None and plan:
             self.set_state_running()
+        # if the next node in the plan changes, we do not use the cutoff
+        use_cutoff = False
+        if self.plan and len(self.plan) > 1 and len(plan) > 2:
+            # plan starts with wait action
+            if plan[0] == plan[1]:
+                use_cutoff = False
+            # plan update is because robot drove to next node in plan
+            elif self.plan[1] == plan[0]:
+                # use the cutoff point, if the next node stays the same
+                # we do not need cutoff, because we go into the transition area
+                use_cutoff = False
+            elif self.plan[0] == plan[0]:
+                # if the first next node stays the same, we do not need to use the cutoff
+                use_cutoff = self.plan[1] == plan[1]
+                
         self.plan = plan
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.set_state("done")
-        self.execute_plan()
+        self.execute_plan(use_cutoff=use_cutoff)
         
-    def execute_plan(self):
+    def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
         visited = set()
         plan = []
@@ -259,7 +274,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().debug(f'\t remaining plan after wait actions {remainder}')
         
         start = None
-        cutoff = self.get_cutoff_point()
+        cutoff = None
+        if use_cutoff:
+            cutoff = self.get_cutoff_point()
         if cutoff is not None:
             s = self.trajectory.poses[cutoff]
             start = self.pose_stamped_to_tuple(s)
