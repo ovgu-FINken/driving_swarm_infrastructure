@@ -51,7 +51,7 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[
               {
-                  "dt": 1.4,
+                  "dt": 2.0,
                   "w1": 1.0,
                   "w2": 1.0,
                   "fail_radius": 0.3
