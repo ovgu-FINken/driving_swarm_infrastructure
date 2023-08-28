@@ -44,6 +44,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.update_path = False
         self.cdm_triggered = {}
         self.cdm_opinions = {}
+        self.belief_timeout = 15.0 + np.random.rand() * 2.0
         self.poly_pub2 = self.create_publisher(MarkerArray, '/cells', 10)
         points = None 
         if map_file.endswith(".yaml"):
@@ -99,14 +100,28 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             self.get_logger().info(f"subscribing /{robot}/nav/plan")
         
         self.create_timer(2.0, self.timer_cb)
+        self.create_timer(0.3, self.fast_timer_cb)
         
     def timer_cb(self):
         if self.state is None:
             return
         if self.goal is None:
             return
+        
+       # publish things 
         self.publish_plan(change_only=False)
         self.poly_pub2.publish(self.publish_high_priority_edge())
+        
+    def fast_timer_cb(self):
+        # check if beliefs are due for deletion
+        del_beliefs = set()
+        for node, t in self.cdm_triggered.items():
+            if self.get_clock().now().nanoseconds - t > self.belief_timeout * 10e9:
+                del_beliefs.add(node)
+        if len(del_beliefs):
+            for node in del_beliefs:
+                self.delete_belief(node)
+            self.update_plan()
 
     def goal_cb(self, msg):
         if msg.data == self.goal:
@@ -135,7 +150,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             if plan != self.plan:
                 self.plan = plan
                 self.publish_plan()
-                # self.get_logger().info(f"new plan: {self.plan}")
+                self.get_logger().info(f"new plan: {self.plan}")
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
@@ -194,7 +209,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         return planning.BeliefState(state=msg.state, priorities={n: p for n, p in zip(msg.neighbours, msg.priorities)})
     
     def cdm_cb(self, msg):
-        self.cdm_triggered[msg.data] = self.get_clock().now()
+        self.cdm_triggered[msg.data] = self.get_clock().now().nanoseconds
         opinion = self.ccr_agent.get_cdm_opinion(msg.data)
         self.get_logger().info(f"opinion {self.robot_name} for node {opinion.state} is {opinion.priorities}")
         bs_msg = self.belief_to_msg(opinion)
@@ -217,6 +232,18 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         s = f"belief robot: {self.robot_name}, state:{bel.state}"
         self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
         self.update_plan()
+        
+    def delete_belief(self, node):
+        if node in self.cdm_triggered:
+            if self.get_clock().now().nanoseconds - self.cdm_triggered[node] < self.belief_timeout * 10e9 * 0.5:
+                self.get_logger().info(f'belief for {node} is still valid')
+                return
+        self.get_logger().info(f'deleting belief for {node}')
+        if node in self.cdm_opinions:
+            del self.cdm_opinions[node]
+        if node in self.cdm_triggered:
+            del self.cdm_triggered[node]
+        self.ccr_agent.delete_belief(node)
             
     def publish_high_priority_edge(self, ns="high_priority", id=1):
         priority = {key: max(value.priorities) for key, value in self.ccr_agent.belief.items()}
