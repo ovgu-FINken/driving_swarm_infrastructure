@@ -321,7 +321,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         for pose in trajectory:
             path.poses.append(self.tuple_to_pose_stamped_msg(*pose))
 
-        self.get_logger().debug("sending path")
+        self.get_logger().info("sending path")
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=int(ti))
@@ -401,8 +401,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         if mp.geom_type != 'MultiPolygon':
             return mp
+        
+        poly = [poly for poly in mp.geoms if not poly.is_empty]
 
-        distances = [poly.distance(robot_point) for poly in mp.geoms if not poly.is_empty]
+        distances = [p.distance(robot_point) for p in poly]
         max_distance = max(distances)
         min_distance = min(distances)
 
@@ -420,7 +422,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
             return distance_weight * normalized_distance + angle_weight * normalized_angle_difference
 
-        target_polygon = min(mp.geoms, key=score_polygon)
+        target_polygon = min(poly, key=score_polygon)
         assert target_polygon.geom_type == 'Polygon'
         return target_polygon
 
