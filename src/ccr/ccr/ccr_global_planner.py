@@ -67,7 +67,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
-        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5)
+        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5, wait_action_cost=0.51)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
@@ -155,7 +155,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
-            # self.get_logger().info(f"plan is consistent and not conflict free, triggering CDM")
+            self.get_logger().info(f"conflicts detected: {self.ccr_agent.get_conflicts()}")
             self.trigger_cdm()
             
     def publish_plan(self, change_only=True):
@@ -190,13 +190,17 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     ############################
 
     def trigger_cdm(self):
-        options = self.ccr_agent.get_cdm_node()
-        # do not re-trigger cdm for a node
-        options = options - set(self.cdm_triggered.keys())
+        cdm_nodes = self.ccr_agent.get_cdm_node()
+        # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
+        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 10e9 * 0.5)
         if len(options) == 0:
-            # self.get_logger().warn(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
+            self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
+            if np.random.rand() < 0.05:
+                self.get_logger().info(f"triggering random CDM")
+                options = set(cdm_nodes)
             # self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
-            return
+            else:
+                return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
         self.cdm_triggered[node] = self.get_clock().now()
