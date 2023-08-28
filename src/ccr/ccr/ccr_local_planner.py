@@ -234,7 +234,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.path_poly2 is not None and False:
             self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(self.robot_name)))
         # self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns=f"{self.robot_name}_scan"))
-        if self.plan:
+        if self.plan and len(self.plan) > 1:
             plan = [self.env.g.nodes()[i]['geometry'].center for i in self.plan]
             self.poly_pub.publish(self.publish_line_marker(LineString(plan), ns=f"{self.robot_name}_plan"))
         if self.goal_cb:
