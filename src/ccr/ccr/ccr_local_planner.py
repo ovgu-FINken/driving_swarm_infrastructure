@@ -161,7 +161,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         return poly_msg
 
-    def publish_polygon_marker(self, polygon, ns="feasible", id=1):
+    def publish_polygon_marker(self, polygon, ns="feasible", id=1, color=None):
+        if color is None:
+            color = ColorRGBA(r=0.5, g=1.0, b=0.5, a=0.4)
         poly_msg = MarkerArray()
         if polygon.geom_type == 'MultiPolygon':
             self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
@@ -171,9 +173,22 @@ class CCRLocalPlanner(DrivingSwarmNode):
         marker.scale.x = 0.01
         coords = polygon.exterior.coords
         marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
-        marker.colors = [ColorRGBA(r=0.5, g=0.3, b=0.3, a=0.3) for _ in coords]
+        marker.colors = [color for _ in coords]
         poly_msg.markers.append(marker)
         return poly_msg
+    
+    def publish_line_marker(self, line, ns="path", id=1, color=None):
+        if color is None:
+            color = ColorRGBA(r=0.5, g=1.0, b=0.5, a=0.4)
+        line_msg = MarkerArray()
+        marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.LINE_STRIP)
+        marker.header.frame_id = 'map'
+        marker.scale.x = 0.01
+        coords = line.coords
+        marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
+        marker.colors = [color for _ in coords]
+        line_msg.markers.append(marker)
+        return line_msg
 
     def replan_callback(self, _, res):
         if not self.plan:
@@ -202,20 +217,29 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().info(f'new state {self.state}')
             
     def timer_cb(self):
+        # functional
         if self._command == "reset":
             self.allow_goal_publish = False
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
         self.publish_goal()
         self.publish_state()
-        self.poly_pub.publish(self.graph_to_marker_array())
-        if self.path_poly is not None:
-            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly,ns="{}_feasible".format(self.robot_name)))
-        if self.path_poly2 is not None:
-            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(self.robot_name)))
-        self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
         if self.plan:
             self.execute_plan()
+            
+        # debug information
+        self.poly_pub.publish(self.graph_to_marker_array())
+        if self.path_poly is not None:
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly,ns="{}_feasible".format(self.robot_name), color=ColorRGBA(r=0.3, g=0.3, b=0.3, a=0.4)))
+        if self.path_poly2 is not None and False:
+            self.poly_pub.publish(self.publish_polygon_marker(self.path_poly2,ns="{}_feasible2".format(self.robot_name)))
+        # self.poly_pub.publish(self.publish_polygon_marker(self.scan_poly, ns=f"{self.robot_name}_scan"))
+        if self.plan:
+            plan = [self.env.g.nodes()[i]['geometry'].center for i in self.plan]
+            self.poly_pub.publish(self.publish_line_marker(LineString(plan), ns=f"{self.robot_name}_plan"))
+        if self.goal_cb:
+            goal_line = LineString([self.get_tf_pose()[:2], self.goal[:2]])
+            self.poly_pub.publish(self.publish_line_marker(goal_line, ns=f"{self.robot_name}_goal", color=ColorRGBA(r=0.3, g=0.3, b=1.0, a=0.4)))
     
     def goal_cb(self, msg):
         if self.allow_goal_publish:
