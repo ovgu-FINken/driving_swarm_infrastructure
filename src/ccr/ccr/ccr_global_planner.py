@@ -134,9 +134,11 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def state_cb(self, msg):
         if msg.data == self.state:
             return
+        old_state = self.state
         self.state = msg.data
         # self.get_logger().info(f"received state {self.state}")
         self.ccr_agent.update_state(self.state)
+        self.delete_belief(old_state)
         self.update_plan()
         
     def update_plan(self):
