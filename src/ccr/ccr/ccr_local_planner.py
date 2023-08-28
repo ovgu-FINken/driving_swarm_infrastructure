@@ -290,6 +290,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if (previous, plan[0]) not in self.env.g.edges():
             previous = None
         self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01, previous_node=previous)
+        # assert self.path_poly.geom_type == 'Polygon' 
+        # assert self.path_poly.is_valid
+        # assert not self.path_poly.is_empty, f'path_poly is empty, plan is {plan}'
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
@@ -363,7 +366,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.send_path([], ti=0)
             return
         
-        if not len(self.trajectory.poses) > 1 and self.plan[0] != self.plan[1]:
+        if not len(self.trajectory.poses) > 1:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
             self.get_logger().info(f"plan is: {self.plan}")
             self.execute_plan(use_cutoff=False)
@@ -401,18 +404,23 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         if mp.geom_type != 'MultiPolygon':
             return mp
+        
+        poly = [poly for poly in mp.geoms if not poly.is_empty and poly.is_valid]
 
-        distances = [poly.distance(robot_point) for poly in mp.geoms if not poly.is_empty]
+        distances = [p.distance(robot_point) for p in poly]
         max_distance = max(distances)
         min_distance = min(distances)
 
         def score_polygon(poly):
+            return robot_point.distance(poly)
             centroid = poly.centroid
             angle_to_polygon = angle_between_points((robot_point.x, robot_point.y), (centroid.x, centroid.y))
             angle_difference = abs(robot_orientation - angle_to_polygon)
 
             normalized_distance = normalize(poly.distance(robot_point), max_distance, min_distance)
             normalized_angle_difference = normalize(angle_difference, 180, 0)  # angles can vary between 0 and 180 degrees
+            self.get_logger().info(f"angle: {angle_difference}, distance: {poly.distance(robot_point)}")
+            self.get_logger().info(f"angle: {normalized_angle_difference}, distance: {normalized_distance}")
 
             # Define weights
             distance_weight = 0.5
@@ -420,7 +428,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
             return distance_weight * normalized_distance + angle_weight * normalized_angle_difference
 
-        target_polygon = min(mp.geoms, key=score_polygon)
+        target_polygon = min(poly, key=score_polygon)
         assert target_polygon.geom_type == 'Polygon'
         return target_polygon
 
