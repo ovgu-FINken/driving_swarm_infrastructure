@@ -2,7 +2,7 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
 from std_msgs.msg import Int32, Int32MultiArray
 from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
-from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
 import networkx as nx
 import numpy as np
 import functools
@@ -80,6 +80,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         ## -- once a message is received here, the robot will publish its opinion on the given node
         self.create_subscription(Int32, "/nav/cdm", self.cdm_cb, 10)
         self.opinion_pub = self.create_publisher(BeliefStateMsg, "/nav/opinion", 10)
+        self.belief_pub = self.create_publisher(BeliefStateMsg, "nav/belief", 10)
         self.create_subscription(BeliefStateMsg, "/nav/opinion", self.opinion_cb, 10)
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
@@ -212,6 +213,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         for opinion in self.cdm_opinions[bs.state].values():
             bel += opinion
         self.ccr_agent.set_belief(bel.state, bel)
+        self.belief_pub.publish(self.belief_to_msg(bel))
         s = f"belief robot: {self.robot_name}, state:{bel.state}"
         self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
         self.update_plan()

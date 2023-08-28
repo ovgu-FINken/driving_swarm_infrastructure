@@ -50,6 +50,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
+        self.goalcount = 0
         self.wall = None
         self.initial_pos = None
         self.allow_goal_publish = True
@@ -108,6 +109,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
+        self.goal_count_pub = self.create_publisher(Int32, "nav/goal_count", 1)
         self.wall_pub = self.create_publisher(String, "nav/wall", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
@@ -204,6 +206,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
     def timer_cb(self):
         if self._command == "reset":
             self.allow_goal_publish = False
+            self.goalcount = 0
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
         self.publish_goal()
@@ -221,8 +224,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.allow_goal_publish:
             goal = self.pose_stamped_to_tuple(msg)
             if self.goal != goal:
+                self.goalcount += 1
                 self.goal = goal
                 self.get_logger().info(f'new goal {self.goal}')
+                self.goal_count_pub.publish(Int32(data=int(self.goalcount)))
                 self.publish_goal()
 
     def plan_cb(self, msg):
