@@ -58,6 +58,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.last_state = None
         self.goal = None
         self.plan = None
+        self.flag = True
+        self.current_time = None
         self.path_poly = None
         self.path_poly2 = None
         self.trajectory = None
@@ -325,6 +327,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
+        self.path_poly = self.path_poly.buffer(-0.06)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         position = ShapelyPoint(self.get_tf_pose()[:2])
         if not self.path_poly.contains(position):
@@ -405,7 +408,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(self.trajectory.poses) > 1:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
             self.get_logger().info(f"plan is: {self.plan}")
-            self.execute_plan(use_cutoff=False)
+            if self.flag:
+                self.current_time = self.get_clock().now().nanoseconds
+                self.flag = False
+            if (self.get_clock().now().nanoseconds - self.current_time)*(10e9)> 0.1:
+                self.execute_plan(use_cutoff=False)
+                self.flag = True
             return
 
         # TODO check if the trajectory is valid with respect to our plan

@@ -193,7 +193,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def trigger_cdm(self):
         cdm_nodes = self.ccr_agent.get_cdm_node()
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
-        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 10e9 * 0.5)
+        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if int(self.get_clock().now().nanoseconds) - v < int(self.belief_timeout) * 10e9 * 0.5)
         if len(options) == 0:
             self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             if np.random.rand() < 0.05:
@@ -202,6 +202,9 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             # self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
             else:
                 return
+        if not options:
+            self.get_logger().warn("No valid options to choose from!")
+            return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
         self.cdm_triggered[node] = self.get_clock().now()
