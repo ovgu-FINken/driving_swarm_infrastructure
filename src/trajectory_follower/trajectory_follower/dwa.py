@@ -325,7 +325,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         if polygon is None:
             return poly_msg
         if polygon.geom_type == 'MultiPolygon':
-            self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
+            #self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
             for g in polygon.geoms:
                 if g.geom_type == 'Polygon':
                     polygon = g

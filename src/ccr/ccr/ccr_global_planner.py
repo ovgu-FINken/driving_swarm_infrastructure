@@ -43,6 +43,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.goal = None
         self.update_path = False
         self.deadlock_robots = []
+        self.deadlock_robots_name = []
         self.cdm_triggered = {}
         self.cdm_opinions = {}
         self.belief_timeout = 15.0 + np.random.rand() * 2.0
@@ -193,19 +194,39 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         #self.get_logger().info(f"received plan from {robot}: {plan}")
         self.ccr_agent.update_other_paths({self.robot_names.index(robot): list(msg.data)})
         self.update_plan()
-        
-    def deadlock_cb(self, robot, msg):
+    
+    
+    
+    def deadlock_cb(self,robot, msg):
         if msg.data == 'deadlock':
-            if robot not in self.deadlock_robots:
-                self.deadlock_robots.append(robot)
+            if robot not in self.deadlock_robots_name:
+                self.deadlock_robots_name.append(self.robot_names.index(robot))
         elif msg.data == 'free':
-            if robot in self.deadlock_robots:
-                self.deadlock_robots.remove(robot)
-        self.get_logger().info(f"{len(self.deadlock_robots)} robots deadlocked")
+            if robot in self.deadlock_robots_name:
+                self.deadlock_robots_name.remove(self.robot_names.index(robot))
+                
+    
+        if self.ccr_agent.index in self.deadlock_robots_name and self.ccr_agent not in self.deadlock_robots:
+            self.deadlock_robots.append(self.ccr_agent)
+            self.deadlock_robots_name.remove(self.ccr_agent.index)
+        
+        #self.get_logger().info(f"{len(self.deadlock_robots)} robots deadlocked")
+        if len(self.deadlock_robots) >= 2:
+            state_dict = {}
+            # Grouping agents by state
+            for agent in self.deadlock_robots:
+                if agent.state not in state_dict:
+                    state_dict[agent.state] = [agent]
+                else:
+                    state_dict[agent.state].append(agent)
+            self.get_logger().info(f"{robot}")
+            for state, agent_list in state_dict.items():
+                if len(agent_list) > 1:
+                    agent_names = [agent.name for agent in agent_list]
+                    print(f"Deadlocked agents {', '.join(agent_names)} share the same : {state}")
 
-    ############################
-    # CDM
-    ############################
+            
+
 
     def trigger_cdm(self):
         cdm_nodes = self.ccr_agent.get_cdm_node()

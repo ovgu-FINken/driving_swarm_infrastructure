@@ -287,6 +287,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
     
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
+        use_cutoff=False
         visited = set()
         plan = []
         for node in self.plan:
@@ -400,8 +401,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.send_path([], ti=0)
             return
         if not len(self.trajectory.poses) > 1:
-            self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
-            self.get_logger().info(f"plan is: {self.plan}")
+            #self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
+            #self.get_logger().info(f"plan is: {self.plan}")
             self.deadlock = True
             if self.flag:
                 self.current_time = self.get_clock().now().nanoseconds
