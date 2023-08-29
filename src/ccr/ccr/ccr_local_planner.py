@@ -87,7 +87,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
-        self.declare_parameter("step_size", 0.15)
+        self.declare_parameter("step_size", 0.1)
         self.declare_parameter("turn_radius", .2)
         self.declare_parameter("turn_speed", 0.2)
         # set up vehicle model with parameters

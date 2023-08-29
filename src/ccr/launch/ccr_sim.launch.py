@@ -28,7 +28,7 @@ def controller_spawning(context, *args, **kwargs):
               'grid_type': 'square',
               'grid_size': 0.5,
               'inflation_size': 0.1,
-              'laser_inflation_size': 0.15,} 
+              'laser_inflation_size': 0.1,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
@@ -49,14 +49,18 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_follower',
            executable='dwa',
+           prefix=f'python3 -m cProfile -o dwa_{robot}.prof',
            namespace=robot,
            parameters=[
               {
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
-                  "w1": 1.0,
-                  "w2": 1.0,
-                  "w3": 1.0,
+                  "w1": 1.2,
+                  "w2": 0.9,
+                  "w3": 0.7,
+                  "obstacle_threshold": 0.15,
+                  "tb_radius": 0.3,
+                  "n_samples": 7,
                   "fail_radius": 0.3
               }
            ],

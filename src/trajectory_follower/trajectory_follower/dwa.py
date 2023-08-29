@@ -18,6 +18,7 @@ from termcolor import colored
 from shapely import Polygon, Point, LineString, union_all
 from sensor_msgs.msg import LaserScan
 from visualization_msgs.msg import MarkerArray, Marker
+from rclpy.duration import Duration
 
 
 class TrajectoryFollower(DrivingSwarmNode):
@@ -26,33 +27,32 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.get_frames()
         self.declare_parameter("dt", 1.0)
         self.dt = self.get_parameter("dt").get_parameter_value().double_value
-        self.declare_parameter("w1", 0.9)
+        self.declare_parameter("w1", 1.0)
         self.w1 = self.get_parameter("w1").get_parameter_value().double_value
-        self.declare_parameter("w2", 0.7)
+        self.declare_parameter("w2", 1.0)
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
-        self.declare_parameter("w3", 0.7)
+        self.declare_parameter("w3", 1.0)
         self.w3 = self.get_parameter("w3").get_parameter_value().double_value
         self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
                                .get_parameter_value().double_value
-        self.declare_parameter("n_samples", 9)
+        self.declare_parameter("n_samples", 7)
         self.n_samples = 4 # self.get_parameter("n_samples").get_parameter_value().integer_value
-        self.declare_parameter("laser_inflation_size", 0.2)
+        self.declare_parameter("laser_inflation_size", 0.15)
         self.laser_inflation_size = self.get_parameter("laser_inflation_size").get_parameter_value().double_value
+        self.declare_parameter("obstacle_threshold", 0.1)
+        self.obstacle_threshold = self.get_parameter("obstacle_threshold").get_parameter_value().double_value
+        self.declare_parameter("tb_radius", 0.23)
+        self.tb_radius = self.get_parameter("tb_radius").get_parameter_value().double_value
         self.vel = 0.0
         self.rot = 0.0
         self.trajectory = None
         self.current_goal = None
-        self.ix = 0
-        self.iy = 0
-        self.itheta = 0
         self.name = self.get_namespace()[1:]
         self.angular = None
-        self.tb_radius = 0.26
-        self.cluster_size_threshold = 10
-        self.cluster_linkage_threshold = 0.13
+        self.cluster_size_threshold = 8
+        self.cluster_linkage_threshold = 0.2
         self.cluster_range_threshold = 1.0
-        self.obstacle_threshold = 0.15
         self.workspace = Polygon([
             (-10, -10),
             (-10, 10),
@@ -67,9 +67,9 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.scan_poly = None
         self.cmd_vel = Twist()
         self.max_accel_x = 0.025
-        self.max_accel_z = 0.032
-        self.max_vel = 0.2
-        self.min_vel = -0.2
+        self.max_accel_z = 0.075
+        self.max_vel = 0.15
+        self.min_vel = -0.15
         self.max_rot = 1.0
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = \
@@ -87,6 +87,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.replan_client = self.create_client(Empty, 'nav/replan')
 
         self.create_timer(0.1, self.timer_cb)
+        self.create_timer(1.0, self.slow_timer_cb)
 
     def update_trajectory_cb(self, request, response):
         # todo: check if trajectories submitted are valid
@@ -176,12 +177,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         # the orientation after dt * rot should be the same as the relative target pose
         alignment_error = diff_pose[2] - dt * rot
 
-        # Normalize the error to be within the range [-pi, pi]
-        while alignment_error > np.pi:
-            alignment_error -= 2 * np.pi
-        while alignment_error < -np.pi:
-            alignment_error += 2 * np.pi
-
         # Calculate the absolute alignment term (smaller is better)
         alignment_term = abs(alignment_error)
         return alignment_term
@@ -218,11 +213,12 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.linalg.norm(diff) / dt
     
     def obstacle_error(self, vel, rot, dt):
-        p = [Point(self.position(vel, rot, t)) for t in np.linspace(0.25*dt, dt, 5)]
+        p = [self.position(vel, rot, t) for t in np.linspace(0.25*dt, dt, 4)]
         ls = LineString(p)
         dist = self.occupied.distance(ls)
-        if self.occupied.contains(ls):
-            dist = 0
+        # should be the case anyway
+        #if self.occupied.contains(ls):
+        #    dist = 0
 
         return np.clip(self.obstacle_threshold - dist, 0.0, self.obstacle_threshold)
         
@@ -293,22 +289,23 @@ class TrajectoryFollower(DrivingSwarmNode):
         
         self.set_cmd_vel(c)
         self.cmd_publisher.publish(self.cmd_vel)
-
-                
+        
+    def slow_timer_cb(self):
+        # publish topics for vizual debugging and analysis
         msg = MarkerArray()
         marker = Marker(action=Marker.ADD, ns="traj", id=0, type=Marker.LINE_STRIP)
         marker.header.frame_id = self.own_frame
         marker.scale.x = 0.02
-        points = [self.position(self.vel, self.rot, t) for t in np.linspace(0, self.dt*2, 5)]
+        points = [self.position(self.vel, self.rot, t) for t in [0.25*self.dt, 0.5*self.dt, 0.75*self.dt, self.dt]]
         marker.points = [PointMsg(x=float(x), y=float(y), z=0.0) for x, y in points]
         marker.colors = [ColorRGBA(r=1.0, g=0.1, b=0.1, a=0.8) for _ in marker.points]
+        marker.lifetime = Duration(seconds=2.0).to_msg()
         msg.markers.append(marker)
         self.local_pub.publish(msg)
         self.local_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
         for i, tb in enumerate(self.tb_polygons):
             self.local_pub.publish(self.publish_polygon_marker(tb, ns="tb", id=i, color=ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)))
 
-        # publish topics for vizual debugging and analysis
         if self.trajectory is None:
             return None
         self.desired_pose_publisher.publish(
@@ -395,20 +392,25 @@ class TrajectoryFollower(DrivingSwarmNode):
         
         # for each cluster, compute the mean angle and range
         cluster_center_index = np.zeros_like(cluster_sizes, dtype=np.int32)
-        cluster_range = np.zeros_like(cluster_sizes, dtype=np.float32)
+        tb_center_points = []
         for i in range(len(cluster_sizes)):
+            if cluster_sizes[i] > 30:
+                continue
             min_index = np.min(np.where(clusters == i)[0])
             cluster_center_index[i] = (min_index + int(cluster_sizes[i] / 2)) % len(ranges)
-            cluster_range[i] = np.mean([ ranges[ci] for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))])
+            cluster_ranges = [ranges[ci] for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))]
+            cr = np.mean(cluster_ranges)
+            if cr > self.cluster_range_threshold:
+                continue
+            if cr * cluster_sizes[i] > 8:
+                continue
+            cluster_positions = [self.get_xy_from_scan(ci, ranges[ci], px, py, pt, angle_min, angle_increment) for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))]
+            cluster_center = np.mean(cluster_positions, axis=0)
+            mean_distance_to_center = np.mean([np.linalg.norm(p - cluster_center) for p in cluster_positions])
+            if mean_distance_to_center > 0.5:
+                continue
+            tb_center_points.append(cluster_center)
 
-        tb_center_points = []
-        for s, i, r in zip(cluster_sizes, cluster_center_index, cluster_range):
-            if s > self.cluster_size_threshold:
-                continue
-            if r > self.cluster_range_threshold:
-                continue
-            x, y = self.get_xy_from_scan(i, r, px, py, pt, angle_min, angle_increment)
-            tb_center_points.append((x,y))
         
         self.tb_polygons = [Point(x,y).buffer(self.tb_radius, quad_segs=4) for x,y in tb_center_points]
 
