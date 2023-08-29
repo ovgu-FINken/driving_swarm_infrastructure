@@ -28,7 +28,7 @@ def controller_spawning(context, *args, **kwargs):
               'grid_type': 'square',
               'grid_size': 0.5,
               'inflation_size': 0.1,
-              'laser_inflation_size': 0.1,} 
+              'laser_inflation_size': 0.15,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
@@ -54,17 +54,18 @@ def controller_spawning(context, *args, **kwargs):
               {
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
-                  "w1": 1.2,
+                  "w1": 1.0,
                   "w2": 0.9,
-                  "w3": 0.9,
-                  "obstacle_threshold": 0.17,
-                  "tb_radius": 0.3,
+                  "w3": 1.1,
+                  "obstacle_threshold": 0.19,
+                  'laser_inflation_size': 0.14,
+                  "tb_radius": 0.33,
                   "n_samples": 7,
                   "fail_radius": 0.3
               }
            ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
-           output='screen',
+           output='log',
         ))
         controllers.append(Node(
            package='ccr',

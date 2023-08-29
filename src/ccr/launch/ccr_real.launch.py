@@ -27,7 +27,7 @@ def controller_spawning(context, *args, **kwargs):
               'grid_type': 'square',
               'grid_size': 0.5,
               'inflation_size': 0.1,
-              'laser_inflation_size': 0.1,} 
+              'laser_inflation_size': 0.15,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
@@ -51,17 +51,18 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[
               {
                   "dt": 2.0,
-                  "w1": 1.2,
+                  "w1": 1.0,
                   "w2": 0.9,
-                  "w3": 0.9,
-                  "obstacle_threshold": 0.17,
-                  "tb_radius": 0.3,
+                  "w3": 1.1,
+                  "obstacle_threshold": 0.19,
+                  'laser_inflation_size': 0.14,
+                  "tb_radius": 0.33,
                   "n_samples": 7,
                   "fail_radius": 0.3
               }
            ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
-           output='screen',
+           output='log',
         ))
         controllers.append(Node(
            package='ccr',
@@ -96,7 +97,7 @@ def generate_launch_description():
          'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_waypoints.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
-         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
+         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml'),
     }
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_real_robot_fix_pos.launch.py')),
