@@ -27,7 +27,7 @@ def controller_spawning(context, *args, **kwargs):
               'y_max': 1.25,
               'grid_type': 'square',
               'grid_size': 0.5,
-              'inflation_size': 0.05,
+              'inflation_size': 0.1,
               'laser_inflation_size': 0.24,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
@@ -48,12 +48,12 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_follower',
-           executable='pure_pursuit',
+           executable='dwa',
            namespace=robot,
            parameters=[
               {
                   "use_sim_time": use_sim_time,
-                  "dt": 1.4,
+                  "dt": 2.0,
                   "w1": 1.0,
                   "w2": 1.0,
                   "fail_radius": 0.3

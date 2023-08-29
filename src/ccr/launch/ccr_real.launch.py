@@ -18,7 +18,6 @@ def controller_spawning(context, *args, **kwargs):
     n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robot_names_file').perform(context)
     waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
-    use_sim_time = TextSubstitution(text='true')
     grid_params = {
               'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),
               'x_min': -2.25,
@@ -27,7 +26,7 @@ def controller_spawning(context, *args, **kwargs):
               'y_max': 1.25,
               'grid_type': 'square',
               'grid_size': 0.5,
-              'inflation_size': 0.05,
+              'inflation_size': 0.1,
               'laser_inflation_size': 0.2,} 
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
@@ -47,7 +46,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='trajectory_follower',
-           executable='pure_pursuit',
+           executable='dwa',
            namespace=robot,
            parameters=[
               {

@@ -118,7 +118,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().info(f"graph generated {map_file}")
         self.wait_for_tf()
         self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
-        self.create_subscription(LaserScan, 'scan', self.wall_cb, rclpy.qos.qos_profile_sensor_data)
         self.follow_client.wait_for_service()
         self.get_logger().info("connected to trajectory follower service")
         self.initial_pos = self.get_tf_pose()
@@ -378,17 +377,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
         self.scan_poly = self.resolve_multi_polygon(self.scan_poly)
         
-    def wall_cb(self, msg):
-        r = msg.ranges
-        r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
-        if r[80] < 0.3 and r[100] < 0.3:
-            self.wall ="Left"
-        elif r[260] < 0.3 and r[280] < 0.3:
-            self.wall ="Right"
-        else:
-            self.wall =None
-        self.wall_pub.publish(String(data=str(self.wall)))
-    
     def trajectory_cb(self, msg):
         self.trajectory = msg
         # if we do have a trajectory, but do not have a plan, we should stop (this should not happen)

@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'pid = trajectory_follower.pid:main',
-            'pure_pursuit = trajectory_follower.pure_pursuit:main'
+            'pure_pursuit = trajectory_follower.pure_pursuit:main',
+            'dwa = trajectory_follower.dwa:main',
         ],
     },
 )
