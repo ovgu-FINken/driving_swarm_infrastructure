@@ -68,7 +68,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
-        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5, wait_action_cost=0.51)
+        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5, wait_action_cost=1.01)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
@@ -210,7 +210,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def trigger_cdm(self):
         cdm_nodes = self.ccr_agent.get_cdm_node()
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
-        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if int(self.get_clock().now().nanoseconds) - v < int(self.belief_timeout) * 10e9 * 0.5)
+        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 1e9 * 0.5)
         if len(options) == 0:
             self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             if np.random.rand() < 0.05:
@@ -224,7 +224,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
-        self.cdm_triggered[node] = self.get_clock().now()
+        self.cdm_triggered[node] = self.get_clock().now().nanoseconds
         self.cdm_pub.publish(Int32(data=int(node)))
         
     def belief_to_msg(self, bs):

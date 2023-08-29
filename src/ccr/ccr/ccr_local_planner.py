@@ -37,6 +37,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('y_max', 1.0)
         map_file = self.get_parameter('graph_file').get_parameter_value().string_value
         self.get_logger().info(f'loading graph from {map_file}')
+        self.cutoff_amount = 20
         
         self.declare_parameter('robot_names', ['invalid_name'])
         self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
@@ -50,7 +51,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
-        self.goalcount = 0
         self.wall = None
         self.initial_pos = None
         self.allow_goal_publish = True
@@ -58,9 +58,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.last_state = None
         self.goal = None
         self.plan = None
-        self.flag = True
-        self.deadlock = None
-        self.current_time = None
         self.path_poly = None
         self.path_poly2 = None
         self.trajectory = None
@@ -88,7 +85,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
-        self.declare_parameter("step_size", 0.1)
+        self.declare_parameter("step_size", 0.15)
         self.declare_parameter("turn_radius", .2)
         self.declare_parameter("turn_speed", 0.2)
         # set up vehicle model with parameters
@@ -112,11 +109,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
-        self.goal_count_pub = self.create_publisher(Int32, "nav/goal_count", 1)
         self.wall_pub = self.create_publisher(String, "nav/wall", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
-        self.deadlock_pub = self.create_publisher(String, "nav/deadlock", 1)
         self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
@@ -141,28 +136,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
             marker.colors = [ColorRGBA(r=0.5, g=0.8, b=0.5, a=0.3) for _ in coords]
             poly_msg.markers.append(marker)
 
-        idx = 0
-        for i, j, e in self.env.g.edges(data=True):
-            if e['geometry'].borderPoly is None:
-                continue
-            if  e['geometry'].borderPoly.geom_type != 'Polygon':
-                continue
-            idx += 1
-            marker = Marker(action=Marker.ADD, ns="transition", id=idx, type=Marker.LINE_STRIP)
-            marker.header.frame_id = 'map'
-            marker.scale.x = 0.01
-            coords = e['geometry'].borderPoly.exterior.coords
-            marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
-            marker.colors = [ColorRGBA(r=0.5, g=0.5, b=0.8, a=0.3) for _ in coords]
-            poly_msg.markers.append(marker)
-            idx += 1
-            marker = Marker(action=Marker.ADD, ns="edge", id=idx, type=Marker.LINE_STRIP)
-            marker.header.frame_id = 'map'
-            marker.scale.x = 0.01
-            coords = e['geometry'].connection.coords
-            marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
-            marker.colors = [ColorRGBA(r=0.5, g=0.3, b=0.3, a=0.3) for _ in coords]
-            poly_msg.markers.append(marker)
 
         return poly_msg
 
@@ -225,9 +198,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # functional
         if self._command == "reset":
             self.allow_goal_publish = False
-            self.goalcount = 0
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
+            self.set_state("reset")
         self.publish_goal()
         self.publish_state()
         if self.plan:
@@ -243,18 +216,19 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.plan and len(self.plan) > 1:
             plan = [self.env.g.nodes()[i]['geometry'].center for i in self.plan]
             self.poly_pub.publish(self.publish_line_marker(LineString(plan), ns=f"{self.robot_name}_plan"))
-        if self.goal_cb:
+        if self.goal:
             goal_line = LineString([self.get_tf_pose()[:2], self.goal[:2]])
-            self.poly_pub.publish(self.publish_line_marker(goal_line, ns=f"{self.robot_name}_goal", color=ColorRGBA(r=0.3, g=0.3, b=1.0, a=0.4)))
-
+            self.poly_pub.publish(self.publish_line_marker(goal_line, ns=f"{self.robot_name}_goal", color=ColorRGBA(r=0.3, g=0.3, b=1.0, a=0.1)))
+        if self.trajectory and len(self.trajectory.poses):
+            trajectory_line = LineString([self.pose_stamped_to_tuple(p)[:2] for p in self.trajectory.poses])
+            self.poly_pub.publish(self.publish_line_marker(trajectory_line, ns=f"{self.robot_name}_trajectory", color=ColorRGBA(r=0.0, g=.0, b=0.3, a=0.4)))
+    
     def goal_cb(self, msg):
         if self.allow_goal_publish:
             goal = self.pose_stamped_to_tuple(msg)
             if self.goal != goal:
-                self.goalcount += 1
                 self.goal = goal
                 self.get_logger().info(f'new goal {self.goal}')
-                self.goal_count_pub.publish(Int32(data=int(self.goalcount)))
                 self.publish_goal()
 
     def plan_cb(self, msg):
@@ -282,9 +256,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.set_state("done")
         self.execute_plan(use_cutoff=use_cutoff)
-    
-    
-    
+        
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
         visited = set()
@@ -304,17 +276,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if remainder:
             self.get_logger().debug(f'\t remaining plan after wait actions {remainder}')
         
-        start = None
-        cutoff = None
-        if use_cutoff:
-            cutoff = self.get_cutoff_point()
-        if cutoff is not None:
-            s = self.trajectory.poses[cutoff]
-            start = self.pose_stamped_to_tuple(s)
-        else:
-            start = self.get_tf_pose()
-        end = self.env.g.nodes()[plan[-1]]['geometry'].center
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
+        # compute feasible area
 
         previous = None
         if self.plan[0] == self.state:
@@ -343,6 +306,29 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().info(f'plan is: {plan}')
             self.send_path([], ti=0)
             return
+        
+        # compute cutoff point
+        
+        start = None
+        cutoff = None
+        if self.trajectory is None or not len(self.trajectory.poses):
+            use_cutoff = None
+        if use_cutoff:
+            now_index = self.get_now_index()
+            cutoff = self.get_cutoff_point()
+            traj = self.trajectory.poses[now_index:cutoff]
+            traj = [self.pose_stamped_to_tuple(p)[:2] for p in traj]
+            dist = max([self.path_poly.distance(ShapelyPoint(p)) for p in traj])
+            if dist > 0.05:
+                cutoff = None
+        
+        if cutoff is not None:
+            s = self.trajectory.poses[cutoff]
+            start = self.pose_stamped_to_tuple(s)
+        else:
+            start = self.get_tf_pose()
+        end = self.env.g.nodes()[plan[-1]]['geometry'].center
+
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
@@ -353,11 +339,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.send_path(trajectory, ti=cutoff)
 
     def send_path(self, trajectory, ti=0):
+        if not self._state == "running" or self._state == "reset":
+            return
         # convert trajectory to correct space
-        if self.deadlock:
-            self.deadlock_pub.publish(String(data='deadlock'))
-        else:
-            self.deadlock_pub.publish(String(data='free'))
         if not len(trajectory):
             trajectory = [self.get_tf_pose()]
             ti = 0
@@ -399,24 +383,18 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().info("no plan, stopping trajectory")
             self.send_path([], ti=0)
             return
+        
         if not len(self.trajectory.poses) > 1:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
             self.get_logger().info(f"plan is: {self.plan}")
-            self.deadlock = True
-            if self.flag:
-                self.current_time = self.get_clock().now().nanoseconds
-                self.flag = False
-            if (self.get_clock().now().nanoseconds - self.current_time)*(10e9)> 0.1:
-                self.execute_plan(use_cutoff=False)
-                self.flag = True
+            self.execute_plan(use_cutoff=False)
             return
-        else:
-            self.deadlock = False
+
         # TODO check if the trajectory is valid with respect to our plan
         # in case the cut-off point was set wrongly, or some other problem happens, we could end up with a trajectory that is not valid
         # in that case, we will send a new path
-        
-    def get_cutoff_point(self):
+    
+    def get_now_index(self):
         if self.trajectory is None:
             return None
         trajectory_time = self.trajectory.header.stamp.sec + self.trajectory.header.stamp.nanosec * 1e-9
@@ -425,10 +403,17 @@ class CCRLocalPlanner(DrivingSwarmNode):
         now_index = int(np.floor((now_time - trajectory_time) * 10))
         if now_index < 0:
             return None
-        if len(self.trajectory.poses) <= now_index + 10:
+
+    def get_cutoff_point(self):
+        if self.trajectory is None:
+            return None
+        now_index = self.get_now_index()
+        if now_index is None:
+            return None
+        if len(self.trajectory.poses) <= now_index + self.cutoff_amount:
             return None
         #self.get_logger().info(f'start: {trajectory_time}, now: {now_time}, now_index: {now_index}')
-        return now_index + int(10 * 0.4)
+        return now_index + self.cutoff_amount
 
     def resolve_multi_polygon(self, mp):
         

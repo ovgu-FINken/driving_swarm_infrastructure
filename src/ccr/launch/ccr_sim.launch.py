@@ -49,7 +49,6 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_follower',
            executable='dwa',
-           prefix=f'python3 -m cProfile -o dwa_{robot}.prof',
            namespace=robot,
            parameters=[
               {
@@ -57,8 +56,8 @@ def controller_spawning(context, *args, **kwargs):
                   "dt": 2.0,
                   "w1": 1.2,
                   "w2": 0.9,
-                  "w3": 0.7,
-                  "obstacle_threshold": 0.15,
+                  "w3": 0.9,
+                  "obstacle_threshold": 0.17,
                   "tb_radius": 0.3,
                   "n_samples": 7,
                   "fail_radius": 0.3

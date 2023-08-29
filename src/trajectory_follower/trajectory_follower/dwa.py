@@ -212,6 +212,11 @@ class TrajectoryFollower(DrivingSwarmNode):
         diff = [diff_pose[0] - dx, diff_pose[1] - dy]
         return np.linalg.norm(diff) / dt
     
+    def velocity_error(self, vel, rot, diff_pose, dt):
+        dx, dy = self.position(vel, rot, dt)
+        dist = np.linalg.norm([diff_pose[0] - dx, diff_pose[1] - dy])
+        return np.abs(dist / dt - vel)
+    
     def obstacle_error(self, vel, rot, dt):
         p = [self.position(vel, rot, t) for t in np.linspace(0.25*dt, dt, 4)]
         ls = LineString(p)
@@ -223,7 +228,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.clip(self.obstacle_threshold - dist, 0.0, self.obstacle_threshold)
         
     def value(self, vel, rot, dt, diff_pose):
-        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + self.w3 * self.obstacle_error(vel, rot, dt)
+        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + self.w3 * self.obstacle_error(vel, rot, dt) + 0.3 * self.velocity_error(vel, rot, diff_pose, dt)
         
     def compute_dwa_output(self, dt) -> tuple:
         if self.trajectory is None:
@@ -322,7 +327,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         if polygon is None:
             return poly_msg
         if polygon.geom_type == 'MultiPolygon':
-            self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
+            # self.get_logger().warn(f'got multi polygon for "{ns}", will not show all components')
             for g in polygon.geoms:
                 if g.geom_type == 'Polygon':
                     polygon = g
