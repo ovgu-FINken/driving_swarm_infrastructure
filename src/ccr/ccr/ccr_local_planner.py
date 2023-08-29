@@ -59,6 +59,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.goal = None
         self.plan = None
         self.flag = True
+        self.deadlock = None
         self.current_time = None
         self.path_poly = None
         self.path_poly2 = None
@@ -115,6 +116,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.wall_pub = self.create_publisher(String, "nav/wall", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
+        self.deadlock_pub = self.create_publisher(String, "nav/deadlock", 1)
         self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
@@ -244,7 +246,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.goal_cb:
             goal_line = LineString([self.get_tf_pose()[:2], self.goal[:2]])
             self.poly_pub.publish(self.publish_line_marker(goal_line, ns=f"{self.robot_name}_goal", color=ColorRGBA(r=0.3, g=0.3, b=1.0, a=0.4)))
-    
+
     def goal_cb(self, msg):
         if self.allow_goal_publish:
             goal = self.pose_stamped_to_tuple(msg)
@@ -280,7 +282,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.set_state("done")
         self.execute_plan(use_cutoff=use_cutoff)
-        
+    
+    
+    
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
         visited = set()
@@ -326,7 +330,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
-        self.path_poly = self.path_poly.buffer(-0.06)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         position = ShapelyPoint(self.get_tf_pose()[:2])
         if not self.path_poly.contains(position):
@@ -351,6 +354,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
     def send_path(self, trajectory, ti=0):
         # convert trajectory to correct space
+        if self.deadlock:
+            self.deadlock_pub.publish(String(data='deadlock'))
+        else:
+            self.deadlock_pub.publish(String(data='free'))
         if not len(trajectory):
             trajectory = [self.get_tf_pose()]
             ti = 0
@@ -392,10 +399,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.get_logger().info("no plan, stopping trajectory")
             self.send_path([], ti=0)
             return
-        
         if not len(self.trajectory.poses) > 1:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
             self.get_logger().info(f"plan is: {self.plan}")
+            self.deadlock = True
             if self.flag:
                 self.current_time = self.get_clock().now().nanoseconds
                 self.flag = False
@@ -403,7 +410,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 self.execute_plan(use_cutoff=False)
                 self.flag = True
             return
-
+        else:
+            self.deadlock = False
         # TODO check if the trajectory is valid with respect to our plan
         # in case the cut-off point was set wrongly, or some other problem happens, we could end up with a trajectory that is not valid
         # in that case, we will send a new path
