@@ -113,4 +113,34 @@ table_column_config = [
         'reached_goals',
         lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
     ),
+    data_aggregation_helper.TableColumn(
+        'nav/cell',
+        'desired',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
+    data_aggregation_helper.TableColumn(
+        'nav/plan',
+        'desired',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
+    data_aggregation_helper.TableColumn(
+        'nav/opinion',
+        'desired',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
+    data_aggregation_helper.TableColumn(
+        'nav/cdm',
+        'desired',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
+    data_aggregation_helper.TableColumn(
+        'nav/goal_count',
+        'goal_count',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
+    data_aggregation_helper.TableColumn(
+        'nav/belief',
+        'goal_count',
+        lambda conf: data_aggregation_helper.calculate_reached_goals(conf),
+    ),
 ]

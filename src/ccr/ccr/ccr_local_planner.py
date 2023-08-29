@@ -50,6 +50,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
 
+        self.goalcount = 0
         self.wall = None
         self.initial_pos = None
         self.allow_goal_publish = True
@@ -57,6 +58,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.last_state = None
         self.goal = None
         self.plan = None
+        self.flag = True
+        self.current_time = None
         self.path_poly = None
         self.path_poly2 = None
         self.trajectory = None
@@ -108,6 +111,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
         self.create_service(Empty, "nav/replan", self.replan_callback)
         self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
+        self.goal_count_pub = self.create_publisher(Int32, "nav/goal_count", 1)
         self.wall_pub = self.create_publisher(String, "nav/wall", 1)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
@@ -219,6 +223,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         # functional
         if self._command == "reset":
             self.allow_goal_publish = False
+            self.goalcount = 0
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
         self.publish_goal()
@@ -244,8 +249,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.allow_goal_publish:
             goal = self.pose_stamped_to_tuple(msg)
             if self.goal != goal:
+                self.goalcount += 1
                 self.goal = goal
                 self.get_logger().info(f'new goal {self.goal}')
+                self.goal_count_pub.publish(Int32(data=int(self.goalcount)))
                 self.publish_goal()
 
     def plan_cb(self, msg):
@@ -319,6 +326,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
+        self.path_poly = self.path_poly.buffer(-0.06)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         position = ShapelyPoint(self.get_tf_pose()[:2])
         if not self.path_poly.contains(position):
@@ -388,7 +396,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(self.trajectory.poses) > 1:
             self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
             self.get_logger().info(f"plan is: {self.plan}")
-            self.execute_plan(use_cutoff=False)
+            if self.flag:
+                self.current_time = self.get_clock().now().nanoseconds
+                self.flag = False
+            if (self.get_clock().now().nanoseconds - self.current_time)*(10e9)> 0.1:
+                self.execute_plan(use_cutoff=False)
+                self.flag = True
             return
 
         # TODO check if the trajectory is valid with respect to our plan

@@ -2,7 +2,7 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
 from std_msgs.msg import Int32, Int32MultiArray
 from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
-from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
 import networkx as nx
 import numpy as np
 import functools
@@ -81,6 +81,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         ## -- once a message is received here, the robot will publish its opinion on the given node
         self.create_subscription(Int32, "/nav/cdm", self.cdm_cb, 10)
         self.opinion_pub = self.create_publisher(BeliefStateMsg, "/nav/opinion", 10)
+        self.belief_pub = self.create_publisher(BeliefStateMsg, "nav/belief", 10)
         self.create_subscription(BeliefStateMsg, "/nav/opinion", self.opinion_cb, 10)
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
@@ -192,7 +193,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def trigger_cdm(self):
         cdm_nodes = self.ccr_agent.get_cdm_node()
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
-        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 10e9 * 0.5)
+        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if int(self.get_clock().now().nanoseconds) - v < int(self.belief_timeout) * 10e9 * 0.5)
         if len(options) == 0:
             self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             if np.random.rand() < 0.05:
@@ -201,6 +202,9 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             # self.get_logger().warn(f'decided nodes: {list(self.ccr_agent.belief.keys())}')
             else:
                 return
+        if not options:
+            self.get_logger().warn("No valid options to choose from!")
+            return
         node = np.random.choice(list(options))
         self.get_logger().info(colored("triggering CDM", "yellow") + f" at node {node}")
         self.cdm_triggered[node] = self.get_clock().now()
@@ -233,6 +237,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         for opinion in self.cdm_opinions[bs.state].values():
             bel += opinion
         self.ccr_agent.set_belief(bel.state, bel)
+        self.belief_pub.publish(self.belief_to_msg(bel))
         s = f"belief robot: {self.robot_name}, state:{bel.state}"
         self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
         self.update_plan()

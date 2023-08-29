@@ -14,6 +14,7 @@ from driving_swarm_messages.srv import UpdateTrajectory
 from std_srvs.srv import Empty
 from driving_swarm_utils.node import DrivingSwarmNode
 from termcolor import colored
+import copy
 
 
 class TrajectoryFollower(DrivingSwarmNode):
@@ -36,8 +37,9 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.itheta = 0
         self.name = self.get_namespace()[1:]
         self.angular = None
-
+        self.sign = 1.0
     
+        self.sign_pub = self.create_publisher(Int32, "nav/sign", 1)
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.cmd_vel = Twist()
@@ -158,6 +160,10 @@ class TrajectoryFollower(DrivingSwarmNode):
         dtheta = diff_pose.theta / dt
         
         rot = self.w1 * dy + self.w2 * dtheta
+        sign = np.sign(rot)
+        if self.sign != sign:
+            self.sign = copy.deepcopy(sign)
+        self.sign_pub.publish(Int32(data=int(self.sign)))
         return vel, rot
     
     def set_cmd_vel(self, control):
