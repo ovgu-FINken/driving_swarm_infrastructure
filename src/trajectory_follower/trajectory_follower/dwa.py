@@ -30,6 +30,8 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.w1 = self.get_parameter("w1").get_parameter_value().double_value
         self.declare_parameter("w2", 0.7)
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
+        self.declare_parameter("w3", 0.7)
+        self.w3 = self.get_parameter("w3").get_parameter_value().double_value
         self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
                                .get_parameter_value().double_value
@@ -50,7 +52,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.cluster_size_threshold = 10
         self.cluster_linkage_threshold = 0.13
         self.cluster_range_threshold = 1.0
-        self.obstacle_threshold = 0.3
+        self.obstacle_threshold = 0.15
         self.workspace = Polygon([
             (-10, -10),
             (-10, 10),
@@ -225,7 +227,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.clip(self.obstacle_threshold - dist, 0.0, self.obstacle_threshold)
         
     def value(self, vel, rot, dt, diff_pose):
-        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + 0.5 * self.obstacle_error(vel, rot, dt)
+        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + self.w3 * self.obstacle_error(vel, rot, dt)
         
     def compute_dwa_output(self, dt) -> tuple:
         if self.trajectory is None:
