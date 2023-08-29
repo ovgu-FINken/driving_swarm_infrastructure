@@ -204,7 +204,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.publish_goal()
         self.publish_state()
         if self.plan:
-            self.execute_plan()
+            self.execute_plan(use_cutoff=False)
             
         # debug information
         self.poly_pub.publish(self.graph_to_marker_array())
@@ -219,7 +219,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.goal:
             goal_line = LineString([self.get_tf_pose()[:2], self.goal[:2]])
             self.poly_pub.publish(self.publish_line_marker(goal_line, ns=f"{self.robot_name}_goal", color=ColorRGBA(r=0.3, g=0.3, b=1.0, a=0.1)))
-        if self.trajectory and len(self.trajectory.poses):
+        if self.trajectory and len(self.trajectory.poses) > 1:
             trajectory_line = LineString([self.pose_stamped_to_tuple(p)[:2] for p in self.trajectory.poses])
             self.poly_pub.publish(self.publish_line_marker(trajectory_line, ns=f"{self.robot_name}_trajectory", color=ColorRGBA(r=0.0, g=.0, b=0.3, a=0.4)))
     

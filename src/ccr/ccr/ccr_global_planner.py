@@ -42,7 +42,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.plan = []
         self.goal = None
         self.update_path = False
-        self.deadlock_robots = []
         self.cdm_triggered = {}
         self.cdm_opinions = {}
         self.belief_timeout = 15.0 + np.random.rand() * 2.0
@@ -96,14 +95,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             self.create_subscription(
                 Int32MultiArray, f"/{robot}/nav/cdm",
                 functools.partial(self.robot_cb, robot),
-                10
-            )
-            self.get_logger().info(f"subscribing /{robot}/nav/plan")
-            
-        for robot in [n for n in self.robot_names if n != self.robot_name]:
-            self.create_subscription(
-                String, f"/{robot}/nav/deadlock",
-                functools.partial(self.deadlock_cb, robot),
                 10
             )
             self.get_logger().info(f"subscribing /{robot}/nav/plan")
@@ -193,15 +184,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         #self.get_logger().info(f"received plan from {robot}: {plan}")
         self.ccr_agent.update_other_paths({self.robot_names.index(robot): list(msg.data)})
         self.update_plan()
-        
-    def deadlock_cb(self, robot, msg):
-        if msg.data == 'deadlock':
-            if robot not in self.deadlock_robots:
-                self.deadlock_robots.append(robot)
-        elif msg.data == 'free':
-            if robot in self.deadlock_robots:
-                self.deadlock_robots.remove(robot)
-        self.get_logger().info(f"{len(self.deadlock_robots)} robots deadlocked")
 
     ############################
     # CDM
