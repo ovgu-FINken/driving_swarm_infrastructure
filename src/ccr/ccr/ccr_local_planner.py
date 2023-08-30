@@ -293,7 +293,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             previous = self.state
         if (previous, plan[0]) not in self.env.g.edges():
             previous = None
-        self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01, previous_node=previous)
+        self.path_poly = geometry.poly_from_path(self.env.g, plan, eps=0.01, previous_node=previous)
         # assert self.path_poly.geom_type == 'Polygon' 
         # assert self.path_poly.is_valid
         # assert not self.path_poly.is_empty, f'path_poly is empty, plan is {plan}'

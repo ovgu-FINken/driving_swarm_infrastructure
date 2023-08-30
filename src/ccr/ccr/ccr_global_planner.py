@@ -190,7 +190,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     ############################
 
     def trigger_cdm(self):
-        cdm_nodes = self.ccr_agent.get_cdm_node()
+        cdm_nodes = self.ccr_agent.get_cdm_node(re_decide_belief=True)
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
         options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 1e9 * 0.5)
         if len(options) == 0:
