@@ -37,7 +37,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('y_max', 1.0)
         map_file = self.get_parameter('graph_file').get_parameter_value().string_value
         self.get_logger().info(f'loading graph from {map_file}')
-        self.cutoff_amount = 20
+        self.cutoff_amount = 2
         
         self.declare_parameter('robot_names', ['invalid_name'])
         self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
@@ -85,7 +85,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
         
         self.declare_parameter("vehicle_model", int(Vehicle.RTR))
-        self.declare_parameter("step_size", 0.15)
+        self.declare_parameter("step_size", 0.1)
         self.declare_parameter("turn_radius", .2)
         self.declare_parameter("turn_speed", 0.2)
         # set up vehicle model with parameters
@@ -135,7 +135,14 @@ class CCRLocalPlanner(DrivingSwarmNode):
             marker.points = [Point(x=point[0], y=point[1], z=0.0) for point in coords]
             marker.colors = [ColorRGBA(r=0.5, g=0.8, b=0.5, a=0.3) for _ in coords]
             poly_msg.markers.append(marker)
-
+            marker = Marker(action=Marker.ADD, ns="label", id=i, type=Marker.TEXT_VIEW_FACING)
+            marker.header.frame_id = 'map'
+            coords = v['geometry'].center.coords
+            marker.pose.position = Point(x=coords[0][0], y=coords[0][1], z=0.0)
+            marker.text = str(i)
+            marker.scale.z = 0.1
+            marker.color = ColorRGBA(r=0.0, g=0.0, b=0.0, a=1.0)
+            poly_msg.markers.append(marker)
 
         return poly_msg
 

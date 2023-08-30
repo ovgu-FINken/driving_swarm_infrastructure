@@ -5,6 +5,7 @@ import tf2_ros
 import tf_transformations
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
+from rclpy.time import Time
 
 
 class DrivingSwarmNode(Node):
@@ -49,20 +50,33 @@ class DrivingSwarmNode(Node):
         rclpy.spin_until_future_complete(self, f)
         self.get_logger().info('tf available for '+colored(f"{self.name}", 'green'))
         
-    def get_tf_pose(self):
+    def lookup_tf(self, frame1, frame2):
         try:
             trans = self.tf_buffer.lookup_transform(
-                self.reference_frame,
-                self.own_frame,
+                frame1,
+                frame2,
                 rclpy.time.Time().to_msg(),
             ).transform
-            tt = trans.translation
-            q = trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w
-            pose = (tt.x, tt.y, tf_transformations.euler_from_quaternion(q)[2])
-
         except Exception as e:
             self.get_logger().warn(f"Exception in tf transformations\n{e}")
             return None
+        return trans
+    
+    def lookup_tf_pose(self, pose, frame):
+        try:
+            pose = self.tf_buffer.transform(pose, frame)
+        except Exception as e:
+            self.get_logger().warn(f"Exception in tf transformations\n{e}")
+            return None
+        return pose
+        
+    def get_tf_pose(self):
+        trans = self.lookup_tf(self.reference_frame, self.own_frame)
+        if trans is None:
+            return None
+        tt = trans.translation
+        q = trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w
+        pose = (tt.x, tt.y, tf_transformations.euler_from_quaternion(q)[2])
         return pose
     
     def tuple_to_pose_stamped_msg(self, x, y, yaw, frame=None):
@@ -81,13 +95,23 @@ class DrivingSwarmNode(Node):
         pose.pose.orientation.w = qw
         return pose
     
-    def pose_stamped_to_tuple(self, pose: PoseStamped):
-        return pose.pose.position.x, pose.pose.position.y, tf_transformations.euler_from_quaternion((
-            pose.pose.orientation.x,
-            pose.pose.orientation.y,
-            pose.pose.orientation.z,
-            pose.pose.orientation.w
-        ))[2]
+    def pose_stamped_to_tuple(self, pose: PoseStamped, frame=None, stamp=None, reset_time=False):
+        if frame is None or frame == pose.header.frame_id:
+            return pose.pose.position.x, pose.pose.position.y, tf_transformations.euler_from_quaternion((
+                pose.pose.orientation.x,
+                pose.pose.orientation.y,
+                pose.pose.orientation.z,
+                pose.pose.orientation.w
+            ))[2]
+        # transform pose to frame
+        if stamp is not None:
+            pose.header.stamp = stamp
+        if reset_time:
+            pose.header.stamp = Time().to_msg()
+        p_stamped = self.lookup_tf_pose(pose, frame)
+        if p_stamped is None:
+            return None
+        return self.pose_stamped_to_tuple(p_stamped)
     
     def setup_command_interface(self, autorun=True):
         self.autorun = autorun

@@ -33,11 +33,15 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.w2 = self.get_parameter("w2").get_parameter_value().double_value
         self.declare_parameter("w3", 1.0)
         self.w3 = self.get_parameter("w3").get_parameter_value().double_value
+        self.declare_parameter("w4", 1.0)
+        self.w4 = self.get_parameter("w4").get_parameter_value().double_value
         self.declare_parameter("fail_radius", 1.0)
         self.fail_radius = self.get_parameter("fail_radius") \
                                .get_parameter_value().double_value
-        self.declare_parameter("n_samples", 7)
-        self.n_samples = 4 # self.get_parameter("n_samples").get_parameter_value().integer_value
+        self.declare_parameter("n_samples_linear", 7)
+        self.n_samples_linear = self.get_parameter("n_samples_linear").get_parameter_value().integer_value
+        self.declare_parameter("n_samples_angular", 7)
+        self.n_samples_angular = self.get_parameter("n_samples_angular").get_parameter_value().integer_value
         self.declare_parameter("laser_inflation_size", 0.15)
         self.laser_inflation_size = self.get_parameter("laser_inflation_size").get_parameter_value().double_value
         self.declare_parameter("obstacle_threshold", 0.1)
@@ -70,7 +74,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.max_accel_z = 0.075
         self.max_vel = 0.15
         self.min_vel = -0.15
-        self.max_rot = 1.0
+        self.max_rot = 0.5
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 9)
         self.desired_pose_publisher = \
             self.create_publisher(PoseStamped, 'nav/desired', 9)
@@ -112,53 +116,8 @@ class TrajectoryFollower(DrivingSwarmNode):
         return response
 
     def pose2D_to_PoseStamped(self, pose2d, header_id=None):
-        pose_stamped = PoseStamped()
-        if header_id is None:
-            pose_stamped.header.frame_id = self.reference_frame
-        else:
-            pose_stamped.header.frame_id = header_id
-        pose_stamped.header.stamp = self.get_clock().now().to_msg()
-        pose_stamped.pose.position.x = pose2d.x
-        pose_stamped.pose.position.y = pose2d.y
-        pose_stamped.pose.position.z = 0.0
-        q = Quaternion()
-        q.x, q.y, q.z, q.w = tf_transformations.quaternion_from_euler(.0, .0, pose2d.theta)
-        pose_stamped.pose.orientation = q
-        return pose_stamped
+        return self.tuple_to_pose_stamped_msg(pose2d.x, pose2d.y, pose2d.theta, frame=header_id)
 
-    def poseStamped_to_Pose2D(self, pose_stamped):
-        """A function that transforms tha pose_stamped from a plan to a Pose2D in EGO coordinates
-
-        :param pose_stamped: pose from a plan
-        :return: Pose2D in EGO coordinates
-        """
-        pose2d = Pose2D()
-        try:
-            # get the transform so we can read at wich time it was performed
-            t = self.tf_buffer.lookup_transform(
-                pose_stamped.header.frame_id,
-                self.reference_frame,
-                rclpy.time.Time().to_msg()
-            )
-            # set the time to the most recent transform
-            pose_stamped.header.stamp = t.header.stamp
-            pose3d = self.tf_buffer.transform(
-                pose_stamped,
-                self.own_frame
-            )
-            pose2d.x = pose3d.pose.position.x
-            pose2d.y = pose3d.pose.position.y
-            q = pose3d.pose.orientation
-            pose2d.theta = \
-                tf_transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))[2]
-        except Exception as e:
-            self.get_logger().warn(
-                'could not transform pose' +
-                f' in frame {pose_stamped.header.frame_id}' +
-                f' to reference frame {self.own_frame} \n {e}'
-            )
-        return pose2d
- 
     def get_target_pose(self, offset: float = 0.0) -> Pose2D:
         """ get the target poset at time t + offset in ego coordinates
         """
@@ -182,12 +141,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         return alignment_term
     
     def position(self, vel, rot, dt):
-        #if rot*dt < 0.0000001:
-        #    return vel * dt, 0
-        #r = vel / rot
-        #dx = np.abs(r) * (1.0 - np.cos(rot * dt)) * np.sign(vel)
-        #dy = r * (np.sin(rot * dt))
-        #return dx, dy
         rot = 0.5*rot
         mat_rot = np.array([
             [np.cos(rot*dt), -np.sin(rot*dt), 0],
@@ -217,10 +170,15 @@ class TrajectoryFollower(DrivingSwarmNode):
         dist = np.linalg.norm([diff_pose[0] - dx, diff_pose[1] - dy])
         return np.abs(dist / dt - vel)
     
+    def get_obstacle_distance(self, x, y):
+        return min(self.occupied.distance(Point(x,y)), [np.linalg.norm(np.array([x, y]), np.array(p)) - self.tb_radius for p in self.tb_center_points])
+
     def obstacle_error(self, vel, rot, dt):
-        p = [self.position(vel, rot, t) for t in np.linspace(0.25*dt, dt, 4)]
-        ls = LineString(p)
-        dist = self.occupied.distance(ls)
+        p = [self.position(vel, rot, t) for t in [0.5*dt, dt]]
+        dist = [self.occupied.distance(Point(x,y)) for x,y in p]
+        dist = min(dist)
+        #ls = LineString(p)
+        #dist = self.occupied.distance(ls)
         # should be the case anyway
         #if self.occupied.contains(ls):
         #    dist = 0
@@ -228,7 +186,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.clip(self.obstacle_threshold - dist, 0.0, self.obstacle_threshold)
         
     def value(self, vel, rot, dt, diff_pose):
-        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + self.w3 * self.obstacle_error(vel, rot, dt) + 0.3 * self.velocity_error(vel, rot, diff_pose, dt)
+        return self.w1 * self.alignment_error(vel, rot, diff_pose, dt) + self.w2 * self.position_error(vel, rot, diff_pose, dt) + self.w3 * self.obstacle_error(vel, rot, dt) + self.w4 * self.velocity_error(vel, rot, diff_pose, dt)
         
     def compute_dwa_output(self, dt) -> tuple:
         if self.trajectory is None:
@@ -240,33 +198,23 @@ class TrajectoryFollower(DrivingSwarmNode):
         
         admissable_min = max(self.min_vel, self.vel - self.max_accel_x)
         admissable_max = min(self.max_vel, self.vel + self.max_accel_x)
-        admissable_vel = np.linspace(admissable_min, admissable_max, self.n_samples)
+        admissable_vel = np.linspace(admissable_min, admissable_max, self.n_samples_linear)
         admissable_min = max(-self.max_rot, self.rot - self.max_accel_z)
         admissable_max = min(self.max_rot, self.rot + self.max_accel_z)
-        admissable_rot = np.linspace(admissable_min, admissable_max)
+        admissable_rot = np.linspace(admissable_min, admissable_max, self.n_samples_angular)
         
         admissable_cmd = [(x, y) for x in admissable_vel for y in admissable_rot]
         cmd = min(admissable_cmd, key=lambda x: self.value(*x, dt, diff_pose))
-        self.get_logger().debug(f'calculate_dwa output: vel:{cmd[0]}, rot: {cmd[1]}')
-        self.get_logger().debug(f'alignment: {self.alignment_error(cmd[0], cmd[1], diff_pose, dt)}')
-        self.get_logger().debug(f'position: {self.position_error(cmd[0], cmd[1], diff_pose, dt)}')
-        self.get_logger().debug(f'obstacle: {self.obstacle_error(cmd[0], cmd[1], dt)}')
+        # self.get_logger().info(f'calculate_dwa output: vel:{cmd[0]}, rot: {cmd[1]}')
+        # self.get_logger().info(f'alignment:\t{self.w1 * self.alignment_error(cmd[0], cmd[1], diff_pose, dt)}')
+        # self.get_logger().info(f'position:\t{self.w2 * self.position_error(cmd[0], cmd[1], diff_pose, dt)}')
+        # self.get_logger().info(f'obstacle:\t{self.w3 * self.obstacle_error(cmd[0], cmd[1], dt)}')
+        # self.get_logger().info(f'velocity:\t{self.w4 * self.velocity_error(cmd[0], cmd[1], diff_pose, dt)}')
         
         return cmd[0], cmd[1]
     
     def set_cmd_vel(self, control):
-        # todo: respect limits (acceleration + max vel)
-        # self.cmd_vel = control
-        self.cmd_vel.linear.x = np.clip(
-            control.linear.x,
-            self.cmd_vel.linear.x - self.max_accel_x,
-            self.cmd_vel.linear.x + self.max_accel_x
-        )
-        self.cmd_vel.angular.z = np.clip(
-            control.angular.z,
-            self.cmd_vel.angular.z - self.max_accel_z,
-            self.cmd_vel.angular.z + self.max_accel_z
-        )
+        self.cmd_vel = control
         self.vel = control.linear.x
         self.rot = control.angular.z
     
@@ -308,17 +256,15 @@ class TrajectoryFollower(DrivingSwarmNode):
         msg.markers.append(marker)
         self.local_pub.publish(msg)
         self.local_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
+        self.tb_polygons = [Point(x,y).buffer(self.tb_radius, quad_segs=3) for x,y in self.tb_center_points]
         for i, tb in enumerate(self.tb_polygons):
             self.local_pub.publish(self.publish_polygon_marker(tb, ns="tb", id=i, color=ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)))
 
         if self.trajectory is None:
             return None
-        self.desired_pose_publisher.publish(
-            self.pose2D_to_PoseStamped(
-                self.get_desired_pose(), header_id=self.name
-            )
-        )
         self.path_publisher.publish(self.trajectory)
+        diff_pose = self.get_target_pose(offset=self.dt)
+        self.desired_pose_publisher.publish(self.tuple_to_pose_stamped_msg(diff_pose.x, diff_pose.y, diff_pose.theta, frame=self.own_frame))
         
     def publish_polygon_marker(self, polygon, ns="feasible", id=1, color=None):
         if color is None:
@@ -354,18 +300,14 @@ class TrajectoryFollower(DrivingSwarmNode):
             t = 0.0
         last_index = int(np.floor(t))
         if last_index+2 >= len(self.trajectory.poses):
-            return self.poseStamped_to_Pose2D(self.trajectory.poses[-1])
+            pose = self.pose_stamped_to_tuple(self.trajectory.poses[-1], frame=self.own_frame, reset_time=True)
+            return Pose2D(x=pose[0], y=pose[1], theta=pose[2])
+        
         dt = (t - np.floor(t))
-        last_pose = self.poseStamped_to_Pose2D(
-            self.trajectory.poses[last_index]
-        )
-        next_pose = self.poseStamped_to_Pose2D(
-            self.trajectory.poses[last_index + 1]
-        )
-        x = (1 - dt) * last_pose.x + dt * next_pose.x
-        y = (1 - dt) * last_pose.y + dt * next_pose.y
-        theta = (1 - dt) * last_pose.theta + dt * next_pose.theta
-        return Pose2D(x=x, y=y, theta=theta)
+        last_pose = self.pose_stamped_to_tuple(self.trajectory.poses[last_index], frame=self.own_frame, reset_time=True)
+        next_pose = self.pose_stamped_to_tuple(self.trajectory.poses[last_index + 1], frame=self.own_frame, reset_time=True)
+        pose = (1-dt) * np.array(last_pose) + dt * np.array(next_pose)
+        return Pose2D(x=pose[0], y=pose[1], theta=pose[2])
     
     def detect_tb(self, ranges, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
         # detect turtlebot in scan ranges
@@ -417,7 +359,7 @@ class TrajectoryFollower(DrivingSwarmNode):
             tb_center_points.append(cluster_center)
 
         
-        self.tb_polygons = [Point(x,y).buffer(self.tb_radius, quad_segs=4) for x,y in tb_center_points]
+        self.tb_center_points = tb_center_points
 
 
     def scan_cb(self, msg):
@@ -439,10 +381,10 @@ class TrajectoryFollower(DrivingSwarmNode):
             points.append((x,y))
 
         self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
-        occupied = self.workspace.difference(self.scan_poly)
+        self.occupied = self.workspace.difference(self.scan_poly)
 
         self.detect_tb(ranges, px, py, pt, msg.angle_min, msg.angle_increment)
-        self.occupied = union_all(self.tb_polygons + [occupied])
+        #self.occupied = union_all(self.tb_polygons + [occupied])
 
     def get_xy_from_scan(self, i, r, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
         angle = angle_min + i * angle_increment + pt

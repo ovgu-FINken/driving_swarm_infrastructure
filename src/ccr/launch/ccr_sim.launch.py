@@ -49,19 +49,21 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_follower',
            executable='dwa',
+           prefix=f'python3 -m cProfile -o {robot}_dwa.prof',
            namespace=robot,
            parameters=[
               {
                   "use_sim_time": use_sim_time,
                   "dt": 2.0,
-                  "w1": 1.0,
-                  "w2": 0.9,
-                  "w3": 1.1,
-                  "w4": 0.2,
+                  "w1": 0.5,
+                  "w2": 1.3,
+                  "w3": 1.3,
+                  "w4": 0.3,
                   "obstacle_threshold": 0.19,
                   'laser_inflation_size': 0.14,
                   "tb_radius": 0.33,
-                  "n_samples": 7,
+                  "n_samples_linear": 4,
+                  "n_samples_angular": 5,
                   "fail_radius": 0.3
               }
            ],
