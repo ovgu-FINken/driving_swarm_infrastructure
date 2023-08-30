@@ -171,11 +171,11 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.abs(dist / dt - vel)
     
     def get_obstacle_distance(self, x, y):
-        return min(self.occupied.distance(Point(x,y)), [np.linalg.norm(np.array([x, y]), np.array(p)) - self.tb_radius for p in self.tb_center_points])
+        return min([self.occupied.distance(Point(x,y))] + [np.linalg.norm(np.array([x, y]) - np.array(p)) - self.tb_radius for p in self.tb_center_points])
 
     def obstacle_error(self, vel, rot, dt):
         p = [self.position(vel, rot, t) for t in [0.5*dt, dt]]
-        dist = [self.occupied.distance(Point(x,y)) for x,y in p]
+        dist = [self.get_obstacle_distance(x, y) for x, y in p]
         dist = min(dist)
         #ls = LineString(p)
         #dist = self.occupied.distance(ls)
