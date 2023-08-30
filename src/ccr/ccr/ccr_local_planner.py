@@ -207,7 +207,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
             self.allow_goal_publish = False
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
-            self.set_state("reset")
+            self.set_state("resetting")
         self.publish_goal()
         self.publish_state()
         if self.plan:
@@ -346,7 +346,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.send_path(trajectory, ti=cutoff)
 
     def send_path(self, trajectory, ti=0):
-        if not self._state == "running" or self._state == "reset":
+        if not self._state in ["running", "resetting"]:
             return
         # convert trajectory to correct space
         if not len(trajectory):

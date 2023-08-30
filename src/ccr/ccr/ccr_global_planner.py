@@ -67,7 +67,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
-        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=5, wait_action_cost=1.01)
+        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=8, wait_action_cost=1.01)
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
