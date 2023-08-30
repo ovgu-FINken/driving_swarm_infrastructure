@@ -203,6 +203,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
             
     def timer_cb(self):
         # functional
+        # do not publish state and goal before all planners are ready
+        if self._command not in ["go", "reset"]:
+            return
         if self._command == "reset":
             self.allow_goal_publish = False
             self.goal = self.initial_pos
@@ -245,6 +248,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.plan is None and plan:
             self.set_state_running()
         # if the next node in the plan changes, we do not use the cutoff
+        plan = self.compute_unblocked_path(plan)
+        if self.plan == plan:
+            return
+
         use_cutoff = False
         if self.plan and len(self.plan) > 1 and len(plan) > 2:
             # plan starts with wait action
@@ -262,7 +269,19 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.plan = plan
         if len(self.plan) == 1 and not self.allow_goal_publish:
             self.set_state("done")
+            return
         self.execute_plan(use_cutoff=use_cutoff)
+    
+    def compute_unblocked_path(self, plan):
+        visited = set()
+        out = []
+        for node in plan:
+            if node not in visited:
+                visited.add(node)
+                out.append(node)
+            else:
+                break
+        return out
         
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
@@ -392,14 +411,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         
         if not len(self.trajectory.poses) > 1:
-            self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
-            self.get_logger().info(f"plan is: {self.plan}")
-            self.execute_plan(use_cutoff=False)
+            if len(self.plan) > 1:
+                self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
+                self.get_logger().info(f"plan is: {self.plan}")
+                self.execute_plan(use_cutoff=False)
             return
-
-        # TODO check if the trajectory is valid with respect to our plan
-        # in case the cut-off point was set wrongly, or some other problem happens, we could end up with a trajectory that is not valid
-        # in that case, we will send a new path
     
     def get_now_index(self):
         if self.trajectory is None:

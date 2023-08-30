@@ -60,8 +60,8 @@ def controller_spawning(context, *args, **kwargs):
                   "w3": 1.3,
                   "w4": 0.3,
                   "obstacle_threshold": 0.19,
-                  'laser_inflation_size': 0.14,
-                  "tb_radius": 0.33,
+                  'laser_inflation_size': 0.13,
+                  "tb_radius": 0.32,
                   "n_samples_linear": 4,
                   "n_samples_angular": 5,
                   "fail_radius": 0.3
