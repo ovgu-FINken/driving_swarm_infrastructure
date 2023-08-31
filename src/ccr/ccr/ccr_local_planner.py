@@ -356,9 +356,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
         if len(result_path) < 2:
             self.get_logger().warn(f'len(result_path) < 2, will not send path, len(result_path)={len(result_path)}')
-        wps = [start]
-        wp = [(i.x,i.y,np.nan) for i in result_path]
-        wps += wp
+        wps = [start] + [(i.x,i.y,np.nan) for i in result_path]
         trajectory = self.vm.tuples_to_path(wps)
         if not len(trajectory):
             self.get_logger().warn('trajectory is empty')
@@ -375,10 +373,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         # convert trajectory to correct space
         if not len(trajectory):
-            self.get_logger().info(colored('sending empty trajectory', 'red'))
+            if len(self.plan) > 1:
+                self.get_logger().info(colored('sending empty trajectory', 'red'))
             trajectory = [self.get_tf_pose()]
             ti = 0
-        if len(trajectory) == 1:
+        if len(trajectory) == 1 and len(self.plan) > 1:
             self.get_logger().info(colored('sending single point trajectory', 'red'))
 
         if ti is None:
@@ -422,8 +421,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         if not len(self.trajectory.poses) > 1:
             if len(self.plan) > 1:
-                self.get_logger().info("empty trajectory")
-                self.get_logger().info(f"plan is: {self.plan}")
+                self.get_logger().info(f"empty trajectory for plan {self.plan}")
                 # self.execute_plan(use_cutoff=False)
             return
     

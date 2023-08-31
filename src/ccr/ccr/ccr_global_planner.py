@@ -140,6 +140,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             for node in del_beliefs:
                 self.delete_belief(node)
             self.update_plan()
+        self.publish_plan(change_only=True)
 
     def goal_cb(self, msg):
         if msg.data == self.goal:
@@ -169,7 +170,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             plan = self.ccr_agent.get_plan()
             if plan != self.plan:
                 self.plan = plan
-                self.publish_plan()
+                #self.publish_plan(change_only=True)
                 #self.get_logger().info(f"new plan: {self.plan}")
 
         # when it is not possible to make plan consistent, trigger CDM
@@ -186,7 +187,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                     self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
                     self.get_logger().warn(f"path: self.plan")
         msg = Int32MultiArray()
-        msg.data = self.plan
+        msg.data = self.plan[:6]
         if change_only and self._published_plan == self.plan:
             return
         self.plan_pub.publish(msg)

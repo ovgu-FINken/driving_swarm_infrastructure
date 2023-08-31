@@ -31,7 +31,7 @@ def controller_spawning(context, *args, **kwargs):
     
     local_planner_params = {
         'inflation_size': 0.1,
-        'laser_inflation_size': 0.15,
+        'laser_inflation_size': 0.13,
         'vehicle_model': 3,
         'step_size': 0.1,
         'turn_speed': 0.5,
@@ -42,7 +42,7 @@ def controller_spawning(context, *args, **kwargs):
         'inertia': 0.1,
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
-        'horizon': 6,
+        'horizon': 4,
         'wait_cost': 1.01,
         
     }
@@ -76,8 +76,8 @@ def controller_spawning(context, *args, **kwargs):
                   "w2": 1.3,
                   "w3": 1.3,
                   "w4": 0.3,
-                  "obstacle_threshold": 0.19,
-                  'laser_inflation_size': 0.13,
+                  "obstacle_threshold": 0.18,
+                  'laser_inflation_size': 0.12,
                   "tb_radius": 0.32,
                   "n_samples_linear": 4,
                   "n_samples_angular": 5,
@@ -120,8 +120,8 @@ def generate_launch_description():
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
-         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_waypoints.yaml'),
-         'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_poses.yaml'),
+         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_waypoints.yaml'),
+         'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
