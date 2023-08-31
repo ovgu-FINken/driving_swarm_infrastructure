@@ -39,7 +39,7 @@ def controller_spawning(context, *args, **kwargs):
     }
 
     global_planner_params = {
-        'inertia': 0.01,
+        'inertia': 0.1,
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
         'horizon': 5,
