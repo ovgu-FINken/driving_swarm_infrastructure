@@ -260,6 +260,8 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.update_plan()
         
     def delete_belief(self, node):
+        if self.belief_lifetime > 1000:
+            return
         if node in self.cdm_triggered:
             if self.get_clock().now().nanoseconds - self.cdm_triggered[node] < self.belief_lifetime * 10e9 * 0.5:
                 self.get_logger().info(f'belief for {node} is still valid')

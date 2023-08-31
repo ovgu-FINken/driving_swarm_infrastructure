@@ -113,6 +113,7 @@ class TrajectoryFollower(DrivingSwarmNode):
                 request.trajectory.poses
         response.accepted = True
         response.trajectory = self.trajectory
+        self.path_publisher.publish(self.trajectory)
 
         return response
 
