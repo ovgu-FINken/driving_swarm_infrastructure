@@ -421,9 +421,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         if not len(self.trajectory.poses) > 1:
             if len(self.plan) > 1:
-                self.get_logger().info("empty trajectory, stopping replan and send new trajectory")
+                self.get_logger().info("empty trajectory")
                 self.get_logger().info(f"plan is: {self.plan}")
-                self.execute_plan(use_cutoff=False)
+                # self.execute_plan(use_cutoff=False)
             return
     
     def get_now_index(self):
