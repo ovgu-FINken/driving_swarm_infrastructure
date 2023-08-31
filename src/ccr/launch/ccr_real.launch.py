@@ -38,7 +38,7 @@ def controller_spawning(context, *args, **kwargs):
     }
 
     global_planner_params = {
-        'inertia': 0.2,
+        'inertia': 0.01,
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
         'horizon': 5,
@@ -70,14 +70,15 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[
               {
                   "dt": 2.0,
-                  "w1": 1.0,
-                  "w2": 0.9,
-                  "w3": 1.1,
-                  "w4": 0.2,
+                  "w1": 0.5,
+                  "w2": 1.3,
+                  "w3": 1.3,
+                  "w4": 0.3,
                   "obstacle_threshold": 0.19,
                   'laser_inflation_size': 0.13,
                   "tb_radius": 0.32,
-                  "n_samples": 7,
+                  "n_samples_linear": 4,
+                  "n_samples_angular": 5,
                   "fail_radius": 0.3
               }
            ],
