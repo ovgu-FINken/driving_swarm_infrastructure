@@ -319,13 +319,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly = simplify(self.path_poly, 0.01)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
         position = ShapelyPoint(self.get_tf_pose()[:2])
+
         if not self.path_poly.contains(position):
             distance = self.path_poly.distance(position)
-            if distance > 0.01:
-                self.get_logger().info(f'robot is not in feasible area, d={distance}m')
             if distance > 0.1:
-                self.get_logger().warn(colored(f'robot is not in feasible area, d={distance}m, will not send path', 'red'))
-                self.send_path([], ti=0)
+                self.get_logger().warn(colored(f'robot is not in feasible area, d={distance:.2f}m', 'red'))
+
         if self.path_poly.is_empty:
             self.get_logger().warn(colored('feasible_area is empty, will not send path', 'red'))
             self.get_logger().info(f'plan is: {self.plan}')
