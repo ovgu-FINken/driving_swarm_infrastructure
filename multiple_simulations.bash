@@ -2,7 +2,7 @@
 
 source ~/.rosrc
 
-COMMAND="ros2 launch ccr ccr_sim.launch.py use_rviz:=false"
+COMMAND="ros2 launch ccr ccr_sim.launch.py use_rviz:=false use_rosbag:=true"
 INIT_TIMEOUT=100
 RUN_TIMEOUT=300
 
