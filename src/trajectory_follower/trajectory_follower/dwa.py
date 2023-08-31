@@ -173,7 +173,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         return np.abs(dist / dt - vel)
     
     def get_obstacle_distance(self, x, y):
-        return min([self.occupied.distance(Point(x,y))] + [np.linalg.norm(np.array([x, y]) - np.array(p)) - self.tb_radius for p in self.tb_center_points])
+        return min([self.occupied.distance(Point(x,y)) - self.laser_inflation_size] + [np.linalg.norm(np.array([x, y]) - np.array(p)) - self.tb_radius for p in self.tb_center_points])
 
     def obstacle_error(self, vel, rot, dt):
         p = [self.position(vel, rot, t) for t in [0.5*dt, dt]]
@@ -261,7 +261,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         marker.lifetime = Duration(seconds=2.0).to_msg()
         msg.markers.append(marker)
         self.local_pub.publish(msg)
-        self.local_pub.publish(self.publish_polygon_marker(self.scan_poly, ns="scan", id=0))
+        self.local_pub.publish(self.publish_polygon_marker(self.scan_poly.buffer(-self.laser_inflation_size), ns="scan", id=0))
         self.tb_polygons = [Point(x,y).buffer(self.tb_radius, quad_segs=3) for x,y in self.tb_center_points]
         for i, tb in enumerate(self.tb_polygons):
             self.local_pub.publish(self.publish_polygon_marker(tb, ns="tb", id=i, color=ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)))
@@ -385,7 +385,7 @@ class TrajectoryFollower(DrivingSwarmNode):
             x, y = self.get_xy_from_scan(i, r, px, py, pt, msg.angle_min, msg.angle_increment)
             points.append((x,y))
 
-        self.scan_poly = Polygon(points).buffer(-self.laser_inflation_size)
+        self.scan_poly = Polygon(points) # .buffer(-self.laser_inflation_size)
         self.occupied = self.workspace.difference(self.scan_poly)
 
         self.detect_tb(ranges, px, py, pt, msg.angle_min, msg.angle_increment)
