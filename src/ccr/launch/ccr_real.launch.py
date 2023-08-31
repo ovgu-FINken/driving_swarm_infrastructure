@@ -29,7 +29,7 @@ def controller_spawning(context, *args, **kwargs):
     }
 
     local_planner_params = {
-        'inflation_size': 0.1,
+        'inflation_size': 0.08,
         'laser_inflation_size': 0.15,
         'vehicle_model': 3,
         'step_size': 0.1,
@@ -41,8 +41,8 @@ def controller_spawning(context, *args, **kwargs):
         'inertia': 0.01,
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
-        'horizon': 5,
-        'wait_cost': 1.01,
+        'horizon': 6,
+        'wait_cost': 0.9,
         
     }
     
@@ -73,7 +73,7 @@ def controller_spawning(context, *args, **kwargs):
                   "w1": 0.5,
                   "w2": 1.3,
                   "w3": 1.3,
-                  "w4": 0.3,
+                  "w4": 0.4,
                   "obstacle_threshold": 0.19,
                   'laser_inflation_size': 0.13,
                   "tb_radius": 0.32,
@@ -116,8 +116,8 @@ def generate_launch_description():
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_real.yaml'),
-         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_waypoints.yaml'),
-         'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_real_poses.yaml'),
+         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_waypoints.yaml'),
+         'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml'),
     }

@@ -187,7 +187,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                     self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
                     self.get_logger().warn(f"path: self.plan")
         msg = Int32MultiArray()
-        msg.data = self.plan[:6]
+        msg.data = self.plan
         if change_only and self._published_plan == self.plan:
             return
         self.plan_pub.publish(msg)
