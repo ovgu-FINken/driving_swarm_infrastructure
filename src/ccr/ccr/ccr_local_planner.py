@@ -15,6 +15,7 @@ from shapely import Polygon, simplify, LineString
 from shapely import Point as ShapelyPoint
 from math import atan2, degrees
 import shapely
+from termcolor import colored
 
 
 class CCRLocalPlanner(DrivingSwarmNode):
@@ -248,9 +249,21 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self.plan is None and plan:
             self.set_state_running()
         # if the next node in the plan changes, we do not use the cutoff
+        # self.get_logger().info(f'got new plan {plan}')
+        full_plan = plan
         plan = self.compute_unblocked_path(plan)
+            
+        # self.get_logger().info(f'unblocked is {plan}')
+        for n1, n2 in zip(plan[:-1], plan[1:]):
+            if (n1, n2) not in self.env.g.edges():
+                self.get_logger().warn(f'edge ({n1}, {n2}) is not in graph')
         if self.plan == plan:
             return
+        
+        if len(plan) < len(full_plan):
+            self.get_logger().info(f'new plan: {plan}, remainder: {full_plan[len(plan):]}')
+        else:
+            self.get_logger().info(f'new plan: {plan}')
 
         use_cutoff = False
         if self.plan and len(self.plan) > 1 and len(plan) > 2:
@@ -285,22 +298,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
-        visited = set()
-        plan = []
-        for node in self.plan:
-            if node not in visited:
-                visited.add(node)
-                plan.append(node)
-            else:
-                break
-        if not len(plan):
-            self.get_logger().info('empty plan')
-            self.send_path([], ti=0)
-            return
-        remainder = self.plan[len(plan):]
-        self.get_logger().debug(f'executing plan {self.plan}')
-        if remainder:
-            self.get_logger().debug(f'\t remaining plan after wait actions {remainder}')
+        # self.get_logger().info(f'executing plan {self.plan}')
         
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         # compute feasible area
@@ -310,13 +308,13 @@ class CCRLocalPlanner(DrivingSwarmNode):
             previous = self.last_state
         if self.plan[0] != self.state:
             previous = self.state
-        if (previous, plan[0]) not in self.env.g.edges():
+        if (previous, self.plan[0]) not in self.env.g.edges():
             previous = None
-        self.path_poly = geometry.poly_from_path(self.env.g, plan, eps=0.01, previous_node=previous)
+        self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01, previous_node=previous)
         # assert self.path_poly.geom_type == 'Polygon' 
         # assert self.path_poly.is_valid
         # assert not self.path_poly.is_empty, f'path_poly is empty, plan is {plan}'
-        self.path_poly2 = self.path_poly
+        # self.path_poly2 = self.path_poly
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
@@ -325,11 +323,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
             distance = self.path_poly.distance(position)
             self.get_logger().info(f'robot is not in feasible area, d={distance}m')
             if distance > 0.05:
-                self.get_logger().warn(f'robot is not in feasible area, d={distance}m, will not send path')
+                self.get_logger().warn(colored(f'robot is not in feasible area, d={distance}m, will not send path', 'red'))
                 self.send_path([], ti=0)
         if self.path_poly.is_empty:
             self.get_logger().warn('feasible_area is empty, will not send path')
-            self.get_logger().info(f'plan is: {plan}')
+            self.get_logger().info(f'plan is: {self.plan}')
             self.send_path([], ti=0)
             return
         
@@ -353,15 +351,22 @@ class CCRLocalPlanner(DrivingSwarmNode):
             start = self.pose_stamped_to_tuple(s)
         else:
             start = self.get_tf_pose()
-        end = self.env.g.nodes()[plan[-1]]['geometry'].center
+        end = self.env.g.nodes()[self.plan[-1]]['geometry'].center
 
         result_path = geometry.find_shortest_path(self.path_poly, start, end, eps=0.01, goal_outside_feasible=False)
+        if len(result_path) < 2:
+            self.get_logger().warn(f'len(result_path) < 2, will not send path, len(result_path)={len(result_path)}')
         wps = [start]
         wp = [(i.x,i.y,np.nan) for i in result_path]
         wps += wp
         trajectory = self.vm.tuples_to_path(wps)
         if not len(trajectory):
             self.get_logger().warn('trajectory is empty')
+            
+        if len(trajectory) == 1:
+            self.get_logger().warn('trajectory has only one point')
+            self.get_logger().info(f'wps: {wps}')
+            self.get_logger().info(f'result_path: {result_path}')
         self.send_path(trajectory, ti=cutoff)
 
     def send_path(self, trajectory, ti=0):
@@ -369,8 +374,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return
         # convert trajectory to correct space
         if not len(trajectory):
+            self.get_logger().info(colored('sending empty trajectory', 'red'))
             trajectory = [self.get_tf_pose()]
             ti = 0
+        if len(trajectory) == 1:
+            self.get_logger().info(colored('sending single point trajectory', 'red'))
+
         if ti is None:
             ti = 0
         path = Path()
@@ -379,7 +388,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         for pose in trajectory:
             path.poses.append(self.tuple_to_pose_stamped_msg(*pose))
 
-        self.get_logger().debug("sending path")
+        # self.get_logger().info(f"sending path with {len(path.poses)}s")
         if ti == 0:
             path.header.stamp = self.get_clock().now().to_msg()
         request = UpdateTrajectory.Request(trajectory=path, update_index=int(ti))

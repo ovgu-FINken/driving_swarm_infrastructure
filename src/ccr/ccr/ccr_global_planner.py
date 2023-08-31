@@ -37,6 +37,11 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
+        self.declare_parameter('horizon', 5)
+        self.declare_parameter('inertia', 0.1)
+        self.declare_parameter('belief_lifetime', 15.0)
+        self.declare_parameter('belief_lifetime_variability', 2.0)
+        self.declare_parameter('wait_cost', 1.01)
         self._published_plan = []
         self.state = None
         self.plan = []
@@ -44,7 +49,8 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.update_path = False
         self.cdm_triggered = {}
         self.cdm_opinions = {}
-        self.belief_timeout = 15.0 + np.random.rand() * 2.0
+        self.belief_lifetime = self.get_parameter('belief_lifetime').get_parameter_value().double_value
+        self.belief_lifetime += 2 * (np.random.rand() - 0.5) * self.get_parameter('belief_lifetime_variability').get_parameter_value().double_value
         self.poly_pub2 = self.create_publisher(MarkerArray, '/cells', 10)
         points = None 
         if map_file.endswith(".yaml"):
@@ -67,11 +73,23 @@ class CCRGlobalPlanner(DrivingSwarmNode):
                                                         wx=wx,
                                                         wy=wy,
                                                         offset=self.get_parameter('inflation_size').get_parameter_value().double_value)
-        self.planning_problem_parameters = environment.PlanningProblemParameters(pad_path=False, conflict_horizon=8, wait_action_cost=1.01)
+        self.planning_problem_parameters = environment.PlanningProblemParameters(
+            pad_path=False,
+            conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
+            wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
+        )
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
-        self.ccr_agent = planning.CCRAgent(self.g, self.state, self.goal, self.planning_problem_parameters, index=self.robot_names.index(self.robot_name), limit=self.env.planning_horizon)
+        self.ccr_agent = planning.CCRAgent(
+            self.g,
+            self.state,
+            self.goal,
+            self.planning_problem_parameters,
+            index=self.robot_names.index(self.robot_name),
+            limit=self.env.planning_horizon,
+            inertia=self.get_parameter('inertia').get_parameter_value().double_value,
+        )
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
@@ -116,7 +134,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         # check if beliefs are due for deletion
         del_beliefs = set()
         for node, t in self.cdm_triggered.items():
-            if self.get_clock().now().nanoseconds - t > self.belief_timeout * 10e9:
+            if self.get_clock().now().nanoseconds - t > self.belief_lifetime * 10e9:
                 del_beliefs.add(node)
         if len(del_beliefs):
             for node in del_beliefs:
@@ -192,7 +210,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def trigger_cdm(self):
         cdm_nodes = self.ccr_agent.get_cdm_node(re_decide_belief=True)
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
-        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_timeout * 1e9 * 0.5)
+        options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_lifetime * 1e9 * 0.5)
         if len(options) == 0:
             self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             if np.random.rand() < 0.05:
@@ -243,7 +261,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         
     def delete_belief(self, node):
         if node in self.cdm_triggered:
-            if self.get_clock().now().nanoseconds - self.cdm_triggered[node] < self.belief_timeout * 10e9 * 0.5:
+            if self.get_clock().now().nanoseconds - self.cdm_triggered[node] < self.belief_lifetime * 10e9 * 0.5:
                 self.get_logger().info(f'belief for {node} is still valid')
                 return
         self.get_logger().info(f'deleting belief for {node}')

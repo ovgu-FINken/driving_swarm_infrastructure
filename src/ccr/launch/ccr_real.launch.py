@@ -26,8 +26,27 @@ def controller_spawning(context, *args, **kwargs):
               'y_max': 1.25,
               'grid_type': 'square',
               'grid_size': 0.5,
-              'inflation_size': 0.1,
-              'laser_inflation_size': 0.17,} 
+    }
+
+    local_planner_params = {
+        'inflation_size': 0.1,
+        'laser_inflation_size': 0.15,
+        'vehicle_model': 3,
+        'step_size': 0.1,
+        'turn_speed': 0.5,
+
+    }
+
+    global_planner_params = {
+        'inertia': 0.2,
+        'belief_lifetime': 15.0,
+        'belief_lifetime_variability': 2.0,
+        'horizon': 5,
+        'wait_cost': 1.01,
+        
+    }
+    
+
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
@@ -65,12 +84,13 @@ def controller_spawning(context, *args, **kwargs):
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='log',
         ))
+        # we need to pass all params to the local planner and global planner, so the exact same graph is generated
         controllers.append(Node(
            package='ccr',
            executable='ccr_local_planner',
            namespace=robot,
            parameters=[{
-           }, grid_params
+           }, grid_params, local_planner_params, global_planner_params
              ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
@@ -81,7 +101,7 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
               'robot_names': robots[:n_robots],
-           }, grid_params
+           }, grid_params, local_planner_params, global_planner_params
               ],
            output='screen',
         ))

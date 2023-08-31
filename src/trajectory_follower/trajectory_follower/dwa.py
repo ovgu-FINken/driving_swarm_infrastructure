@@ -113,6 +113,7 @@ class TrajectoryFollower(DrivingSwarmNode):
                 request.trajectory.poses
         response.accepted = True
         response.trajectory = self.trajectory
+
         return response
 
     def pose2D_to_PoseStamped(self, pose2d, header_id=None):
@@ -245,6 +246,10 @@ class TrajectoryFollower(DrivingSwarmNode):
         
     def slow_timer_cb(self):
         # publish topics for vizual debugging and analysis
+        if self.trajectory is not None:
+            self.path_publisher.publish(self.trajectory)
+        else:
+            self.get_logger().warn('no trajectory')
         msg = MarkerArray()
         marker = Marker(action=Marker.ADD, ns="traj", id=0, type=Marker.LINE_STRIP)
         marker.header.frame_id = self.own_frame
@@ -262,7 +267,6 @@ class TrajectoryFollower(DrivingSwarmNode):
 
         if self.trajectory is None:
             return None
-        self.path_publisher.publish(self.trajectory)
         diff_pose = self.get_target_pose(offset=self.dt)
         self.desired_pose_publisher.publish(self.tuple_to_pose_stamped_msg(diff_pose.x, diff_pose.y, diff_pose.theta, frame=self.own_frame))
         

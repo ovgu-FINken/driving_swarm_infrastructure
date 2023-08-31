@@ -27,8 +27,26 @@ def controller_spawning(context, *args, **kwargs):
               'y_max': 1.25,
               'grid_type': 'square',
               'grid_size': 0.5,
-              'inflation_size': 0.1,
-              'laser_inflation_size': 0.15,} 
+    } 
+    
+    local_planner_params = {
+        'inflation_size': 0.1,
+        'laser_inflation_size': 0.15,
+        'vehicle_model': 3,
+        'step_size': 0.1,
+        'turn_speed': 0.5,
+
+    }
+
+    global_planner_params = {
+        'inertia': 0.2,
+        'belief_lifetime': 15.0,
+        'belief_lifetime_variability': 2.0,
+        'horizon': 5,
+        'wait_cost': 1.01,
+        
+    }
+    
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
@@ -49,7 +67,6 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='trajectory_follower',
            executable='dwa',
-           prefix=f'python3 -m cProfile -o {robot}_dwa.prof',
            namespace=robot,
            parameters=[
               {
@@ -77,7 +94,7 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
-           }, grid_params
+           }, grid_params, local_planner_params, global_planner_params
              ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
@@ -89,7 +106,7 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
-           }, grid_params
+           }, grid_params, local_planner_params, global_planner_params
               ],
            output='screen',
         ))
