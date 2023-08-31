@@ -170,7 +170,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             if plan != self.plan:
                 self.plan = plan
                 self.publish_plan()
-                self.get_logger().info(f"new plan: {self.plan}")
+                #self.get_logger().info(f"new plan: {self.plan}")
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
@@ -237,7 +237,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
     def cdm_cb(self, msg):
         self.cdm_triggered[msg.data] = self.get_clock().now().nanoseconds
         opinion = self.ccr_agent.get_cdm_opinion(msg.data)
-        self.get_logger().info(f"opinion {self.robot_name} for node {opinion.state} is {opinion.priorities}")
+        #self.get_logger().info(f"opinion {self.robot_name} for node {opinion.state} is {opinion.priorities}")
         bs_msg = self.belief_to_msg(opinion)
         self.opinion_pub.publish(bs_msg)
         
@@ -256,7 +256,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.ccr_agent.set_belief(bel.state, bel)
         self.belief_pub.publish(self.belief_to_msg(bel))
         s = f"belief robot: {self.robot_name}, state:{bel.state}"
-        self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
+        #self.get_logger().info("new " + colored(s, "yellow") + f":\n{self.ccr_agent.belief[bel.state]}")
         self.update_plan()
         
     def delete_belief(self, node):
@@ -264,7 +264,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             return
         if node in self.cdm_triggered:
             if self.get_clock().now().nanoseconds - self.cdm_triggered[node] < self.belief_lifetime * 10e9 * 0.5:
-                self.get_logger().info(f'belief for {node} is still valid')
+                # self.get_logger().info(f'belief for {node} is still valid')
                 return
         self.get_logger().info(f'deleting belief for {node}')
         if node in self.cdm_opinions:
