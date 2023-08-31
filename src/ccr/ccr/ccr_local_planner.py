@@ -363,8 +363,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(trajectory):
             self.get_logger().warn('trajectory is empty')
             
-        if len(trajectory) == 1:
+        if len(trajectory) == 1 and len(self.plan) > 1:
             self.get_logger().warn('trajectory has only one point')
+            self.get_logger().info(f'path: {self.plan}')
             self.get_logger().info(f'wps: {wps}')
             self.get_logger().info(f'result_path: {result_path}')
         self.send_path(trajectory, ti=cutoff)

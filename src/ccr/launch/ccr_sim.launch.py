@@ -42,7 +42,7 @@ def controller_spawning(context, *args, **kwargs):
         'inertia': 0.1,
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
-        'horizon': 5,
+        'horizon': 6,
         'wait_cost': 1.01,
         
     }

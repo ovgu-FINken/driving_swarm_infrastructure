@@ -174,7 +174,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
 
         # when it is not possible to make plan consistent, trigger CDM
         if len(self.ccr_agent.get_conflicts()):
-            self.get_logger().info(f"conflicts detected: {self.ccr_agent.get_conflicts()}")
+            # self.get_logger().info(f"conflicts detected: {self.ccr_agent.get_conflicts()}")
             self.trigger_cdm()
             
     def publish_plan(self, change_only=True):
@@ -212,7 +212,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         # do not re-trigger cdm for a node if the decision is not older than half the belief timeout
         options = cdm_nodes - set(k for k, v in self.cdm_triggered.items() if self.get_clock().now().nanoseconds - v < self.belief_lifetime * 1e9 * 0.5)
         if len(options) == 0:
-            self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
+            # self.get_logger().info(f"no CDM options for {self.robot_name}, index={self.ccr_agent.index}, conflitcs: {self.ccr_agent.get_conflicts()}")
             if np.random.rand() < 0.05:
                 self.get_logger().info(f"triggering random CDM")
                 options = set(cdm_nodes)
