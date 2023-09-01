@@ -14,3 +14,4 @@
 - 'nav/goal'
 - 'nav/goal_count'
 - 'nav/belief'
+- 'nav/goal_completed'

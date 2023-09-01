@@ -31,7 +31,7 @@ def controller_spawning(context, *args, **kwargs):
     
     local_planner_params = {
         'inflation_size': 0.08,
-        'laser_inflation_size': 0.13,
+        'laser_inflation_size': 0.15,
         'vehicle_model': 3,
         'step_size': 0.1,
         'turn_speed': 0.5,
@@ -43,7 +43,7 @@ def controller_spawning(context, *args, **kwargs):
         'belief_lifetime': 15.0,
         'belief_lifetime_variability': 2.0,
         'horizon': 6,
-        'wait_cost': 0.9,
+        'wait_cost': 0.51,
         
     }
     
@@ -74,11 +74,11 @@ def controller_spawning(context, *args, **kwargs):
                   "dt": 2.0,
                   "w1": 0.5,
                   "w2": 1.3,
-                  "w3": 1.3,
+                  "w3": 1.4,
                   "w4": 0.4,
-                  "obstacle_threshold": 0.18,
-                  'laser_inflation_size': 0.12,
-                  "tb_radius": 0.32,
+                  "obstacle_threshold": 0.2,
+                  'laser_inflation_size': 0.15,
+                  "tb_radius": 0.33,
                   "n_samples_linear": 4,
                   "n_samples_angular": 5,
                   "fail_radius": 0.3

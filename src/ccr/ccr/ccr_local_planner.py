@@ -59,6 +59,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.last_state = None
         self.goal = None
         self.plan = None
+        self.scan_poly = None
         self.path_poly = None
         self.path_poly2 = None
         self.trajectory = None
