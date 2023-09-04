@@ -303,7 +303,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         
         # include last state, so transition area is within feasible region, while the robot is still with in the transition area
         # compute feasible area
-
+        if self.plan is None:
+            self.get_logger().warn(colored('plan is None', 'red'))
+            return
+        if len(self.plan) < 1:
+            self.get_logger().warn(colored('plan is empty', 'red'))
+            return
         previous = None
         if self.plan[0] == self.state:
             previous = self.last_state
@@ -448,6 +453,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
         return now_index + self.cutoff_amount
 
     def resolve_multi_polygon(self, mp):
+        if mp is None:
+            return None
         
         def angle_between_points(p1, p2):
             return degrees(atan2(p2[1] - p1[1], p2[0] - p1[0]))
