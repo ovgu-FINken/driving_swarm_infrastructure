@@ -77,8 +77,8 @@ def controller_spawning(context, *args, **kwargs):
                   "w2": 1.3,
                   "w3": 1.4,
                   "w4": 0.4,
-                  "obstacle_threshold": 0.2,
-                  'laser_inflation_size': 0.15,
+                  "obstacle_threshold": 0.19,
+                  'laser_inflation_size': 0.13,
                   "tb_radius": 0.33,
                   "n_samples_linear": 4,
                   "n_samples_angular": 5,
@@ -102,7 +102,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='ccr',
-           executable='ccr_global_planner_baseline',
+           executable='ccr_global_planner',
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
