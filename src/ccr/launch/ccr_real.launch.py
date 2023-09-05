@@ -59,6 +59,7 @@ def controller_spawning(context, *args, **kwargs):
            namespace=robot,
            parameters=[{
               'waypoints': yaml.dump(wp['waypoints']),
+              'goal_radius': 0.25,
            }],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',

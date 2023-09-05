@@ -60,6 +60,7 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
               'use_sim_time': use_sim_time,
               'waypoints': yaml.dump(wp['waypoints']),
+              'goal_radius': 0.25,
            }],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='screen',
@@ -101,7 +102,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='ccr',
-           executable='ccr_global_planner',
+           executable='ccr_global_planner_baseline',
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,

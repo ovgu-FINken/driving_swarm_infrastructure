@@ -18,7 +18,8 @@ class SimpleGoalProvider(DrivingSwarmNode):
         self.completed_publisher = self.create_publisher(Int32, 'nav/goal_completed', 10)
         self.completed = 0
         self.goal_list = []
-        self.goal_dist = 0.2
+        self.declare_parameter('goal_radius', 0.2)
+        self.goal_dist = self.get_parameter('goal_radius').get_parameter_value().double_value
         self.current_goal_index = 0
         self.get_frames()
         
