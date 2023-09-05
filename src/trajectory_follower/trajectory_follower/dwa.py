@@ -354,12 +354,14 @@ class TrajectoryFollower(DrivingSwarmNode):
             cr = np.mean(cluster_ranges)
             if cr > self.cluster_range_threshold:
                 continue
-            if cr * cluster_sizes[i] > 8:
+            if cr * cluster_sizes[i] > 30:
+                continue
+            if cluster_sizes[i] < 2:
                 continue
             cluster_positions = [self.get_xy_from_scan(ci, ranges[ci], px, py, pt, angle_min, angle_increment) for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))]
             cluster_center = np.mean(cluster_positions, axis=0)
             mean_distance_to_center = np.mean([np.linalg.norm(p - cluster_center) for p in cluster_positions])
-            if mean_distance_to_center > 0.5:
+            if mean_distance_to_center > 0.1:
                 continue
             tb_center_points.append(cluster_center)
 
