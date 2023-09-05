@@ -18,33 +18,15 @@ def controller_spawning(context, *args, **kwargs):
     n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robot_names_file').perform(context)
     waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
-    grid_params = {
-              'graph_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml'),
-              'x_min': -2.25,
-              'x_max': 2.75,
-              'y_min': -1.75,
-              'y_max': 1.25,
-              'grid_type': 'square',
-              'grid_size': 0.5,
-    }
-
-    local_planner_params = {
-        'inflation_size': 0.08,
-        'laser_inflation_size': 0.13,
-        'vehicle_model': 3,
-        'step_size': 0.1,
-        'turn_speed': 0.5,
-
-    }
-
-    global_planner_params = {
-        'inertia': 0.01,
-        'belief_lifetime': 15.0,
-        'belief_lifetime_variability': 2.0,
-        'horizon': 6,
-        'wait_cost': 1.3,
-        
-    }
+    param_file = os.path.join(get_package_share_directory('ccr'), 'params', 'ccr_params.yaml')
+    with open(param_file, 'r') as stream:
+         params = yaml.safe_load(stream)
+         
+    grid_params = params['grid_params']
+    grid_params['graph_file'] = os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml')
+    local_planner_params = params['local_planner_params']
+    global_planner_params = params['global_planner_params']
+    dwa_params = params['dwa_params']
     
 
     with open(robots_file, 'r') as stream:
@@ -69,19 +51,7 @@ def controller_spawning(context, *args, **kwargs):
            executable='dwa',
            namespace=robot,
            parameters=[
-              {
-                  "dt": 2.0,
-                  "w1": 0.5,
-                  "w2": 1.4,
-                  "w3": 2.2,
-                  "w4": 0.8,
-                  "obstacle_threshold": 0.1,
-                  'laser_inflation_size': 0.15,
-                  "tb_radius": 0.35,
-                  "n_samples_linear": 4,
-                  "n_samples_angular": 5,
-                  "fail_radius": 0.3
-              }
+              dwa_params
            ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='log',
