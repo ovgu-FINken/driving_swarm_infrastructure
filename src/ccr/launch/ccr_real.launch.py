@@ -62,7 +62,7 @@ def controller_spawning(context, *args, **kwargs):
               'goal_radius': 0.25,
            }],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
-           output='screen',
+           output='both',
         ))
         controllers.append(Node(
            package='trajectory_follower',
@@ -95,7 +95,7 @@ def controller_spawning(context, *args, **kwargs):
            }, grid_params, local_planner_params, global_planner_params
              ],
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
-           output='screen',
+           output='both',
         ))
         controllers.append(Node(
            package='ccr',
@@ -105,7 +105,7 @@ def controller_spawning(context, *args, **kwargs):
               'robot_names': robots[:n_robots],
            }, grid_params, local_planner_params, global_planner_params
               ],
-           output='screen',
+           output='both',
         ))
     
     return controllers
