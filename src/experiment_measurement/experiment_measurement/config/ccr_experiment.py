@@ -1,6 +1,6 @@
 """Aggregate the data to one table."""
 # from experiment_measurement import data_aggregation_helper
-import data_aggregation_helper
+from experiment_measurement import data_aggregation_helper
 
 """
 'table_column_config' specifies the mapping from the rosbag data to a new pandas dataframe.
@@ -38,27 +38,6 @@ table_column_config = [
         ].angular.z,
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_x',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
-        ].pose.pose.position.x,
-    ),
-    data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_y',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)[
-            'data'
-        ].pose.pose.position.y,
-    ),
-    data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_pose_theta',
-        lambda conf: data_aggregation_helper.quaternion_to_euler(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].pose.pose.orientation
-        )[2],
-    ),
-    data_aggregation_helper.TableColumn(
         '/tf',
         'tf_pose_x',
         lambda conf: data_aggregation_helper.get_latest_in_interval(
@@ -86,22 +65,6 @@ table_column_config = [
         )[2],
     ),
     data_aggregation_helper.TableColumn(
-        'amcl_pose',
-        'amcl_traveled_distance',
-        lambda conf: data_aggregation_helper.calculate_travelled_distance(
-            data_aggregation_helper.amcl_calc_x_and_y(conf)
-        ),
-    ),
-    data_aggregation_helper.TableColumn(
-        '/tf',
-        'tf_traveled_distance',
-        lambda conf: data_aggregation_helper.calculate_travelled_distance(
-            data_aggregation_helper.tf_calc_x_and_y(
-                data_aggregation_helper.filter_tf_child_frame_id(conf)
-            )
-        ),
-    ),
-    data_aggregation_helper.TableColumn(
         'scan',
         'min_obstacle_dist',
         lambda conf: min(
@@ -109,38 +72,43 @@ table_column_config = [
         ),
     ),
     data_aggregation_helper.TableColumn(
-        'goal',
-        'reached_goals',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
-    ),
-    data_aggregation_helper.TableColumn(
         'nav/cell',
         'cell',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
     data_aggregation_helper.TableColumn(
         'nav/plan',
         'plan',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
     data_aggregation_helper.TableColumn(
         'nav/opinion',
         'opinion',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
     data_aggregation_helper.TableColumn(
         'nav/cdm',
         'cdm',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
     data_aggregation_helper.TableColumn(
         'nav/goal_completed',
         'goal_count',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
     data_aggregation_helper.TableColumn(
         'nav/belief',
         'belief',
-        lambda conf: data_aggregation_helper.calculate_reached_goals(conf)['data'].data,
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+    ),
+    data_aggregation_helper.TableColumn(
+        '/command',
+        'command',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+    ),
+    data_aggregation_helper.TableColumn(
+        'status',
+        'status',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     ),
 ]
