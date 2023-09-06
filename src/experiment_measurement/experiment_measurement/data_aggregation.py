@@ -1,6 +1,7 @@
 """Aggregate the data to one table."""
 import argparse
 import datetime
+from multiprocessing.pool import ThreadPool
 import os
 import time
 
@@ -173,6 +174,31 @@ def aggregate_tables_by_msg_timestamps(df, table_column_config, msg_topic):
         res[robot] = robot_ret_df
     return res
 
+def db3_to_df(db3_file, table_column_config, step_size):
+    data = read_rosbag_all_in_one(db3_file)
+
+    # create pandas dataframe from raw data
+    tables = aggregate_tables(data['rosbag'], table_column_config, step_size)
+    
+    # combine data for multiple robots into one dataframe
+    for robot in tables.keys():
+        tables[robot]['robot'] = robot
+        
+    
+    df = pd.concat(tables.values()).reset_index(drop=True)
+    df['db3'] = db3_file
+    return df
+
+
+def aggregate_many(db3_files, table_column_config, step_size=None):
+    if step_size is None:
+        step_size = 10**9
+
+    with ThreadPool() as pool:
+        results = pool.starmap(
+            db3_to_df, [(f, table_column_config, step_size) for f in db3_files]
+        )
+    return pd.concat(results).reset_index(drop=True)
 
 def main():
     """Program starts here."""

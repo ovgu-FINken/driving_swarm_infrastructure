@@ -39,7 +39,7 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         '/tf',
-        'tf_pose_x',
+        'x',
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
         )[
@@ -48,7 +48,7 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         '/tf',
-        'tf_pose_y',
+        'y',
         lambda conf: data_aggregation_helper.get_latest_in_interval(
             data_aggregation_helper.filter_tf_child_frame_id(conf)
         )[
@@ -57,7 +57,7 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         '/tf',
-        'tf_pose_theta',
+        '$\\theta$',
         lambda conf: data_aggregation_helper.quaternion_to_euler(
             data_aggregation_helper.get_latest_in_interval(
                 data_aggregation_helper.filter_tf_child_frame_id(conf)
@@ -66,7 +66,7 @@ table_column_config = [
     ),
     data_aggregation_helper.TableColumn(
         'scan',
-        'min_obstacle_dist',
+        'min_scan',
         lambda conf: min(
             data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
         ),
