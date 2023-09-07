@@ -3,7 +3,7 @@
 source ~/.rosrc
 
 COMMAND="ros2 launch ccr ccr_sim.launch.py use_rviz:=false use_rosbag:=true"
-export RUN_TIMEOUT="600.0"
+export RUN_TIMEOUT="900.0"
 
 export ROS_SIMULATOR="gzserver"
 

@@ -69,7 +69,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='ccr',
-           executable='ccr_global_planner',
+           executable='ccr_global_planner_baseline',
            namespace=robot,
            parameters=[{
               'robot_names': robots[:n_robots],
