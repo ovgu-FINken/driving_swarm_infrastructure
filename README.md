@@ -78,3 +78,22 @@ Source your `.bashrc` or restart your shell to load the environment variables an
 ```
 ros2 launch trajectory_follower trajectory_follower_test.launch.py n_robots:=2 simulator:=gzserver
 ```
+
+# References
+
+If you use this package in your own academic research, please cite the following paper:
+
+[1] S. Mai, N. Traichel, and S. Mostaghim, “Driving Swarm: A Swarm Robotics Framework for Intelligent Navigation in a Self-organized World,” in 2022 IEEE International Conference on Robotics and Automation (ICRA), Philadelphia, PA, USA: IEEE, 2022, pp. 4958–4964. doi: 10.1109/ICRA46639.2022.9811852.
+```
+@inproceedings{Mai2022DrivingSwarm,
+  title = {Driving {{Swarm}}: {{A Swarm Robotics Framework}} for {{Intelligent Navigation}} in a {{Self-organized World}}},
+  booktitle = {2022 {{IEEE International Conference}} on {{Robotics}} and {{Automation}} ({{ICRA}})},
+  author = {Mai, Sebastian and Traichel, Nele and Mostaghim, Sanaz},
+  year = {2022},
+  pages = {4958--4964},
+  publisher = {{IEEE}},
+  address = {{Philadelphia, PA, USA}},
+  doi = {10.1109/ICRA46639.2022.9811852},
+}
+
+```
