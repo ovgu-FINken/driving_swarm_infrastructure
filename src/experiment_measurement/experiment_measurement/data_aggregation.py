@@ -198,7 +198,7 @@ def aggregate_many(db3_files, table_column_config, step_size=None):
         results = pool.starmap(
             db3_to_df, [(f, table_column_config, step_size) for f in db3_files]
         )
-    return pd.concat(results).reset_index(drop=True)
+    return {db3: df for db3, df in zip(db3_files, results)}
 
 def main():
     """Program starts here."""
