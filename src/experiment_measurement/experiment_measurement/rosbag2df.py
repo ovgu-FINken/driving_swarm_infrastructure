@@ -43,7 +43,7 @@ def read_rosbag_per_topic(db_file_path):
 
     return dict_df
 
-def read_rosbag_all_in_one(db_file_path, toics=None):
+def read_rosbag_all_in_one(db_file_path, topics=None):
     """
     @brief: read the data from a rosbag file, i.e. a sqlite3 database file created by rosbag2 while recording
     @args: db_file_path: absolute path to the sqlite3 database file to load
