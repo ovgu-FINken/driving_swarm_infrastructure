@@ -64,51 +64,51 @@ table_column_config = [
             )['data'].transforms[0].transform.rotation
         )[2],
     ),
-    data_aggregation_helper.TableColumn(
-        'scan',
-        'min_scan',
-        lambda conf: min(
-            data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
-        ),
-    ),
-    data_aggregation_helper.TableColumn(
-        'nav/cell',
-        'cell',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-    ),
-    data_aggregation_helper.TableColumn(
-        'nav/plan',
-        'plan',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-    ),
-    data_aggregation_helper.TableColumn(
-        'nav/opinion',
-        'opinion',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-    ),
-    data_aggregation_helper.TableColumn(
-        'nav/cdm',
-        'cdm',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-    ),
+#    data_aggregation_helper.TableColumn(
+#        'scan',
+#        'min_scan',
+#        lambda conf: min(
+#            data_aggregation_helper.get_latest_in_interval(conf)['data'].ranges
+#        ),
+#    ),
+#    data_aggregation_helper.TableColumn(
+#        'nav/cell',
+#        'cell',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+#    ),
+#    data_aggregation_helper.TableColumn(
+#        'nav/plan',
+#        'plan',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+#    ),
+#    data_aggregation_helper.TableColumn(
+#        'nav/opinion',
+#        'opinion',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+#    ),
+#    data_aggregation_helper.TableColumn(
+#        'nav/cdm',
+#        'cdm',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+#    ),
     data_aggregation_helper.TableColumn(
         'nav/goal_completed',
         'goal_count',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
     ),
-    data_aggregation_helper.TableColumn(
-        'nav/belief',
-        'belief',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-    ),
+#    data_aggregation_helper.TableColumn(
+#        'nav/belief',
+#        'belief',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+#    ),
     data_aggregation_helper.TableColumn(
         '/command',
         'command',
         lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
     ),
-    data_aggregation_helper.TableColumn(
-        'status',
-        'status',
-        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
-    ),
+#    data_aggregation_helper.TableColumn(
+#        'status',
+#        'status',
+#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data
+#    ),
 ]
