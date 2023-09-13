@@ -1,5 +1,7 @@
 install/ 
+build/
 log/ 
+
 
 # Compiled Object files
 *.slo
@@ -64,3 +66,4 @@ build-*/
 /.project
 .vscode
 rosbag**
+**.sif
