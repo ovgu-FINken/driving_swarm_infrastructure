@@ -189,7 +189,6 @@ def db3_to_df(db3_file, table_column_config, step_size):
     df['db3'] = db3_file
     return df
 
-
 def aggregate_many(db3_files, table_column_config, step_size=None):
     if step_size is None:
         step_size = 10**9
