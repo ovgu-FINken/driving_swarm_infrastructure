@@ -42,12 +42,17 @@ class DrivingSwarmNode(Node):
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
     
-    def wait_for_tf(self):
+    def wait_for_tf(self, timeout=None, retries=0):
         self.get_logger().info("waiting for tf " + colored(f"{self.name}", 'yellow'))
         f = self.tf_buffer.wait_for_transform_async(
             self.reference_frame, self.own_frame, rclpy.time.Time().to_msg()
         )
-        rclpy.spin_until_future_complete(self, f)
+        rclpy.spin_until_future_complete(self, f, timeout_sec=timeout)
+        if not f.done():
+            self.get_logger().warn(colored('wait_for_tf not done', 'red'))
+            f.cancel()
+            if retries > 0:
+                self.wait_for_tf(timeout=timeout, retries=retries-1)
         self.get_logger().info('tf available for '+colored(f"{self.name}", 'green'))
         
     def lookup_tf(self, frame1, frame2):
