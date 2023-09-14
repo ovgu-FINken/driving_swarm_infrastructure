@@ -146,10 +146,8 @@ def data_assignments(dfs, db3_files):
     with open(pos_file, 'r') as file:
         waypoints = yaml.safe_load(file)
     starting_positions = [w['waypoints'][1] for w in waypoints]
-    print(f'starting_positions: {starting_positions}')
     
-    for ex_id, _ in enumerate(dfs):
-        print(ex_id)
+    for ex_id, _ in enumerate(tqdm.tqdm(dfs)):
         # find the fitting directory name to give a good name to the experiment
         name = {v: k for k, v in db3_files.items()}[dfs[ex_id].db3.iloc[0]]
         dfs[ex_id]['experiment'] = name
@@ -161,7 +159,6 @@ def data_assignments(dfs, db3_files):
             x = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x'].iloc[0]
             y = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'y'].iloc[0]
             rid = get_robot_id(x, y, starting_positions)
-            print(f'name: {robot}, start:({x}, {y}), rid:{rid}')
             # find the starting position for each tb and assign a name
             dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'robot_id'] = f'robot{rid+1}'
             # fint the pair by the starting position
