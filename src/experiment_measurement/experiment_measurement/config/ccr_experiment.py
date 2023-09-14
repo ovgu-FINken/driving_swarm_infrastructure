@@ -64,6 +64,11 @@ table_column_config = [
             )['data'].transforms[0].transform.rotation
         )[2],
     ),
+    data_aggregation_helper.TableColumn(
+        '/clock',
+        'sim_time',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].clock.sec,
+    ),
 #    data_aggregation_helper.TableColumn(
 #        'scan',
 #        'min_scan',
