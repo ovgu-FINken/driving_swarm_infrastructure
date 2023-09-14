@@ -53,7 +53,7 @@ def read_rosbag_all_in_one(db_file_path, topics=None):
     # get the data from the database
     cnx = sqlite3.connect(db_file_path)
     if topics is None:
-        topics = ["%goal_completed", "/tf", "/clock", "/command", "%status", "%cmd_vel"]
+        topics = ["%goal_completed", "/tf", "/clock", "/command", "%status", "%cmd_vel", "%plan"]
     topics_str = [f" topics.name LIKE '{t}' " for t in topics]
     topics_str = "OR".join(topics_str)
     df = pd.read_sql_query(f"SELECT messages.*, topics.name, topics.type FROM messages JOIN topics ON messages.topic_id==topics.id WHERE {topics_str}", cnx)

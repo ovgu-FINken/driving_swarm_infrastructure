@@ -76,11 +76,11 @@ table_column_config = [
 #        'cell',
 #        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
 #    ),
-#    data_aggregation_helper.TableColumn(
-#        'nav/plan',
-#        'plan',
-#        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
-#    ),
+    data_aggregation_helper.TableColumn(
+        'nav/plan',
+        'plan',
+        lambda conf: data_aggregation_helper.get_latest_in_interval(conf)['data'].data,
+    ),
 #    data_aggregation_helper.TableColumn(
 #        'nav/opinion',
 #        'opinion',
