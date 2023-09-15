@@ -26,10 +26,10 @@ def aggregate_file(db3_file, config_file, step_size):
     if os.path.isfile(db3_file.replace('.db3', '.pkl')):
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
     config = __import__('config.' + config_file, fromlist=[None])
-    print(f'start aggregating {db3_file}')
-    data_dict = data_aggregation.read_rosbag_all_in_one(db3_file)
-    print(f'table aggregating {db3_file}')
     try:
+        print(f'start aggregating {db3_file}')
+        data_dict = data_aggregation.read_rosbag_all_in_one(db3_file)
+        print(f'table aggregating {db3_file}')
         tables = data_aggregation.aggregate_tables(
             data_dict['rosbag'],
             config.table_column_config,
@@ -46,7 +46,8 @@ def aggregate_file(db3_file, config_file, step_size):
         print(f'done  aggregating {db3_file}')
         return df
     except pdsql.DatabaseError:
-        pass
+        print(f'error aggregating {db3_file}')
+        return pd.DataFrame()
 
 def clean_df(df):
     df.command = df.command.fillna(method='ffill')
