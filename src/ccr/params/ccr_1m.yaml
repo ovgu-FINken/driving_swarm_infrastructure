@@ -6,10 +6,10 @@ grid_params:
   y_min: -1.75
   y_max: 1.25
   grid_type: square
-  grid_size: 0.5
+  grid_size: 1.0
 
 local_planner_params:
-  inflation_size: 0.08
+  inflation_size: 0.12
   laser_inflation_size: 0.13
   vehicle_model: 3
   step_size: 0.1

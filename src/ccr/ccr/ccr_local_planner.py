@@ -47,7 +47,9 @@ class CCRLocalPlanner(DrivingSwarmNode):
         wx = (self.get_parameter('x_min').get_parameter_value().double_value, self.get_parameter('x_max').get_parameter_value().double_value)
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
+        tiling = self.get_parameter('grid_type').get_parameter_value().string_value
         self.declare_parameter('grid_size', .5)
+        grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
         self.declare_parameter('inflation_size', 0.2)
         self.declare_parameter('laser_inflation_size', 0.2)
         self.laser_inflation_size = self.get_parameter('laser_inflation_size').get_parameter_value().double_value
@@ -66,8 +68,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         points = None 
         self.poly_pub = self.create_publisher(MarkerArray, '/cells', 10)
         if map_file.endswith(".yaml"):
-            grid_size = self.get_parameter('grid_size').get_parameter_value().double_value
-            tiling = self.get_parameter('grid_type').get_parameter_value().string_value
+            self.get_logger().info(f'generating {tiling} graph with grid size {grid_size} and working area {wx}x{wy}')
             if tiling == 'hex':
                 points = geometry.hexagon_tiling(grid_size, working_area_x=wx, working_area_y=wy)
             elif tiling == 'square':
@@ -106,14 +107,13 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
-        self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 1)
+        self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 10)
         
-        self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 1)
+        self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 10)
         self.create_service(Empty, "nav/replan", self.replan_callback)
-        self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 1)
-        self.wall_pub = self.create_publisher(String, "nav/wall", 1)
-        self.state_pub = self.create_publisher(Int32, "nav/current_node", 1)
-        self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 1)
+        self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 10)
+        self.state_pub = self.create_publisher(Int32, "nav/current_node", 10)
+        self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 10)
         self.follow_client = self.create_client(
             UpdateTrajectory, "nav/follow_trajectory"
         )
@@ -295,7 +295,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 out.append(node)
             else:
                 break
-        return out
+        return out[:3]
         
     def execute_plan(self, use_cutoff=True):
         # if there is a wait action within the plan, only execute the plan up to the wait action
@@ -317,6 +317,15 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if (previous, self.plan[0]) not in self.env.g.edges():
             previous = None
         self.path_poly = geometry.poly_from_path(self.env.g, self.plan, eps=0.01, previous_node=previous)
+        if not self.path_poly.is_valid:
+            #self.get_logger().warn(colored('path_poly is not valid', 'red'))
+            #self.get_logger().info(f'plan is: {self.plan}')
+            #self.get_logger().info(f'path_poly is: {self.path_poly}')
+            buffer_distance = 0.001
+            buffer_poly = self.path_poly.buffer(buffer_distance)
+            # Create a new polygon from the buffer
+            self.path_poly = Polygon(buffer_poly.exterior.coords)
+    
         # assert self.path_poly.geom_type == 'Polygon' 
         # assert self.path_poly.is_valid
         # assert not self.path_poly.is_empty, f'path_poly is empty, plan is {plan}'

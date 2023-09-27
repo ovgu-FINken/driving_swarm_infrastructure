@@ -122,6 +122,7 @@ class Spawner(DrivingSwarmNode):
             else:
                 raise RuntimeError(
                     'exception while calling service: %r' % future.exception())
+            time.sleep(1.0)
         self.send_initial_pose()
 
     def send_initial_pose(self):
