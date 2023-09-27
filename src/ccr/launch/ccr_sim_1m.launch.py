@@ -4,8 +4,8 @@ import os
 import yaml
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, OpaqueFunction
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -27,6 +27,7 @@ def controller_spawning(context, *args, **kwargs):
     grid_params['graph_file'] = os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps', 'icra2024.yaml')
     local_planner_params = params['local_planner_params']
     global_planner_params = params['global_planner_params']
+    ccr_version = LaunchConfiguration('ccr_version').perform(context)
     dwa_params = params['dwa_params']
     
     with open(robots_file, 'r') as stream:
@@ -73,7 +74,7 @@ def controller_spawning(context, *args, **kwargs):
         ))
         controllers.append(Node(
            package='ccr',
-           executable='ccr_global_planner',
+           executable=f'ccr_{ccr_version}',
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
@@ -103,5 +104,6 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
+    ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld
