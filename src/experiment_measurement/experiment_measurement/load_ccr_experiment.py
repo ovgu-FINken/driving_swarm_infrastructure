@@ -1,5 +1,4 @@
 from multiprocessing.pool import Pool
-import data_aggregation
 import os
 import argparse
 import pandas.io.sql as pdsql
@@ -8,6 +7,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 from polygonal_roadmaps import environment, geometry
+from data_export import read_rosbag_all_in_one,  DataConverter
 
 def get_db3_files_in_folders(directory):
     db3_files = {}
@@ -25,22 +25,12 @@ def get_db3_files_in_folders(directory):
 def aggregate_file(db3_file, config_file, step_size):
     if os.path.isfile(db3_file.replace('.db3', '.pkl')):
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
-    config = __import__('config.' + config_file, fromlist=[None])
     try:
         print(f'start aggregating {db3_file}')
-        data_dict = data_aggregation.read_rosbag_all_in_one(db3_file)
+        data = read_rosbag_all_in_one(db3_file)
         print(f'table aggregating {db3_file}')
-        tables = data_aggregation.aggregate_tables(
-            data_dict['rosbag'],
-            config.table_column_config,
-            step_size
-        )
-        for robot in tables.keys():
-            tables[robot]['robot'] = robot
-            
-        
-        df = pd.concat(tables.values()).reset_index(drop=True)
-        df = clean_df(df)
+        converter = DataConverter()
+        df = converter.convert_df(data)
         df['db3'] = db3_file
         df.to_pickle(db3_file.replace('.db3', '.pkl'))
         print(f'done  aggregating {db3_file}')
@@ -48,13 +38,6 @@ def aggregate_file(db3_file, config_file, step_size):
     except pdsql.DatabaseError:
         print(f'error aggregating {db3_file}')
         return pd.DataFrame()
-
-def clean_df(df):
-    df.command = df.command.fillna(method='ffill')
-    # only where the command is "go" the data is part of the experiment
-    df = df[df.command.eq('go')].copy()
-    df["t"] = (df.timestamp - df.timestamp.iloc[0]) / 1e9
-    return df
 
 def get_robot_id(x, y, start_pos):
     dist = [np.linalg.norm(np.array([x-p[0], y-p[1]])) for p in start_pos]

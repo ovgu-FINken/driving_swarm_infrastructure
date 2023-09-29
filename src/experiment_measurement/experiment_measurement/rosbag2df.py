@@ -59,7 +59,6 @@ def read_rosbag_all_in_one(db_file_path, topics=None):
     df = pd.read_sql_query(f"SELECT messages.*, topics.name, topics.type FROM messages JOIN topics ON messages.topic_id==topics.id WHERE {topics_str}", cnx)
     dict_df = {}
 
-    # for each topic in the db-file create a csv-file named after the topic plus the timestamp
     msgs = []
     for _, row in df.iterrows():
         msg_type = get_message(row['type'])
