@@ -20,7 +20,7 @@ global_planner_params:
   belief_lifetime: 15.0
   belief_lifetime_variability: 2.0
   horizon: 6
-  wait_cost: 1.3
+  wait_cost: 3.5
 
 dwa_params:
   dt: 2.0
