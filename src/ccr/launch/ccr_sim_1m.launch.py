@@ -79,6 +79,7 @@ def controller_spawning(context, *args, **kwargs):
            parameters=[{
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
+              'priorities': LaunchConfiguration('priorities').perform(context),
            }, grid_params, local_planner_params, global_planner_params
               ],
            output='both',
@@ -105,5 +106,6 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
+    ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld

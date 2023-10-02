@@ -41,7 +41,7 @@ def tf_to_xyt(timestamp, name, type, data):
     x = data.transforms[0].transform.translation.x
     y = data.transforms[0].transform.translation.y
     q = data.transforms[0].transform.rotation
-    theta = euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
+    theta = euler_from_quaternion([q.w, q.x, q.y, q.z])[2]
     
     return {'timestamp': timestamp,
             'x': x,
@@ -60,8 +60,9 @@ def get_atomic_value(timestamp, name, type, data):
         return {'timestamp': timestamp, 'robot': get_name_from_topic(name), get_topic_variable(name): data.data}
     return {'timestamp': timestamp, get_topic_variable(name): data.data}
 
-def cmd_vel_to_vw(timestamp, name, type, data):
-    return {'timestamp': timestamp, 'robot': get_name_from_topic(name), 'trans_vel': data.linear.x, 'rot_vel': data.angular.z}
+def twist_to_vw(timestamp, name, type, data):
+    topic = get_topic_variable(name)
+    return {'timestamp': timestamp, 'robot': get_name_from_topic(name), f'{topic}_trans': data.linear.x, f'{topic}_rot': data.angular.z}
 
 class DataConverter:
     # this class is used to convert the data from the raw msg data to a numeric column(s)
@@ -70,7 +71,7 @@ class DataConverter:
         self._types_func = {}
         self.register_type('rosgraph_msgs/msg/Clock', clock_to_s)
         self.register_type('tf2_msgs/msg/TFMessage', tf_to_xyt)
-        self.register_type('geometry_msgs/msg/Twist', cmd_vel_to_vw)
+        self.register_type('geometry_msgs/msg/Twist', twist_to_vw)
         self.register_type('std_msgs/msg/Int32', get_atomic_value)
         self.register_type('std_msgs/msg/Float32', get_atomic_value)
         self.register_type('std_msgs/msg/String', get_atomic_value)

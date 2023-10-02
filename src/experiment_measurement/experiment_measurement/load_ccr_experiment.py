@@ -27,7 +27,8 @@ def aggregate_file(db3_file, config_file, step_size):
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
     try:
         print(f'start aggregating {db3_file}')
-        data = read_rosbag_all_in_one(db3_file)
+        topics = ["%goal_completed", "/tf", "/clock", "/command", "%status", "%cmd_vel", "%current_node"]
+        data = read_rosbag_all_in_one(db3_file, topics=topics)
         print(f'table aggregating {db3_file}')
         converter = DataConverter()
         df = converter.convert_df(data)
@@ -55,78 +56,11 @@ def get_algo_from_name(name):
         return "baseline"
     return "ccr"
 
-class map_loader_without_ros:
-    def __init__(self, graph_file=None):
-        # Simulating parameter declarations and assignments without ROS
-        self.parameters = {
-        'graph_file': graph_file,
-        'x_min': -2.25,
-        'x_max': 2.75,
-        'y_min': -1.75,
-        'y_max': 1.25,
-        'grid_type': 'square',
-        'grid_size': 0.5,
-        'inflation_size': 0.1,
-        'laser_inflation_size': 0.15,
-        'vehicle_model': 3,
-        'step_size': 0.1,
-        'turn_speed': 0.5,
-        'inertia': 0.01,
-        'belief_lifetime': 15.0,
-        'belief_lifetime_variability': 2.0,
-        'horizon': 5,
-        'wait_cost': 1.01,
-            
-        }
-
-        map_file = self.get_parameter('graph_file')
-        print(f"map_file value: {map_file}")  # print the value of map_file
-
-        if map_file.endswith(".yaml"):
-            grid_size = self.get_parameter('grid_size')
-            tiling = self.get_parameter('grid_type')
-            print(f"tiling value: {tiling}")  # print the value of tiling
-            
-            wx = (self.get_parameter('x_min'), self.get_parameter('x_max'))
-            wy = (self.get_parameter('y_min'), self.get_parameter('y_max'))
-
-            points = None
-            if tiling == 'hex':
-                points = geometry.hexagon_tiling(grid_size, working_area_x=wx, working_area_y=wy)
-            elif tiling == 'square':
-                points = geometry.square_tiling(grid_size, working_area_x=wx, working_area_y=wy)
-            elif tiling == 'random':
-                points = geometry.random_tiling(50, working_area_x=wx, working_area_y=wy)
-            else:
-                print('no tiling specified, using hex')
-                points = geometry.hexagon_tiling(grid_size, working_area_x=wx, working_area_y=wy)
-
-            assert points is not None
-
-            self.env = environment.RoadmapEnvironment(map_file,
-                                                       [],
-                                                       [],
-                                                       generator_points=points,
-                                                       wx=wx,
-                                                       wy=wy,
-                                                       offset=self.get_parameter('inflation_size'))
-
-        else:
-            print("map_file does not end with .yaml")
-
-    def get_parameter(self, key):
-        return self.parameters.get(key, None)
-
-
-
 
 # because we switched turtlebots during experiments we have to assign new names and pairs by the robots starting position
 def data_assignments(dfs, db3_files):
-    def find_cell(row):
-        return map_obj.env.find_nearest_node((row.x, row.y))
     
-    pos_file = '/home/semai/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints.yaml'
-    map_obj = map_loader_without_ros('/home/semai/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/maps/icra2024.yaml')
+    pos_file = '/home/semai/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints1m.yaml'
     with open(pos_file, 'r') as file:
         waypoints = yaml.safe_load(file)
     starting_positions = [w['waypoints'][1] for w in waypoints]
@@ -138,8 +72,14 @@ def data_assignments(dfs, db3_files):
         dfs[ex_id]['type'] = get_type_from_name(name)
         dfs[ex_id]['algo'] = get_algo_from_name(name)
         
-        
+        dfs[ex_id]['robot_id'] = ""
+        dfs[ex_id]['pair_id'] = ""
         for robot in dfs[ex_id].robot.unique():
+            if pd.isna(robot):
+                continue
+            if not len(dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x']):
+                print(f'robot {robot} not found in {ex_id}')
+                continue
             x = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x'].iloc[0]
             y = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'y'].iloc[0]
             rid = get_robot_id(x, y, starting_positions)
@@ -148,8 +88,9 @@ def data_assignments(dfs, db3_files):
             # fint the pair by the starting position
             dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'pair_id'] = f'pair{int(rid / 2)+1}'
 
-        dfs[ex_id]['cell'] = dfs[ex_id].apply(find_cell, axis=1)
-        dfs[ex_id].loc[dfs[ex_id].cell == dfs[ex_id].cell.shift(), "cell"] = pd.NA
+        #dfs[ex_id]['cell'] = dfs[ex_id].apply(find_cell, axis=1)
+        dfs[ex_id].rename(columns={'current_node': 'cell'}, inplace=True)
+        #dfs[ex_id].loc[dfs[ex_id].cell == dfs[ex_id].cell.shift(), "cell"] = pd.NA
         dfs[ex_id]['cell'] = dfs[ex_id].cell.astype("Int64")
         dfs[ex_id]['N'] = len(dfs[ex_id].robot_id.unique())
 

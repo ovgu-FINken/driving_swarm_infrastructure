@@ -75,6 +75,15 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
+        self.declare_parameter('priorities', "same")
+        priorities_method = self.get_parameter('priorities').get_parameter_value().string_value
+        if priorities_method == "same":
+            self.priorities = {i: 0 for i, _ in enumerate(self.robot_names)}
+        elif priorities_method == "index":
+            self.priorities = {i: i for i, _ in enumerate(self.robot_names)}
+        else:
+            self.priorities = {i: i for i, _ in enumerate(self.robot_names)}
+            
         self.ccr_agent = planning.PriorityAgent(
             self.g,
             self.state,
