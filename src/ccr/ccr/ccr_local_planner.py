@@ -472,6 +472,8 @@ class CCRLocalPlanner(DrivingSwarmNode):
             return (value - min_value) / (max_value - min_value)
         
         position = self.get_tf_pose()
+        if position is None:
+            return None
         robot_point = ShapelyPoint(position[0], position[1])
         robot_orientation = position[2]
 
