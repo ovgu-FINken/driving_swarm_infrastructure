@@ -8,9 +8,6 @@ export INIT_TIMEOUT="300.0"
 
 export ROS_SIMULATOR="gzserver"
 
-export CCR_VERSION="global_planner_baseline"
-export CCR_PRIORITIES="index"
-export DATA_DIR="~/data/scenarios/fixed_priorities_1m"
 
 make_runs() {
 	for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
@@ -24,15 +21,15 @@ make_runs() {
 	mv rosbag* $DATA_DIR
 }
 
+export CCR_VERSION="global_planner_baseline"
+export CCR_PRIORITIES="index"
+export DATA_DIR="~/data/scenarios/sim/fixed_priorities_1m"
 make_runs
 
-
 export CCR_PRIORITIES="same"
-export DATA_DIR="~/data/scenarios/same_priorities_1m"
-
+export DATA_DIR="~/data/scenarios/sim/same_priorities_1m"
 make_runs
 
 export CCR_VERSION="global_planner"
-export DATA_DIR="~/data/scenarios/ccr_1m"
-
+export DATA_DIR="~/data/scenarios/sim/ccr_1m"
 make_runs
