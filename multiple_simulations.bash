@@ -9,7 +9,7 @@ export ROS_SIMULATOR="gzserver"
 
 
 make_runs() {
-	mkdir -o $DATA_DIR
+	mkdir -p $DATA_DIR
 	for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
 		for ((N_ROBOTS = 1; N_ROBOTS <= 8; N_ROBOTS++)); do
 			echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
