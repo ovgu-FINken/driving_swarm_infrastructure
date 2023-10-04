@@ -7,40 +7,32 @@ export RUN_TIMEOUT="600.0"
 export INIT_TIMEOUT="300.0"
 
 export ROS_SIMULATOR="gzserver"
+
 export CCR_VERSION="global_planner_baseline"
 export CCR_PRIORITIES="index"
+export DATA_DIR="~/data/scenarios/fixed_priorities_1m"
 
-for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
-	for ((N_ROBOTS = 1; N_ROBOTS <= 8; N_ROBOTS++)); do
-	    echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
-	    # Run the command with the current N_ROBOTS value
-	    $COMMAND n_robots:=$N_ROBOTS
+make_runs() {
+	for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
+		for ((N_ROBOTS = 1; N_ROBOTS <= 8; N_ROBOTS++)); do
+			echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
+			# Run the command with the current N_ROBOTS value
+			$COMMAND n_robots:=$N_ROBOTS
+		done
 	done
-done
+	mkdir -o $DATA_DIR
+	mv rosbag* $DATA_DIR
+}
 
-mkdir -o ~/data/scenarios/fixed_priorities_1m
-mv rosbag* ~/data/scenarios/fiexd_priorities_1m
+make_runs
+
 
 export CCR_PRIORITIES="same"
+export DATA_DIR="~/data/scenarios/same_priorities_1m"
 
-for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
-	for ((N_ROBOTS = 1; N_ROBOTS <= 8; N_ROBOTS++)); do
-	    echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
-	    # Run the command with the current N_ROBOTS value
-	    $COMMAND n_robots:=$N_ROBOTS
-	done
-done
+make_runs
 
-mkdir -o ~/data/scenarios/same_priorities_1m
-mv rosbag* ~/data/scenarios/same_priorities_1m
+export CCR_VERSION="global_planner"
+export DATA_DIR="~/data/scenarios/ccr_1m"
 
-export CCR_VERSION="global_planner_baseline"
-
-for ((RUN = 1; RUN <= $N_RUNS; RUN++)); do
-	for ((N_ROBOTS = 1; N_ROBOTS <= 8; N_ROBOTS++)); do
-	    echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
-	    # Run the command with the current N_ROBOTS value
-	    $COMMAND n_robots:=$N_ROBOTS
-	done
-done
-mv rosbag* ~/data/scenarios/ccr_1m
+make_runs
