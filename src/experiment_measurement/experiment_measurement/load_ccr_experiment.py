@@ -45,7 +45,13 @@ def get_type_from_name(name):
 def get_algo_from_name(name):
     if "baseline" in name:
         return "baseline"
-    return "ccr"
+    if "fixed_priorities" in name:
+        return "fixed_priorities"
+    if "same_priorities" in name:
+        return "same_priorities"
+    if "ccr" in name:
+        return "ccr"
+    return "UNCLASSIFIED"
 
 
 # because we switched turtlebots during experiments we have to assign new names and pairs by the robots starting position
