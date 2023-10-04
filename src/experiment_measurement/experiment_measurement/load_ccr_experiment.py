@@ -8,21 +8,12 @@ import pandas as pd
 import tqdm
 from polygonal_roadmaps import environment, geometry
 from data_export import read_rosbag_all_in_one,  DataConverter
+from glob import glob
 
 def get_db3_files_in_folders(directory):
-    db3_files = {}
-    # Iterate through immediate subdirectories
-    for subdir in next(os.walk(directory))[1]:
-        subdir_path = os.path.join(directory, subdir)
+    return glob(f'{directory}/**/*.db3', recursive=True)
 
-        # Iterate through files in the subdirectory
-        for filename in os.listdir(subdir_path):
-            if filename.endswith(".db3"):
-                db3_files[subdir] = os.path.join(subdir_path, filename)
-
-    return db3_files
-
-def aggregate_file(db3_file, config_file, step_size):
+def aggregate_file(db3_file):
     if os.path.isfile(db3_file.replace('.db3', '.pkl')):
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
     try:
@@ -67,10 +58,10 @@ def data_assignments(dfs, db3_files):
     
     for ex_id, _ in enumerate(tqdm.tqdm(dfs)):
         # find the fitting directory name to give a good name to the experiment
-        name = {v: k for k, v in db3_files.items()}[dfs[ex_id].db3.iloc[0]]
-        dfs[ex_id]['experiment'] = name
-        dfs[ex_id]['type'] = get_type_from_name(name)
-        dfs[ex_id]['algo'] = get_algo_from_name(name)
+        name = dfs[ex_id].db3.iloc[0].split('/')[-2]
+        dfs[ex_id]['experiment'] = str(name)
+        dfs[ex_id]['type'] = dfs[ex_id].db3.apply(get_type_from_name)
+        dfs[ex_id]['algo'] = dfs[ex_id].db3.apply(get_algo_from_name)
         
         dfs[ex_id]['robot_id'] = ""
         dfs[ex_id]['pair_id'] = ""
@@ -109,9 +100,8 @@ if __name__ == "__main__":
     db3 = get_db3_files_in_folders(args.directory)
     print(f'found {len(db3)} db3 files' )
     
-    inputs = [(f, 'ccr_experiment', 10**9) for f in db3.values()] 
     with Pool(8) as pool:
-        dfs = pool.starmap(aggregate_file, inputs)
+        dfs = pool.map(aggregate_file, db3)
     print(f'found {len(dfs)} dfs' )
     dfs = data_assignments(dfs, db3)
     df = pd.concat(dfs)
