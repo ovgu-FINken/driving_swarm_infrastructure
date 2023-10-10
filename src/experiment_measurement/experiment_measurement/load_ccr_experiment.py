@@ -6,7 +6,6 @@ import yaml
 import numpy as np
 import pandas as pd
 import tqdm
-from polygonal_roadmaps import environment, geometry
 from data_export import read_rosbag_all_in_one,  DataConverter
 from glob import glob
 
@@ -89,7 +88,7 @@ def data_assignments(dfs, db3_files):
         dfs[ex_id].rename(columns={'current_node': 'cell'}, inplace=True)
         #dfs[ex_id].loc[dfs[ex_id].cell == dfs[ex_id].cell.shift(), "cell"] = pd.NA
         dfs[ex_id]['cell'] = dfs[ex_id].cell.astype("Int64")
-        dfs[ex_id]['N'] = len(dfs[ex_id].robot_id.unique())
+        dfs[ex_id]['N'] = len(dfs[ex_id].loc[~dfs[ex_id].robot_id.isna()].robot_id.unique())
 
     return dfs
 
@@ -116,4 +115,3 @@ if __name__ == "__main__":
     df.experiment = df.experiment.astype("category")
     df.to_pickle(args.out)
 
-    
