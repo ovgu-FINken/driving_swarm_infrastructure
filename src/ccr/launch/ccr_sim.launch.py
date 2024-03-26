@@ -34,20 +34,19 @@ def controller_spawning(context, *args, **kwargs):
         robots = yaml.safe_load(stream)
     with open(waypoints_file, 'r') as stream:
          waypoints = yaml.safe_load(stream)
-    
-    for wp, robot in zip(waypoints[:n_robots], robots[:n_robots]):
-        controllers.append(Node(
-           package='goal_provider',
-           executable='simple_goal',
-           namespace=robot,
+
+    controllers.append(Node(
+           package='ccr',
+           executable='ccr_goal_provider',
            parameters=[{
               'use_sim_time': use_sim_time,
-              'waypoints': yaml.dump(wp['waypoints']),
-              'goal_radius': 0.25,
-           }],
-           remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
+              'waypoints': waypoints_file,
+              'robot_names': robots[:n_robots],
+           }, grid_params, local_planner_params, global_planner_params],
            output='both',
-        ))
+    ))
+    
+    for robot in robots[:n_robots]:
         controllers.append(Node(
            package='trajectory_follower',
            executable='dwa',

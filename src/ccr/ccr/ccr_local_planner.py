@@ -4,7 +4,7 @@ from polygonal_roadmaps import geometry, environment
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import Path
-from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
+from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray
 from std_srvs.srv import Empty
 from driving_swarm_messages.srv import SaveToFile, UpdateTrajectory
 from sensor_msgs.msg import LaserScan
@@ -13,7 +13,6 @@ import numpy as np
 import rclpy
 from shapely import Polygon, simplify, LineString
 from shapely import Point as ShapelyPoint
-from math import atan2, degrees
 import shapely
 from termcolor import colored
 
@@ -56,7 +55,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         self.wall = None
         self.initial_pos = None
-        self.allow_goal_publish = True
         self.state = None 
         self.last_state = None
         self.goal = None
@@ -65,6 +63,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly = None
         self.path_poly2 = None
         self.trajectory = None
+        self.stop_when_done = False
         points = None 
         self.poly_pub = self.create_publisher(MarkerArray, '/cells', 10)
         if map_file.endswith(".yaml"):
@@ -107,11 +106,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
 
         # set up publishers and subscribers
         self.create_service(SaveToFile, 'save_graph', self.save_graph)
-        self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 10)
+        #self.create_subscription(PoseStamped, "nav/goal", self.goal_cb, 10)
         
         self.create_subscription(Path, "nav/trajectory", self.trajectory_cb, 10)
         self.create_service(Empty, "nav/replan", self.replan_callback)
-        self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 10)
+        #self.goal_pub = self.create_publisher(Int32, "nav/goal_node", 10)
         self.state_pub = self.create_publisher(Int32, "nav/current_node", 10)
         self.plan_sub = self.create_subscription(Int32MultiArray, "nav/plan", self.plan_cb, 10)
         self.follow_client = self.create_client(
@@ -188,15 +187,12 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.g.save(req.filename)
         return res
     
-    def publish_goal(self):
-        if self.goal is None:
-            return
-        goal = self.env.find_nearest_node(self.goal[:2])
-        #self.get_logger().info(str(self.initial_pos)+" "+str(self.goal))
-        self.goal_pub.publish(Int32(data=int(goal)))
 
     def publish_state(self):
-        state = self.env.find_nearest_node(self.get_tf_pose()[:2])
+        tf_pose = self.get_tf_pose()
+        if tf_pose is None:
+            return
+        state = self.env.find_nearest_node(tf_pose[:2])
         self.state_pub.publish(Int32(data=int(state))) 
         if state != self.state:
             self.last_state = self.state
@@ -209,11 +205,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if self._command not in ["go", "reset"]:
             return
         if self._command == "reset":
-            self.allow_goal_publish = False
             self.goal = self.initial_pos
             self.get_logger().info(f'Reset activated, going back to {self.goal}', once=True)
             self.set_state("resetting")
-        self.publish_goal()
+        # self.publish_goal()
         self.publish_state()
         if self.plan:
             self.execute_plan(use_cutoff=False)
@@ -235,14 +230,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
             trajectory_line = LineString([self.pose_stamped_to_tuple(p)[:2] for p in self.trajectory.poses])
             self.poly_pub.publish(self.publish_line_marker(trajectory_line, ns=f"{self.robot_name}_trajectory", color=ColorRGBA(r=0.0, g=.0, b=0.3, a=0.4)))
     
-    def goal_cb(self, msg):
-        if self.allow_goal_publish:
-            goal = self.pose_stamped_to_tuple(msg)
-            if self.goal != goal:
-                self.goal = goal
-                self.get_logger().info(f'new goal {self.goal}')
-                self.publish_goal()
-
     def plan_cb(self, msg):
         if list(msg.data) == self.plan:
             return
@@ -281,7 +268,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
                 use_cutoff = self.plan[1] == plan[1]
                 
         self.plan = plan
-        if len(self.plan) == 1 and not self.allow_goal_publish:
+        if len(self.plan) == 1 and self.stop_when_done:
             self.set_state("done")
             return
         self.execute_plan(use_cutoff=use_cutoff)
@@ -333,21 +320,23 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.path_poly = shapely.intersection(self.path_poly, self.scan_poly)
         self.path_poly = simplify(self.path_poly, 0.01)
         self.path_poly = self.resolve_multi_polygon(self.path_poly)
-        position = ShapelyPoint(self.get_tf_pose()[:2])
 
-        if not self.path_poly.contains(position):
-            distance = self.path_poly.distance(position)
-            if distance > 0.1:
-                self.get_logger().warn(colored(f'robot is not in feasible area, d={distance:.2f}m', 'red'))
-
-        if self.path_poly.is_empty:
+        if self.path_poly is None or self.path_poly.is_empty:
             self.get_logger().warn(colored('feasible_area is empty, will not send path', 'red'))
             self.get_logger().info(f'plan is: {self.plan}')
             self.send_path([], ti=0)
             return
+
+        # print warning if robot is not in feasible area
+        tf_pose = self.get_tf_pose()
+        if tf_pose is not None:
+            position = ShapelyPoint(tf_pose[:2])
+            if not self.path_poly.contains(position):
+                distance = self.path_poly.distance(position)
+                if distance > 0.1:
+                    self.get_logger().warn(colored(f'robot is not in feasible area, d={distance:.2f}m', 'red'))
         
         # compute cutoff point
-        
         start = None
         cutoff = None
         if self.trajectory is None or not len(self.trajectory.poses):
@@ -390,7 +379,10 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if not len(trajectory):
             if len(self.plan) > 1:
                 self.get_logger().info(colored('sending empty trajectory', 'red'))
-            trajectory = [self.get_tf_pose()]
+            tf_pose = self.get_tf_pose()
+            if tf_pose is None:
+                return
+            trajectory = [tf_pose]
             ti = 0
         if len(trajectory) == 1 and len(self.plan) > 1:
             self.get_logger().info(colored('sending single point trajectory', 'red'))
@@ -414,7 +406,11 @@ class CCRLocalPlanner(DrivingSwarmNode):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
         
-        px, py, pt = self.get_tf_pose()
+        tf_pose = self.get_tf_pose()
+        if tf_pose is None:
+            return
+        
+        px, py, pt = tf_pose
         # convert scan ranges to xy coordinates
         points = []
         for i, r in enumerate(r):
@@ -465,43 +461,19 @@ class CCRLocalPlanner(DrivingSwarmNode):
         if mp is None:
             return None
         
-        def angle_between_points(p1, p2):
-            return degrees(atan2(p2[1] - p1[1], p2[0] - p1[0]))
-
-        def normalize(value, max_value, min_value):
-            return (value - min_value) / (max_value - min_value)
-        
         position = self.get_tf_pose()
         if position is None:
             return None
         robot_point = ShapelyPoint(position[0], position[1])
-        robot_orientation = position[2]
 
         if mp.geom_type != 'MultiPolygon':
             return mp
         
         poly = [poly for poly in mp.geoms if not poly.is_empty and poly.is_valid]
 
-        distances = [p.distance(robot_point) for p in poly]
-        max_distance = max(distances)
-        min_distance = min(distances)
 
         def score_polygon(poly):
             return robot_point.distance(poly)
-            centroid = poly.centroid
-            angle_to_polygon = angle_between_points((robot_point.x, robot_point.y), (centroid.x, centroid.y))
-            angle_difference = abs(robot_orientation - angle_to_polygon)
-
-            normalized_distance = normalize(poly.distance(robot_point), max_distance, min_distance)
-            normalized_angle_difference = normalize(angle_difference, 180, 0)  # angles can vary between 0 and 180 degrees
-            self.get_logger().info(f"angle: {angle_difference}, distance: {poly.distance(robot_point)}")
-            self.get_logger().info(f"angle: {normalized_angle_difference}, distance: {normalized_distance}")
-
-            # Define weights
-            distance_weight = 0.5
-            angle_weight = 0.5
-
-            return distance_weight * normalized_distance + angle_weight * normalized_angle_difference
 
         target_polygon = min(poly, key=score_polygon)
         assert target_polygon.geom_type == 'Polygon'
