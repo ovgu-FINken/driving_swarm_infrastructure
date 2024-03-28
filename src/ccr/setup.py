@@ -28,6 +28,7 @@ setup(
             'ccr_global_planner = ccr.ccr_global_planner:main',
             'ccr_global_planner_baseline = ccr.ccr_global_planner_baseline:main',
             'ccr_goal_provider = ccr.ccr_goal_provider:main',
+            'ccr_fake_execution = ccr.ccr_fake_execution:main',
         ],
     },
 )
