@@ -17,7 +17,7 @@ def controller_spawning(context, *args, robots_file=None, waypoints_file=None, p
     n_robots = LaunchConfiguration('n_robots').perform(context)
     n_robots = int(n_robots)
     use_sim_time = TextSubstitution(text='False')
-    param_file = os.path.join(get_package_share_directory('ccr'), 'params', 'ccr_params.yaml')
+    param_file = os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('params').perform(context))
     with open(param_file, 'r') as stream:
          params = yaml.safe_load(stream)
          
@@ -26,7 +26,6 @@ def controller_spawning(context, *args, robots_file=None, waypoints_file=None, p
     local_planner_params = params['local_planner_params']
     global_planner_params = params['global_planner_params']
     ccr_version = LaunchConfiguration('ccr_version').perform(context)
-    dwa_params = params['dwa_params']
     
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
@@ -91,6 +90,7 @@ def generate_launch_description():
     ld.add_action(rosbag_recording)
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
+    ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(OpaqueFunction(function=controller_spawning, kwargs={
         'robots_file': args['robot_names_file'],
         'waypoints_file': args['waypoints_file'],

@@ -3,10 +3,10 @@ grid_params:
   #graph_file: os.path.join(get_package_share_directory('driving_swarm_bringup') 'maps' 'icra2024.yaml')
   x_min: -2.25
   x_max: 2.75
-  y_min: -1.75
+  y_min: -2.0
   y_max: 1.25
-  grid_type: square
-  grid_size: 0.5
+  grid_type: hex
+  grid_size: 0.75
 
 local_planner_params:
   transition_prob: 0.5

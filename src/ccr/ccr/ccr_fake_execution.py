@@ -1,11 +1,9 @@
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
-from polygonal_roadmaps import geometry, environment, planning
-import networkx as nx
+from polygonal_roadmaps import geometry, environment
 import numpy as np
 import functools
 from std_msgs.msg import Int32MultiArray, Int32
-from termcolor import colored
 
 class CCRFakeExecution(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -59,6 +57,9 @@ class CCRFakeExecution(DrivingSwarmNode):
         with open(poses_file, 'r') as stream:
             poses = yaml.safe_load(stream)
         
+        self.declare_parameter('transition_prob', 1.0)
+        self.transition_prob = self.get_parameter('transition_prob').get_parameter_value().double_value
+
         # convert starting pose to state
         self.states = {}
         for robot, pose in zip(self.robots, poses):
@@ -71,9 +72,7 @@ class CCRFakeExecution(DrivingSwarmNode):
         for robot in self.robots:
             self.create_subscription(Int32MultiArray, f"/{robot}/nav/plan", functools.partial(self.plan_cb, robot), 10)
             self.state_pub[robot] = self.create_publisher(Int32, f'/{robot}/nav/current_node', 10)
-
         self.create_timer(1.0, self.timer_cb) 
-
 
     def timer_cb(self):
         self.advance_plans()
@@ -86,6 +85,8 @@ class CCRFakeExecution(DrivingSwarmNode):
         
     def advance_plans(self):
         for robot, plan in self.plans.items():        
+            if np.random.rand() > self.transition_prob:
+                continue
             if len(plan) < 2:
                 continue
             if plan[0] != self.states[robot]:
