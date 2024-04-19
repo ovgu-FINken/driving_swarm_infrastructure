@@ -45,7 +45,6 @@ class SimpleGoalProvider(DrivingSwarmNode):
         for x,y,theta in goals:
             p = PoseStamped()
             p.header.frame_id = self.reference_frame
-            #p.header.stamp = rclpy.time.Time().to_msg()
             p.pose.position.x = x
             p.pose.position.y = y
             p.pose.position.z = 0.0

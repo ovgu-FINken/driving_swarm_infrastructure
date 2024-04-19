@@ -19,6 +19,7 @@ from shapely import Polygon, Point, LineString, union_all
 from sensor_msgs.msg import LaserScan
 from visualization_msgs.msg import MarkerArray, Marker
 from rclpy.duration import Duration
+from driving_swarm_utils.utils import get_xy_from_scan, detect_tb_from_ranges
 
 
 class TrajectoryFollower(DrivingSwarmNode):
@@ -54,9 +55,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.current_goal = None
         self.name = self.get_namespace()[1:]
         self.angular = None
-        self.cluster_size_threshold = 8
-        self.cluster_linkage_threshold = 0.2
-        self.cluster_range_threshold = 1.0
         self.workspace = Polygon([
             (-10, -10),
             (-10, 10),
@@ -64,7 +62,6 @@ class TrajectoryFollower(DrivingSwarmNode):
             (10, -10)
         ])
         
-
         self.setup_tf()
         self.create_subscription(LaserScan, 'scan', self.scan_cb, rclpy.qos.qos_profile_sensor_data)
     
@@ -179,12 +176,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         p = [self.position(vel, rot, t) for t in [0.5*dt, dt]]
         dist = [self.get_obstacle_distance(x, y) for x, y in p]
         dist = min(dist)
-        #ls = LineString(p)
-        #dist = self.occupied.distance(ls)
-        # should be the case anyway
-        #if self.occupied.contains(ls):
-        #    dist = 0
-
         return np.clip(self.obstacle_threshold - dist, 0.0, self.obstacle_threshold)
         
     def value(self, vel, rot, dt, diff_pose):
@@ -197,7 +188,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         diff_pose = self.get_target_pose(offset=dt)
         diff_pose = diff_pose.x, diff_pose.y, diff_pose.theta
 
-        
         admissable_min = max(self.min_vel, self.vel - self.max_accel_x)
         admissable_max = min(self.max_vel, self.vel + self.max_accel_x)
         admissable_vel = np.linspace(admissable_min, admissable_max, self.n_samples_linear)
@@ -207,11 +197,6 @@ class TrajectoryFollower(DrivingSwarmNode):
         
         admissable_cmd = [(x, y) for x in admissable_vel for y in admissable_rot]
         cmd = min(admissable_cmd, key=lambda x: self.value(*x, dt, diff_pose))
-        # self.get_logger().info(f'calculate_dwa output: vel:{cmd[0]}, rot: {cmd[1]}')
-        # self.get_logger().info(f'alignment:\t{self.w1 * self.alignment_error(cmd[0], cmd[1], diff_pose, dt)}')
-        # self.get_logger().info(f'position:\t{self.w2 * self.position_error(cmd[0], cmd[1], diff_pose, dt)}')
-        # self.get_logger().info(f'obstacle:\t{self.w3 * self.obstacle_error(cmd[0], cmd[1], dt)}')
-        # self.get_logger().info(f'velocity:\t{self.w4 * self.velocity_error(cmd[0], cmd[1], diff_pose, dt)}')
         
         return cmd[0], cmd[1]
     
@@ -314,67 +299,11 @@ class TrajectoryFollower(DrivingSwarmNode):
         pose = (1-dt) * np.array(last_pose) + dt * np.array(next_pose)
         return Pose2D(x=pose[0], y=pose[1], theta=pose[2])
     
-    def detect_tb(self, ranges, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
-        # detect turtlebot in scan ranges
-        clusters = np.zeros_like(ranges, dtype=np.int32)
-        
-        # compute single-linkage clusters, where points are connected if they are closer than cluster_threshold
-        last_range = None
-        last_cluster = 0
-        for i, r in enumerate(ranges):
-            if last_range is None:
-                last_range = r
-                continue
-            if r > 9.0:
-                clusters[i] = last_cluster
-                continue
-            if np.abs(r - last_range) < self.cluster_linkage_threshold:
-                clusters[i] = last_cluster
-            else:
-                last_cluster += 1
-                clusters[i] = last_cluster
-            last_range = r
-        
-        # if r[-1] and r[0] are close, connect the clusters
-        if np.abs(ranges[-1] - ranges[0]) < self.cluster_linkage_threshold:
-            clusters[clusters == clusters[-1]] = clusters[0]
-        
-        # compute cluster sizes
-        cluster_sizes = np.bincount(clusters)
-        
-        # for each cluster, compute the mean angle and range
-        cluster_center_index = np.zeros_like(cluster_sizes, dtype=np.int32)
-        tb_center_points = []
-        for i in range(len(cluster_sizes)):
-            if cluster_sizes[i] > 30:
-                continue
-            min_index = np.min(np.where(clusters == i)[0])
-            cluster_center_index[i] = (min_index + int(cluster_sizes[i] / 2)) % len(ranges)
-            cluster_ranges = [ranges[ci] for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))]
-            cr = np.mean(cluster_ranges)
-            if cr > self.cluster_range_threshold:
-                continue
-            if cr * cluster_sizes[i] > 30:
-                continue
-            if cluster_sizes[i] < 2:
-                continue
-            cluster_positions = [self.get_xy_from_scan(ci, ranges[ci], px, py, pt, angle_min, angle_increment) for ci in range(min_index, min_index + cluster_sizes[i] % len(ranges))]
-            cluster_center = np.mean(cluster_positions, axis=0)
-            mean_distance_to_center = np.mean([np.linalg.norm(p - cluster_center) for p in cluster_positions])
-            if mean_distance_to_center > 0.1:
-                continue
-            tb_center_points.append(cluster_center)
-
-        
-        self.tb_center_points = tb_center_points
-
 
     def scan_cb(self, msg):
         # convert laser scan to polygon
         ranges = msg.ranges
         ranges = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in ranges]
-        
-
         
         # px, py, pt = self.get_tf_pose()
         # here, we use local coordinates
@@ -384,20 +313,14 @@ class TrajectoryFollower(DrivingSwarmNode):
         points = []
 
         for i, r in enumerate(ranges):
-            x, y = self.get_xy_from_scan(i, r, px, py, pt, msg.angle_min, msg.angle_increment)
+            x, y = get_xy_from_scan(i, r, px, py, pt, msg.angle_min, msg.angle_increment)
             points.append((x,y))
 
         self.scan_poly = Polygon(points) # .buffer(-self.laser_inflation_size)
         self.occupied = self.workspace.difference(self.scan_poly)
 
-        self.detect_tb(ranges, px, py, pt, msg.angle_min, msg.angle_increment)
+        self.tb_center_points = detect_tb_from_ranges(ranges, px, py, pt, msg.angle_min, msg.angle_increment)
         #self.occupied = union_all(self.tb_polygons + [occupied])
-
-    def get_xy_from_scan(self, i, r, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
-        angle = angle_min + i * angle_increment + pt
-        x = r * np.cos(angle) + px
-        y = r * np.sin(angle) + py
-        return x,y
 
 
 def main():

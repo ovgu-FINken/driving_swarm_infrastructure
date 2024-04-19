@@ -6,6 +6,7 @@ import tf_transformations
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
 from rclpy.time import Time
+import numpy as np
 
 
 class DrivingSwarmNode(Node):

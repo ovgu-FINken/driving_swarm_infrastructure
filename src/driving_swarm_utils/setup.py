@@ -20,7 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ds_node = driving_swarm_utils.ds_node:main'
+            'node = driving_swarm_utils.node:main',
+            #'utils = driving_swarm_utils.utils:main',
+            'turtlebot_sensor = driving_swarm_utils.turtlebot_sensor:main',
         ],
     },
 )
