@@ -4,9 +4,9 @@ import numpy as np
 from driving_swarm_utils.node import DrivingSwarmNode
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String
-class ReactiveController(DrivingSwarmNode):
+from std_msgs.msg import Int32
 
+class ReactiveController(DrivingSwarmNode):
     def __init__(self):
         super().__init__('reactive_controller')
         self.declare_parameter('synchronise', True)
@@ -32,34 +32,24 @@ class ReactiveController(DrivingSwarmNode):
         msg = Twist()
         if self.forward_distance > 0.4:
             self.clear = True
-
-        if self.left_distance < 0.12:
-            msg.linear.x = 0.0
-            msg.angular.z = -0.1
-        elif self.right_distance < 0.12:
-            msg.linear.x = 0.0
-            msg.angular.z = 0.1
+        if self.forward_distance > 0.3:
+            msg.linear.x = 0.10
+            msg.angular.z = 0.0
         else:
-            if self.forward_distance > 0.3:
-                msg.linear.x = 0.10
-                msg.angular.z = 0.0
-            else:
-                if self.clear:
-                    # with probability 0.1, reverse turning direction (only when the roboter was clearing the obstacles before)
-                    if np.random.rand() < 0.1:
-                        self.sign *= -1.0
-                        self.clear = False
-                msg.linear.x = 0.0
-                msg.angular.z = self.sign * 1.0
+            if self.clear:
+                # with probability 0.1, reverse turning direction (only when the roboter was clearing the obstacles before)
+                if np.random.rand() < 0.1:
+                    self.sign *= -1.0
+                    self.clear = False
+            msg.linear.x = 0.0
+            msg.angular.z = self.sign * 1.0
         self.sign_pub.publish(Int32(data=int(self.sign)))
         self.publisher.publish(msg)
     
     def laser_cb(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
-        self.forward_distance = min(r[:60] + r[-60:])
-        self.left_distance = min(r[60:120])
-        self.right_distance = min(r[-120:-60])
+        self.forward_distance = min(r[:45] + r[-45:])
 
 
 def main(args=None):
