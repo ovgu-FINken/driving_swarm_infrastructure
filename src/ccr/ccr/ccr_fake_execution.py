@@ -3,7 +3,7 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment
 import numpy as np
 import functools
-from std_msgs.msg import Int32MultiArray, Int32
+from std_msgs.msg import Int32MultiArray, Int32, String
 
 class CCRFakeExecution(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -72,9 +72,20 @@ class CCRFakeExecution(DrivingSwarmNode):
         for robot in self.robots:
             self.create_subscription(Int32MultiArray, f"/{robot}/nav/plan", functools.partial(self.plan_cb, robot), 10)
             self.state_pub[robot] = self.create_publisher(Int32, f'/{robot}/nav/current_node', 10)
+        
+        self.time = 0
+        self.cmd_pub = self.create_publisher(String, '/command', 10)
+        self.timeout = 5
+
         self.create_timer(1.0, self.timer_cb) 
 
     def timer_cb(self):
+        self.time += 1
+        if self.time < self.timeout:
+            return
+        elif self.time == self.timeout:
+            self.cmd_pub.publish(String(data='go'))
+        
         self.advance_plans()
         self.publish_state()
     
