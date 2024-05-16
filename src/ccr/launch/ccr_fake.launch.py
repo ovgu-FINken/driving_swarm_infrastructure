@@ -88,6 +88,7 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     ld.add_action(rosbag_recording)
+    ld.add_action(DeclareLaunchArgument('n_robots', default_value=EnvironmentVariable('N_ROBOTS', default_value='2')))
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
