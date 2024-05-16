@@ -70,8 +70,11 @@ def data_assignments(dfs, db3_files):
         
         dfs[ex_id]['robot_id'] = ""
         dfs[ex_id]['pair_id'] = ""
+        # TODO: provide this for robots without position
         for robot in dfs[ex_id].robot.unique():
             if pd.isna(robot):
+                continue
+            if 'x' not in dfs[ex_id].columns:
                 continue
             if not len(dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x']):
                 print(f'robot {robot} not found in {ex_id}')
@@ -113,5 +116,5 @@ if __name__ == "__main__":
     df.robot_id = df.robot_id.astype("category")
     df.pair_id = df.pair_id.astype("category")
     df.experiment = df.experiment.astype("category")
-    df.to_pickle(args.out)
+    df.to_parquet(args.out)
 
