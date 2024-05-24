@@ -4,7 +4,9 @@ import os
 import yaml
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
+from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument, RegisterEventHandler, EmitEvent
 from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -40,16 +42,25 @@ def controller_spawning(context, *args, robots_file=None, waypoints_file=None, p
            }, grid_params, local_planner_params, global_planner_params],
            output='both',
     ))
-    controllers.append(Node(
+    fake_controller = Node(
            package='ccr',
            executable='ccr_fake_execution',
            parameters=[{
               'use_sim_time': use_sim_time,
               'poses': poses_file,
               'robot_names': robots[:n_robots],
+              'run_timeout': LaunchConfiguration('run_timeout'),
            }, grid_params, local_planner_params, global_planner_params],
            output='both',
-    ))
+    )
+    controllers.append(fake_controller)
+    
+    exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
+            target_action=fake_controller,
+            on_exit=EmitEvent(event=Shutdown(reason="command node exited"))
+        )
+    )
+    controllers.append(exit_event_handler)
     
     for robot in robots[:n_robots]:
         controllers.append(Node(
@@ -92,6 +103,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
+    ld.add_action(DeclareLaunchArgument('run_timeout', default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")))
     ld.add_action(OpaqueFunction(function=controller_spawning, kwargs={
         'robots_file': args['robot_names_file'],
         'waypoints_file': args['waypoints_file'],

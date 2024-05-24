@@ -152,7 +152,10 @@ class DrivingSwarmNode(Node):
         elif msg.data == "stop":
             self.set_state("stopped")
             raise KeyboardInterrupt()
-
+    
+    def shutdown(self):
+        self.get_logger().info("shutting down")
+        exit()
 
 def main_fn(name, NodeClass):
     rclpy.init()
@@ -160,7 +163,5 @@ def main_fn(name, NodeClass):
         node = NodeClass(name)
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("Shutting Down")
-        node.destroy_node()
-    rclpy.shutdown() 
+        pass
 

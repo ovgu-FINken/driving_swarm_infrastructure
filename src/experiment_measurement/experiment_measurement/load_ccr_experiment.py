@@ -75,18 +75,28 @@ def data_assignments(dfs, db3_files):
             if pd.isna(robot):
                 continue
             if 'x' not in dfs[ex_id].columns:
-                continue
-            if not len(dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x']):
+                # if no names are provided, assume robot names are ordered i.e. robotA, robotB, robotC
+                rid = dfs[ex_id].robot.unique().tolist().index(robot)
+            elif not len(dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x']):
                 print(f'robot {robot} not found in {ex_id}')
                 continue
-            x = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x'].iloc[0]
-            y = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'y'].iloc[0]
-            rid = get_robot_id(x, y, starting_positions)
+            else:
+                x = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'x'].iloc[0]
+                y = dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'y'].iloc[0]
+                rid = get_robot_id(x, y, starting_positions)
             # find the starting position for each tb and assign a name
             dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'robot_id'] = f'robot{rid+1}'
             # fint the pair by the starting position
             dfs[ex_id].loc[dfs[ex_id].robot.eq(robot), 'pair_id'] = f'pair{int(rid / 2)+1}'
 
+        if 'x' not in dfs[ex_id].columns:
+            dfs[ex_id]['x'] = 0.0
+            dfs[ex_id]['y'] = 0.0
+            dfs[ex_id]['theta'] = 0.0
+            dfs[ex_id]['rot_vel'] = 0.0
+            dfs[ex_id]['trans_vel'] = 0.0
+            dfs[ex_id]['cmd_vel_rot'] = 0.0
+            dfs[ex_id]['cmd_vel_trans'] = 0.0
         #dfs[ex_id]['cell'] = dfs[ex_id].apply(find_cell, axis=1)
         dfs[ex_id].rename(columns={'current_node': 'cell'}, inplace=True)
         #dfs[ex_id].loc[dfs[ex_id].cell == dfs[ex_id].cell.shift(), "cell"] = pd.NA

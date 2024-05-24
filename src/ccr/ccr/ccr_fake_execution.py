@@ -8,6 +8,9 @@ from std_msgs.msg import Int32MultiArray, Int32, String
 class CCRFakeExecution(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
+        self.declare_parameter("run_timeout", 0.0)
+        self.run_timeout = self.get_parameter("run_timeout").get_parameter_value().double_value
+
         # get graph stucture
         self.declare_parameter('graph_file', 'graph.yaml')
         self.declare_parameter('x_min', -2.0)
@@ -73,18 +76,22 @@ class CCRFakeExecution(DrivingSwarmNode):
             self.create_subscription(Int32MultiArray, f"/{robot}/nav/plan", functools.partial(self.plan_cb, robot), 10)
             self.state_pub[robot] = self.create_publisher(Int32, f'/{robot}/nav/current_node', 10)
         
-        self.time = 0
+        self.time = -5 # 5 seconds for initialization
         self.cmd_pub = self.create_publisher(String, '/command', 10)
-        self.timeout = 5
 
         self.create_timer(1.0, self.timer_cb) 
 
     def timer_cb(self):
         self.time += 1
-        if self.time < self.timeout:
+        if self.time < 0:
             return
-        elif self.time == self.timeout:
+        elif self.time == 0:
             self.cmd_pub.publish(String(data='go'))
+        elif self.time > self.run_timeout:
+            self.cmd_pub.publish(String(data='stop'))
+            self.get_logger().info('exiting after timeout')
+            self.shutdown()
+            exit()
         
         self.advance_plans()
         self.publish_state()
