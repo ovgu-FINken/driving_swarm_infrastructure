@@ -8,6 +8,7 @@ import pandas as pd
 import tqdm
 from data_export import read_rosbag_all_in_one,  DataConverter
 from glob import glob
+import logging
 
 def get_db3_files_in_folders(directory):
     return glob(f'{directory}/**/*.db3', recursive=True)
@@ -52,6 +53,7 @@ def get_algo_from_name(name):
         return "ccr"
     if "baseline" in name:
         return "baseline"
+    logging.info(f'unknown algo in: {name}')
     return "UNCLASSIFIED"
 
 
