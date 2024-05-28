@@ -39,17 +39,19 @@ def get_type_from_name(name):
         return "real"
     if "sim" in name:
         return "simulated"
+    if "fake" in name:
+        return "discrete"
     return "UNCLASSIFIED"
 
 def get_algo_from_name(name):
-    if "baseline" in name:
-        return "baseline"
-    if "fixed_priorities" in name:
-        return "fixed_priorities"
-    if "same_priorities" in name:
-        return "same_priorities"
+    if "index" in name:
+        return "fixed"
+    if "same" in name:
+        return "same"
     if "ccr" in name:
         return "ccr"
+    if "baseline" in name:
+        return "baseline"
     return "UNCLASSIFIED"
 
 
