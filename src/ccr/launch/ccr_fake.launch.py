@@ -13,9 +13,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 
-def controller_spawning(context, *args, robots_file=None, waypoints_file=None, poses_file=None, **kwargs):
+def controller_spawning(context, *args, robots_file=None, poses_file=None, **kwargs):
     controllers = []
 
+    waypoints_file = os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', LaunchConfiguration('waypoints_file').perform(context))
     n_robots = LaunchConfiguration('n_robots').perform(context)
     n_robots = int(n_robots)
     use_sim_time = TextSubstitution(text='False')
@@ -80,32 +81,31 @@ def controller_spawning(context, *args, robots_file=None, waypoints_file=None, p
 
 
 def generate_launch_description():
+    ld = LaunchDescription()
+    ld.add_action(DeclareLaunchArgument('n_robots', default_value=EnvironmentVariable('N_ROBOTS', default_value='2')))
+    ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
+    ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
+    ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
+    ld.add_action(DeclareLaunchArgument('run_timeout', default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")))
+    ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     args = {
          'behaviour': 'false',      
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
-         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_waypoints.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
+    ld.add_action(OpaqueFunction(function=controller_spawning, kwargs={
+        'robots_file': args['robot_names_file'],
+        'poses_file': args['poses_file']}))
     rosbag_recording = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('experiment_measurement'),
                          'launch', 'rosbag_recording.launch.py')),
         launch_arguments=args.items()
     )
-
-    ld = LaunchDescription()
     ld.add_action(rosbag_recording)
-    ld.add_action(DeclareLaunchArgument('n_robots', default_value=EnvironmentVariable('N_ROBOTS', default_value='2')))
-    ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
-    ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
-    ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
-    ld.add_action(DeclareLaunchArgument('run_timeout', default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")))
-    ld.add_action(OpaqueFunction(function=controller_spawning, kwargs={
-        'robots_file': args['robot_names_file'],
-        'waypoints_file': args['waypoints_file'],
-        'poses_file': args['poses_file']}))
+
     return ld

@@ -17,7 +17,7 @@ def controller_spawning(context, *args, **kwargs):
     n_robots = LaunchConfiguration('n_robots').perform(context)
     n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robot_names_file').perform(context)
-    waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
+    waypoints_file = os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', LaunchConfiguration('waypoints_file').perform(context))
     param_file = os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('params').perform(context))
     with open(param_file, 'r') as stream:
          params = yaml.safe_load(stream)
@@ -84,7 +84,6 @@ def generate_launch_description():
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_real.yaml'),
-         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_waypoints.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml'),
@@ -97,4 +96,5 @@ def generate_launch_description():
     ld.add_action(multi_robot_launch)
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(OpaqueFunction(function=controller_spawning))
+    ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     return ld

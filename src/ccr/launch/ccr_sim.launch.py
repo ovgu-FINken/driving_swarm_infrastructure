@@ -14,10 +14,10 @@ from launch_ros.actions import Node
 def controller_spawning(context, *args, **kwargs):
     controllers = []
 
+    waypoints_file = os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', LaunchConfiguration('waypoints_file').perform(context))
     n_robots = LaunchConfiguration('n_robots').perform(context)
     n_robots = int(n_robots)
     robots_file = LaunchConfiguration('robot_names_file').perform(context)
-    waypoints_file = LaunchConfiguration('waypoints_file').perform(context)
     use_sim_time = TextSubstitution(text='True')
     param_file = os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('params').perform(context))
     with open(param_file, 'r') as stream:
@@ -86,23 +86,23 @@ def controller_spawning(context, *args, **kwargs):
 
 
 def generate_launch_description():
+    ld = LaunchDescription()
     args = {
          'behaviour': 'false',      
          'world': 'icra2024.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
-         'waypoints_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_waypoints.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
          'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
-    multi_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
-        launch_arguments=args.items())
-    ld = LaunchDescription()
-    ld.add_action(multi_robot_launch)
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
+    ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
+    multi_robot_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
+        launch_arguments=args.items())
+    ld.add_action(multi_robot_launch)
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld

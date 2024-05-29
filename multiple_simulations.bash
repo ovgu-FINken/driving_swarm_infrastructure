@@ -18,7 +18,7 @@ make_runs() {
 		for ((N_ROBOTS = 1; N_ROBOTS <= MAX_ROBOTS; N_ROBOTS++)); do
 			echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
 			# Run the command with the current N_ROBOTS value
-			ros2 launch ccr ccr_$MODE.launch.py use_rviz:=false use_rosbag:=true" n_robots:=$N_ROBOTS
+			ros2 launch ccr ccr_$MODE.launch.py use_rviz:=false use_rosbag:=true n_robots:=$N_ROBOTS
 			mv rosbag* $DATA_DIR
 		done
 	done
