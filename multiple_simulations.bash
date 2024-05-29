@@ -6,7 +6,6 @@ N_RUNS=$1
 MODE="fake"
 #MODE="real"
 #MODE="sim"
-COMMAND="ros2 launch ccr ccr_$MODE.launch.py use_rviz:=false use_rosbag:=true"
 export RUN_TIMEOUT="600.0"
 export INIT_TIMEOUT="300.0"
 export ROS_SIMULATOR="gzserver"
@@ -19,7 +18,7 @@ make_runs() {
 		for ((N_ROBOTS = 1; N_ROBOTS <= MAX_ROBOTS; N_ROBOTS++)); do
 			echo "Running $COMMAND with N_ROBOTS=$N_ROBOTS"
 			# Run the command with the current N_ROBOTS value
-			$COMMAND n_robots:=$N_ROBOTS
+			ros2 launch ccr ccr_$MODE.launch.py use_rviz:=false use_rosbag:=true" n_robots:=$N_ROBOTS
 			mv rosbag* $DATA_DIR
 		done
 	done
