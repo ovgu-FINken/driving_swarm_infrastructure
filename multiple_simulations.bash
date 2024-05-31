@@ -9,7 +9,7 @@ MODE="fake"
 export RUN_TIMEOUT="600.0"
 export INIT_TIMEOUT="300.0"
 export ROS_SIMULATOR="gzserver"
-BASE_DIR=~/data/test/
+BASE_DIR=~/data/experiment_$(date +%Y-%m-%d)
 MAX_ROBOTS=5
 
 
