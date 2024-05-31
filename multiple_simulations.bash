@@ -27,6 +27,7 @@ make_runs() {
 
 export MAP="icra2024_waypoints.yaml"
 export MODE="fake"
+
 export CCR_VERSION="global_planner_baseline"
 
 export CCR_PRIORITIES="index"
@@ -43,5 +44,16 @@ export DATA_DIR=$BASE_DIR/$MODE.$CCR_PRIORITIES.$CCR_VERSION.$MAP
 make_runs
 
 export CCR_PRIORITIES="same"
+export DATA_DIR=$BASE_DIR/$MODE.$CCR_PRIORITIES.$CCR_VERSION.$MAP
+make_runs
+
+# CCR
+export CCR_VERSION="global_planner"
+
+export MODE="fake"
+export DATA_DIR=$BASE_DIR/$MODE.$CCR_PRIORITIES.$CCR_VERSION.$MAP
+make_runs
+
+export MODE="sim"
 export DATA_DIR=$BASE_DIR/$MODE.$CCR_PRIORITIES.$CCR_VERSION.$MAP
 make_runs
