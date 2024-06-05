@@ -66,6 +66,10 @@ def data_assignments(dfs, db3_files):
     starting_positions = [w['waypoints'][1] for w in waypoints]
     
     for ex_id, _ in enumerate(tqdm.tqdm(dfs)):
+        if 'current_node' not in dfs[ex_id].columns:
+            logging.warn(f'no cell found in {db3_files[ex_id]}')
+            continue
+
         # find the fitting directory name to give a good name to the experiment
         name = dfs[ex_id].db3.iloc[0].split('/')[-2]
         dfs[ex_id]['experiment'] = str(name)
@@ -102,6 +106,7 @@ def data_assignments(dfs, db3_files):
             dfs[ex_id]['cmd_vel_rot'] = 0.0
             dfs[ex_id]['cmd_vel_trans'] = 0.0
         #dfs[ex_id]['cell'] = dfs[ex_id].apply(find_cell, axis=1)
+
         dfs[ex_id].rename(columns={'current_node': 'cell'}, inplace=True)
         #dfs[ex_id].loc[dfs[ex_id].cell == dfs[ex_id].cell.shift(), "cell"] = pd.NA
         dfs[ex_id]['cell'] = dfs[ex_id].cell.astype("Int64")
