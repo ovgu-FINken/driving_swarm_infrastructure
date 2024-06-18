@@ -33,6 +33,7 @@ def main():
     parser.add_argument("-waypoints_file", type=str, default=None)
     parser.add_argument("-output_dir", type=str, default=f"experiment_{time.strftime('%Y-%m-%d')}")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument('--only-max-agents', action='store_true', help='only use the maximum number of agents per experiment (the default behavior is to iterate over all N=1, ... agents)')
     args = parser.parse_args()
 
     config = {}
@@ -99,12 +100,19 @@ def main():
         
     # run experiments
     # create list of configurations:
-    run_configurations = [{"algo": algo, "mode": mode, "n": n, "run": run} \
-                           for algo in algorithms
-                           for mode in config["modes"]
-                           for n in range(1, config["n_robots"]+1)
-                           for run in range(1, config["n_runs"]+1)
-                        ]
+    if args.only_max_agents:
+        run_configurations = [{"algo": algo, "mode": mode, "n": args.n_robots, "run": run} \
+                               for algo in algorithms
+                               for mode in config["modes"]
+                               for run in range(1, config["n_runs"]+1)
+                            ]
+    else: 
+        run_configurations = [{"algo": algo, "mode": mode, "n": n, "run": run} \
+                               for algo in algorithms
+                               for mode in config["modes"]
+                               for n in range(1, config["n_robots"]+1)
+                               for run in range(1, config["n_runs"]+1)
+                            ]
     
     def run_cfg_to_str(run_cfg):
         params = "_".join([f"{k}={v}" for k, v in run_cfg["algo"][1].items()])
