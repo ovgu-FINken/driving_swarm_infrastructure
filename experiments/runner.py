@@ -97,10 +97,6 @@ def main():
             algorithms.append( (algorithm, p) )
     print(algorithms)
         
-
-
-
-
     # run experiments
     # create list of configurations:
     run_configurations = [{"algo": algo, "mode": mode, "n": n, "run": run} \
@@ -109,10 +105,15 @@ def main():
                            for n in range(1, config["n_robots"]+1)
                            for run in range(1, config["n_runs"]+1)
                         ]
+    
+    def run_cfg_to_str(run_cfg):
+        params = "_".join([f"{k}={v}" for k, v in run_cfg["algo"][1].items()])
+        return run_cfg["algo"][0] + "_" + params + \
+        f"_{run_cfg['mode']}_{run_cfg['n']}_{run_cfg['run']}"
 
     for run_cfg in run_configurations:
         # check if run directory exists
-        run_dir = os.path.join(config["output_dir"], f"{run_cfg['algo']}_{run_cfg['mode']}_{run_cfg['n']}_{run_cfg['run']}")
+        run_dir = os.path.join(config["output_dir"], run_cfg_to_str(run_cfg))
         if os.path.exists(run_dir):
             logging.info("run directory already exists")
             # check if db3 file exists in run directory:
@@ -143,11 +144,20 @@ def main():
         if args.check:
             continue
         try:
+            # save parameter settings for this run as yaml in the run directory
+            with open(os.path.join(run_dir, "params.yaml"), 'w') as f:
+                run_params = run_cfg.copy()
+                run_params["algorithm"] = run_params["algo"][0]
+                run_params["algorithm_params"] = run_params["algo"][1]
+                del run_params["algo"]
+                yaml.dump(run_params, f)
+
+            # we calculate with a realtime factor should be better than 0.1
             process = subprocess.run(command,
                                 capture_output=True,
                                 cwd=run_dir,
-                                timeout=config["run_timeout"] +
-                                config["init_timeout"]*1.5
+                                timeout=config["run_timeout"] * 10 +
+                                config["init_timeout"] * 10
                                 )
             output = process.stdout.decode("utf-8")
             err = process.stderr.decode("utf-8")
