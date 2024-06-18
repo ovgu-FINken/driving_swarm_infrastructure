@@ -101,7 +101,7 @@ def main():
     # run experiments
     # create list of configurations:
     if args.only_max_agents:
-        run_configurations = [{"algo": algo, "mode": mode, "n": args.n_robots, "run": run} \
+        run_configurations = [{"algo": algo, "mode": mode, "n": config["n_robots"], "run": run} \
                                for algo in algorithms
                                for mode in config["modes"]
                                for run in range(1, config["n_runs"]+1)
