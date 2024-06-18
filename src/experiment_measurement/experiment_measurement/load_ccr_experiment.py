@@ -9,23 +9,35 @@ import tqdm
 from data_export import read_rosbag_all_in_one,  DataConverter
 from glob import glob
 import logging
+from functools import partial
 
 def get_db3_files_in_folders(directory):
     return glob(f'{directory}/**/*.db3', recursive=True)
 
-def aggregate_file(db3_file):
+def aggregate_file(db3_file, use_cached=True):
+    # we check if a pkl file already exists
+    # this caches the result so we dont have to recompute this every time
     if os.path.isfile(db3_file.replace('.db3', '.pkl')):
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
     try:
-        print(f'start aggregating {db3_file}')
+        logging.info(f'start aggregating {db3_file}')
         topics = ["%goal_completed", "/tf", "/clock", "/command", "%status", "%cmd_vel", "%current_node"]
         data = read_rosbag_all_in_one(db3_file, topics=topics)
-        print(f'table aggregating {db3_file}')
+        logging.info(f'table aggregating {db3_file}')
         converter = DataConverter()
         df = converter.convert_df(data)
         df['db3'] = db3_file
+        # read experiment ../params.yaml which is stored next to the rosbag folder
+        # get path for params.yaml
+        params_file = os.path.join(os.path.dirname(db3_file), '..', 'params.yaml')
+        logging.info(f'reading params from {params_file}')
+        with open(params_file) as f:
+            params = yaml.safe_load(f)
+        for k, v in params.items():
+            df[k] = v
+
         df.to_pickle(db3_file.replace('.db3', '.pkl'))
-        print(f'done  aggregating {db3_file}')
+        logging.info(f'done  aggregating {db3_file}')
         return df
     except pdsql.DatabaseError:
         print(f'error aggregating {db3_file}')
@@ -34,28 +46,6 @@ def aggregate_file(db3_file):
 def get_robot_id(x, y, start_pos):
     dist = [np.linalg.norm(np.array([x-p[0], y-p[1]])) for p in start_pos]
     return int(np.argmin(np.array(dist)))
-
-def get_type_from_name(name):
-    if "real" in name:
-        return "real"
-    if "sim" in name:
-        return "simulated"
-    if "fake" in name:
-        return "discrete"
-    return "UNCLASSIFIED"
-
-def get_algo_from_name(name):
-    if "index" in name:
-        return "fixed"
-    if "same" in name:
-        return "same"
-    if "ccr" in name:
-        return "ccr"
-    if "baseline" in name:
-        return "baseline"
-    logging.info(f'unknown algo in: {name}')
-    return "UNCLASSIFIED"
-
 
 # because we switched turtlebots during experiments we have to assign new names and pairs by the robots starting position
 def data_assignments(dfs, db3_files):
@@ -73,8 +63,6 @@ def data_assignments(dfs, db3_files):
         # find the fitting directory name to give a good name to the experiment
         name = dfs[ex_id].db3.iloc[0].split('/')[-2]
         dfs[ex_id]['experiment'] = str(name)
-        dfs[ex_id]['type'] = dfs[ex_id].db3.apply(get_type_from_name)
-        dfs[ex_id]['algo'] = dfs[ex_id].db3.apply(get_algo_from_name)
         
         dfs[ex_id]['robot_id'] = ""
         dfs[ex_id]['pair_id'] = ""
@@ -122,14 +110,16 @@ if __name__ == "__main__":
     )
     parser.add_argument('directory', type=str, help='path to the directory that holds the rosbag files')
     parser.add_argument('-o', '--out', metavar='output_file', default="data.pkl", type=str, help='path to the output pkl file')
+    parser.add_argument('-p', type=int, default=8, help='number of processes to use')
+    parser.add_argument('--no-cache', action='store_true', help='do not use the cached data for the db3 files')
     args = parser.parse_args()
 
     db3 = get_db3_files_in_folders(args.directory)
-    print(f'found {len(db3)} db3 files' )
+    logging.info(f'found {len(db3)} db3 files' )
     
-    with Pool(8) as pool:
-        dfs = pool.map(aggregate_file, db3)
-    print(f'found {len(dfs)} dfs' )
+    with Pool(args.p) as pool:
+        dfs = pool.map(partial(aggregate_file, use_cached=not args.no_cache), db3)
+    logging.info(f'found {len(dfs)} dfs' )
     dfs = data_assignments(dfs, db3)
     df = pd.concat(dfs)
     df.robot_id = df.robot_id.astype("category")
