@@ -22,6 +22,7 @@ import glob
 # - output_dir
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("-config_file", type=str, default=None)
     parser.add_argument("-n_robots", type=int, default=None)
@@ -148,7 +149,8 @@ def main():
             f"run_timeout:={config['run_timeout']:.1f}",
             f"init_timeout:={config['init_timeout']:.1f}",
         ]
-        logging.info(command)
+        logging.info(f"===================\n{run_cfg_to_str(run_cfg)}\n===================")
+        logging.info(f"===================\n{' '.join(command)}\n===================")
         if args.check:
             continue
         try:
@@ -161,6 +163,7 @@ def main():
                 yaml.dump(run_params, f)
 
             # we calculate with a realtime factor should be better than 0.1
+            output = ""
             process = subprocess.run(command,
                                 capture_output=True,
                                 cwd=run_dir,
