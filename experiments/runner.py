@@ -9,9 +9,9 @@ import yaml
 import logging
 import glob
 
-def execute(cmd):
+def execute(cmd, run_dir=""):
     logging.info(f'running command: \n{cmd}')
-    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, cwd=run_dir)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line
     popen.stdout.close()
@@ -165,7 +165,7 @@ def main():
             continue
 
         with open(os.path.join(run_dir, "ros.log"), 'w') as f:
-            for output in execute(command):
+            for output in execute(command, run_dir=run_dir):
                 if args.print_ros:
                     print(output, end="")
                 f.write(output)
