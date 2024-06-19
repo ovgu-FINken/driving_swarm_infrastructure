@@ -164,7 +164,7 @@ def main():
         if args.check:
             continue
 
-        with open(os.path.join(run_dir, "ros.log"), 'w') as f:
+        with open(os.path.join(run_dir, "ros.log"), 'w', buffering=8*1024) as f:
             for output in execute(command, run_dir=run_dir):
                 if args.print_ros:
                     print(output, end="")
