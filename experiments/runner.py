@@ -9,6 +9,15 @@ import yaml
 import logging
 import glob
 
+def execute(cmd):
+    logging.info(f'running command: \n{cmd}')
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        yield stdout_line
+    popen.stdout.close()
+    return_code = popen.wait()
+    return return_code
+    
 
 ### MAKE a YAML file, which describes the target experiment settings
 # FORMAT:
@@ -35,6 +44,7 @@ def main():
     parser.add_argument("-output_dir", type=str, default=f"experiment_{time.strftime('%Y-%m-%d')}")
     parser.add_argument("--check", action="store_true")
     parser.add_argument('--only-max-agents', action='store_true', help='only use the maximum number of agents per experiment (the default behavior is to iterate over all N=1, ... agents)')
+    parser.add_argument("--print_ros", action="store_true", help="print ros logging output to stdout")
     args = parser.parse_args()
 
     config = {}
@@ -153,45 +163,10 @@ def main():
         logging.info(f"===================\n{' '.join(command)}\n===================")
         if args.check:
             continue
-        try:
-            # save parameter settings for this run as yaml in the run directory
-            with open(os.path.join(run_dir, "params.yaml"), 'w') as f:
-                run_params = run_cfg.copy()
-                run_params["algorithm"] = run_params["algo"][0]
-                run_params["algorithm_params"] = run_params["algo"][1]
-                del run_params["algo"]
-                yaml.dump(run_params, f)
 
-            # we calculate with a realtime factor should be better than 0.1
-            output = ""
-            process = subprocess.run(command,
-                                capture_output=True,
-                                cwd=run_dir,
-                                timeout=config["run_timeout"] * 10 +
-                                config["init_timeout"] * 10
-                                )
-            output = process.stdout.decode("utf-8")
-            err = process.stderr.decode("utf-8")
-            with open(os.path.join(run_dir, "output.log"), 'w') as f:
-                f.write(err)
-                f.write("\n\n\n")
-                f.write(output)
-        except subprocess.TimeoutExpired:
-            output = process.stdout.decode("utf-8")
-            err = process.stderr.decode("utf-8")
-            with open(os.path.join(run_dir, "output.log"), 'w') as f:
-                f.write(err)
-                f.write("\n\n\n")
-                f.write(output)
-            logging.warning(f"timeout for config {run_cfg}")
-        except KeyboardInterrupt:
-            logging.warning(f"keyboard interrupt for config {run_cfg}")
-            with open(os.path.join(run_dir, "output.log"), 'w') as f:
-                f.write(err)
-                f.write("\n\n\n")
-                f.write(output)
-            logging.warning(f"timeout for config {run_cfg}")
-
+        for output in execute(command):
+            if args.print_ros:
+                print(output, end="")
 
         logging.info(f"done config {run_cfg}")
 
