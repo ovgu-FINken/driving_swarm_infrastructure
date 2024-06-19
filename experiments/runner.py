@@ -164,6 +164,13 @@ def main():
         if args.check:
             continue
 
+        with open(os.path.join(run_dir, "params.yaml"), 'w') as f:
+            run_params = run_cfg.copy()
+            run_params["algorithm"] = run_params["algo"][0]
+            run_params["algorithm_params"] = run_params["algo"][1]
+            del run_params["algo"]
+            yaml.dump(run_params, f)
+
         with open(os.path.join(run_dir, "ros.log"), 'w', buffering=8*1024) as f:
             for output in execute(command, run_dir=run_dir):
                 if args.print_ros:

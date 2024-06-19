@@ -3,8 +3,8 @@ algorithms:
     priorities: [same, index]
   global_planner: {}
 modes:
-  - fake
   - sim
+  - fake
 n_robots: 6
 n_runs: 3
 run_timeout: 3600
