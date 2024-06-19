@@ -164,9 +164,11 @@ def main():
         if args.check:
             continue
 
-        for output in execute(command):
-            if args.print_ros:
-                print(output, end="")
+        with open(os.path.join(run_dir, "ros.log"), 'w') as f:
+            for output in execute(command):
+                if args.print_ros:
+                    print(output, end="")
+                f.write(output)
 
         logging.info(f"done config {run_cfg}")
 
