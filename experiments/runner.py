@@ -152,12 +152,13 @@ def main():
             "launch",
             "ccr",
             f"ccr_{run_cfg['mode']}.launch.py",
-            "use_rviz:=false",
-            "use_rosbag:=true",
             f"n_robots:={run_cfg['n']}",
             f"waypoints_file:={config['waypoints_file']}",
             f"run_timeout:={config['run_timeout']:.1f}",
             f"init_timeout:={config['init_timeout']:.1f}",
+            "use_rviz:=false",
+            "use_rosbag:=true",
+            "simulator:=gzserver"
         ]
         logging.info(f"===================\n{run_cfg_to_str(run_cfg)}\n===================")
         logging.info(f"===================\n{' '.join(command)}\n===================")
