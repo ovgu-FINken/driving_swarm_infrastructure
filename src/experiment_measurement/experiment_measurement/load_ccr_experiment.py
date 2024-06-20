@@ -109,10 +109,13 @@ if __name__ == "__main__":
 
     )
     parser.add_argument('directory', type=str, help='path to the directory that holds the rosbag files')
-    parser.add_argument('-o', '--out', metavar='output_file', default="data.pkl", type=str, help='path to the output pkl file')
+    parser.add_argument('-o', '--out', metavar='output_file', default=None, type=str, help='path to the output pkl file')
     parser.add_argument('-p', type=int, default=8, help='number of processes to use')
     parser.add_argument('--no-cache', action='store_true', help='do not use the cached data for the db3 files')
+    parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose logging (sets log level to INFO)')
     args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
 
     db3 = get_db3_files_in_folders(args.directory)
     logging.info(f'found {len(db3)} db3 files' )
@@ -125,5 +128,7 @@ if __name__ == "__main__":
     df.robot_id = df.robot_id.astype("category")
     df.pair_id = df.pair_id.astype("category")
     df.experiment = df.experiment.astype("category")
+    if args.out is None:
+        args.out = args.directory + '.prq'
     df.to_parquet(args.out)
 
