@@ -17,7 +17,9 @@ def get_db3_files_in_folders(directory):
 def aggregate_file(db3_file, use_cached=True):
     # we check if a pkl file already exists
     # this caches the result so we dont have to recompute this every time
-    if os.path.isfile(db3_file.replace('.db3', '.pkl')):
+    
+    if use_cached and os.path.isfile(db3_file.replace('.db3', '.pkl')):
+        logging.info(f'found pkl for {db3_file} not recomputing')
         return pd.read_pickle(db3_file.replace('.db3', '.pkl'))
     try:
         logging.info(f'start aggregating {db3_file}')
