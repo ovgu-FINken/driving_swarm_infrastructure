@@ -1,4 +1,5 @@
 from multiprocessing.pool import Pool
+import numbers
 import os
 import argparse
 import pandas.io.sql as pdsql
@@ -35,8 +36,18 @@ def aggregate_file(db3_file, use_cached=True):
         logging.info(f'reading params from {params_file}')
         with open(params_file) as f:
             params = yaml.safe_load(f)
+        print(params)
         for k, v in params.items():
-            df[k] = v
+            if isinstance(v, numbers.Number):
+                df[k] = v
+            if isinstance(v, dict):
+                s = []
+                for kk, vv in v.items():
+                    df[f'{k}.{kk}'] = vv
+                    s.append(f"{kk}={vv}")
+                df[k] = ",".join(s)
+            else:
+                df[k] = str(v)
 
         df.to_pickle(db3_file.replace('.db3', '.pkl'))
         logging.info(f'done  aggregating {db3_file}')
@@ -131,6 +142,6 @@ if __name__ == "__main__":
     df.pair_id = df.pair_id.astype("category")
     df.experiment = df.experiment.astype("category")
     if args.out is None:
-        args.out = args.directory + '.prq'
+        args.out = args.directory + '/data.prq'
     df.to_parquet(args.out)
 
