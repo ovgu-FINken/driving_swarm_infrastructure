@@ -42,6 +42,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('belief_lifetime', 15.0)
         self.declare_parameter('belief_lifetime_variability', 2.0)
         self.declare_parameter('wait_cost', 1.01)
+        self.declare_parameter('quality_metric', "criticality")
         self._published_plan = []
         self.state = None
         self.plan = []
@@ -89,6 +90,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             index=self.robot_names.index(self.robot_name),
             limit=self.env.planning_horizon,
             inertia=self.get_parameter('inertia').get_parameter_value().double_value,
+            quality_metric=self.get_parameter('quality_metric').get_parameter_value().string_value,
         )
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)

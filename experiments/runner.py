@@ -9,12 +9,20 @@ import yaml
 import logging
 import glob
 
-def execute(cmd, run_dir=""):
+def execute(cmd, run_dir="", timeout=float('inf')):
+    t = time.time()
+    timed_out = False
     logging.info(f'running command: \n{cmd}')
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, cwd=run_dir)
     for stdout_line in iter(popen.stdout.readline, ""):
+        if time.time() - t > timeout:
+            timed_out = True
+            break
         yield stdout_line
     popen.stdout.close()
+    if timed_out:
+        logging.warning("timeout executing command: \n%s" % (cmd))
+        popen.kill()
     return_code = popen.wait()
     return return_code
     
@@ -173,7 +181,11 @@ def main():
             yaml.dump(run_params, f)
 
         with open(os.path.join(run_dir, "ros.log"), 'w', buffering=8*1024) as f:
-            for output in execute(command, run_dir=run_dir):
+            # estimate real time factor
+            rtf = 2 * config["n_robots"]
+            # estimate runtime as rtf * (run_timeout + init_timeout)
+            timeout = rtf * (config["run_timeout"]+config["init_timeout"])
+            for output in execute(command, run_dir=run_dir, timeout=timeout):
                 if args.print_ros:
                     print(output, end="")
                 f.write(output)

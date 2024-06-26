@@ -5,9 +5,9 @@ algorithms:
     quality_metric: ['criticality', 'flow']
 modes:
   - fake
-  - sim
+  #- sim
 n_robots: 2
 n_runs: 3
-run_timeout: 900
-init_timeout: 300
+run_timeout: 120
+init_timeout: 30
 waypoints_file: "icra2024_waypoints.yaml"
