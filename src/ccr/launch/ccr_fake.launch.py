@@ -63,19 +63,18 @@ def controller_spawning(context, *args, robots_file=None, poses_file=None, **kwa
     )
     controllers.append(exit_event_handler)
     
-    for robot in robots[:n_robots]:
-        controllers.append(Node(
-           package='ccr',
-           executable=f'ccr_{ccr_version}',
-           namespace=robot,
-           parameters=[{
-              'use_sim_time': use_sim_time,
-              'robot_names': robots[:n_robots],
-              'priorities': LaunchConfiguration('priorities').perform(context),
-           }, grid_params, local_planner_params, global_planner_params
-              ],
-           output='both',
-        ))
+    controllers.append(Node(
+	   package='ccr',
+	   executable=f'ccr_centralized_planner',
+	   parameters=[{
+	      'use_sim_time': use_sim_time,
+	      'robot_names': robots[:n_robots],
+	      'priorities': LaunchConfiguration('priorities').perform(context),
+	   }, grid_params, local_planner_params, global_planner_params
+	      ],
+	   output='both',
+	))
+	
     
     return controllers
 
