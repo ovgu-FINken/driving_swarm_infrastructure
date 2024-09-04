@@ -72,6 +72,7 @@ def controller_spawning(context, *args, robots_file=None, poses_file=None, **kwa
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
               'priorities': LaunchConfiguration('priorities').perform(context),
+              'planner_params_file': LaunchConfiguration('planner_params_file').perform(context),
            }, grid_params, local_planner_params, global_planner_params
               ],
            output='both',
@@ -85,6 +86,8 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('n_robots', default_value=EnvironmentVariable('N_ROBOTS', default_value='2')))
     ld.add_action(DeclareLaunchArgument('ccr_version', default_value=EnvironmentVariable('CCR_VERSION', default_value='global_planner')))
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
+    ld.add_action(DeclareLaunchArgument('planner_params_file', default_value=EnvironmentVariable('CCR_PLANNER_PARAMS',
+        default_value=os.path.join(get_package_share_directory('ccr'), 'params', 'planner_aco.yaml'))))
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(DeclareLaunchArgument('run_timeout', default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")))
     ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))

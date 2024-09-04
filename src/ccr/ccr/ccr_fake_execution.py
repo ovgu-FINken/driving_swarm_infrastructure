@@ -4,6 +4,7 @@ from polygonal_roadmaps import geometry, environment
 import numpy as np
 import functools
 from std_msgs.msg import Int32MultiArray, Int32, String
+from termcolor import colored
 
 class CCRFakeExecution(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -110,6 +111,13 @@ class CCRFakeExecution(DrivingSwarmNode):
             if plan[0] != self.states[robot]:
                 self.get_logger().warn(f'{robot} is not at the expected state {plan[0]}, instead at {self.state[robot]}')
                 continue
+            # check there is no collision:
+            for r in self.robots:
+                if r == robot:
+                    continue
+                if self.states[r] == plan[1]:
+                    self.get_logger().warn(colored('red', 'collision: ') + f'{robot} and {r} collide at {plan[1]}')
+
             self.get_logger().info(f'{robot}: {self.states[robot]} -> {plan[1]}')
             self.states[robot] = plan[1]
     

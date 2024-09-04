@@ -288,6 +288,10 @@ class CCRGlobalPlanner(DrivingSwarmNode):
             id += 1 
 
         return edge_msg
+    
+    def publish_quality_marker(self, ns="quality", id=1):
+        marker_msg = MarkerArray()
+        return marker_msg
 
 
 

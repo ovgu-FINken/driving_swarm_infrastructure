@@ -1,0 +1,6 @@
+alpha: 1
+beta: 1
+gamma: 0.5
+evaporation_rate: 0.1
+epsilon: 0.3
+method: 'aco'
