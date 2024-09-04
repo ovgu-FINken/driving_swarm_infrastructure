@@ -5,12 +5,12 @@ from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
-from polygonal_roadmaps.planning import CBSPlanner, Plans
-
+from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner
+import networkx as nx
 class CCRCentralizedPlanner(DrivingSwarmNode):
 
-    def __init__(self):
-        super().__init__('centralized_planner')
+    def __init__(self, name):
+        super().__init__(name)
         self.declare_parameter('robot_names', ['robot1', 'robot2'])
         self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
         
@@ -54,20 +54,22 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         # Subscriber and Publisher dictionaries for each robot
         self.subscribers = {}
-        self.publishers = {}
+        self.publishers_ = {}
 
         for robot in self.robot_names:
             self.subscribers[robot] = {
                 'state': self.create_subscription(Int32, f'/{robot}/nav/current_node', self.create_state_callback(robot), 10),
                 'goal': self.create_subscription(Int32, f'/{robot}/nav/goal_node', self.create_goal_callback(robot), 10)
             }
-            self.publishers[robot] = self.create_publisher(Int32MultiArray, f'/{robot}/nav/plan', 10)
+            self.publishers_[robot] = self.create_publisher(Int32MultiArray, f'/{robot}/nav/plan', 10)
 
 	    # initialize dictionary for state and goal information
         self.central_plan = {}
         for robot in self.robot_names:
+            self.central_plan[robot] = {}
             self.central_plan[robot]['state'] = -1
             self.central_plan[robot]['goal'] = -1
+            self.central_plan[robot]['plan'] = (0,0)
 
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.distribute_plans)
@@ -83,6 +85,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
     def create_goal_callback(self, robot_name):
         def callback(msg):
             # Handle goal update from robot
+            if msg.data == self.central_plan[robot_name]['goal']:
+                return
             self.get_logger().info(f'Received goal {msg.data} from {robot_name}')
             # Example of updating internal plan goal
             self.central_plan[robot_name]['goal'] = msg.data
@@ -91,14 +95,18 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def generate_plan_for_robots(self):
         # TODO : calculate plan and add them to the central_plan dictionary
-        cbs = CBSPlanner(self.env)
-        all_plans = cbs.create_plan(self.env)
-
+        cbs = PriorityAgentPlanner(self.env, max_iter = 1_000_000)
+        all_plans = []
+        try:
+            all_plans = cbs.create_plan(self.env)
+        except nx.NetworkXNoPath:
+            self.get_logger().info("Error")
+            
         # match plans to robots
         for robot in self.robot_names :
-            for i in range(len(all_plans)) :
-                if (all_plans[i][0] == self.central_plan[robot]['state'] and all_plans[i][len(all_plans[i])] == self.central_plan[robot]['goal']):
-                    self.central_plan[robot]['plan'] = all_plans[i]
+            for i in range(len(all_plans.plans)) :
+                if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])] == self.central_plan[robot]['goal']):
+                    self.central_plan[robot]['plan'] = all_plans.plans[i]
 
     def distribute_plans(self):
         # Example logic to generate and distribute plans to all robots
@@ -114,7 +122,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             plan = self.central_plan[robot]['plan']
             msg = Int32MultiArray()
             msg.data = plan
-            self.publishers[robot].publish(msg)
+            self.publishers_[robot].publish(msg)
             self.get_logger().info(f'Sent plan {plan} to {robot}')
 
 
