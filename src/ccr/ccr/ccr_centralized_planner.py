@@ -5,7 +5,7 @@ from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
-from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner
+from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, PBSPlanner
 import networkx as nx
 class CCRCentralizedPlanner(DrivingSwarmNode):
 
@@ -80,6 +80,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().info(f'Received state {msg.data} from {robot_name}')
             # Example of updating internal plan state
             self.central_plan[robot_name]['state'] = msg.data
+            self.env
         return callback
 
     def create_goal_callback(self, robot_name):
@@ -94,21 +95,32 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
     
 
     def generate_plan_for_robots(self):
+
+
         # TODO : calculate plan and add them to the central_plan dictionary
-        cbs = PriorityAgentPlanner(self.env, max_iter = 1_000_000)
+
+
+        self.env.state= [self.central_plan[robot]['state']  for robot in self.robot_names]
+        self.env.goal = [self.central_plan[robot]['goal']  for robot in self.robot_names]
+
+        cbs = PriorityAgentPlanner   (self.env, max_iter = 1_000_000)
+        pbs = PBSPlanner(self.env, max_iter = 1_000_000)
         all_plans = []
         try:
             all_plans = cbs.create_plan(self.env)
         except nx.NetworkXNoPath:
-            self.get_logger().info("Error")
+            self.get_logger().info("################# Error ##################")
             
         # match plans to robots
         for robot in self.robot_names :
             for i in range(len(all_plans.plans)) :
-                if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])] == self.central_plan[robot]['goal']):
+                if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])-1] == self.central_plan[robot]['goal']):
                     self.central_plan[robot]['plan'] = all_plans.plans[i]
 
     def distribute_plans(self):
+
+
+
         # Example logic to generate and distribute plans to all robots
         
         # check if all robots have a state and goal
