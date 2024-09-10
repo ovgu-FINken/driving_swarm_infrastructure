@@ -9,7 +9,7 @@ import numpy as np
 import functools
 from termcolor import colored
 from visualization_msgs.msg import MarkerArray, Marker
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
 
 
@@ -157,9 +157,8 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
     def state_cb(self, msg):
         if msg.data == self.state:
             return
-        old_state = self.state
+        self.get_logger().info(f"state changed: {self.state} -> {msg.data}")
         self.state = msg.data
-        # self.get_logger().info(f"received state {self.state}")
         self.ccr_agent.update_state(self.state)
         self.update_plan()
         
@@ -167,6 +166,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         #self.get_logger().info(f"updating plan: {self.state} -> {self.goal}")
         if self.state is None or self.goal is None:
             return
+        self.ccr_agent.iteration()
 
         plan = self.ccr_agent.get_plan()
         if not self.plan or self.plan != plan:
@@ -175,6 +175,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
                 self.publish_plan(change_only=True)
 
     def publish_plan(self, change_only=True):
+
         if change_only and self._published_plan == self.plan:
             return
         # feasibility check
@@ -211,7 +212,8 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
             return
         self.q[robot] = np.array(list(msg.data)).reshape(self.ccr_agent.get_q_matrix().shape)
 
-        self.ccr_agent.set_other_pheromones(sum(self.q.values())/len(self.q))
+        q_sum = sum(self.q.values())
+        self.ccr_agent.set_other_q(q_sum / sum(q_sum.flatten()))
     
     def communicate(self):
         if self.goal is None:
@@ -235,31 +237,28 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         if self.state is None:
             return
         episodes = self.ccr_agent.iteration()
+        #self.get_logger().info(f"episodes: {episodes}")
         self.plan = self.ccr_agent.get_plan()
         #self.get_logger().info(f"q: {self.ccr_agent.get_q_matrix()}")
 
     def publish_q_values(self, ns="q", id=1):
         values = {}
-        for u, v in self.ccr_agent.G_t.edges():
-            if (u[0], v[0]) not in values:
-                values[(u[0], v[0])] = 0
-            values[(u[0], v[0])] += self.ccr_agent.G_t[u][v]['Q']
-        edge_msg = MarkerArray()
+        for u in self.env.g.nodes():
+            values[u] = np.sum(self.ccr_agent.get_q_matrix()[u,:])
+                
+        node_msg = MarkerArray()
         for key, val in values.items():
-            start_point = self.env.g.nodes()[key[0]]['geometry'].center
-            end_point = self.env.g.nodes()[key[1]]['geometry'].center
-            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.ARROW)
+            point = self.env.g.nodes()[key]['geometry'].center
+            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
             marker.header.frame_id = 'map'
             marker.scale.x = 0.1 * val / max(values.values())
-            marker.scale.y = 0.15 * val / max(values.values())
-            marker.points = [Point(x=(start_point.x*0.4+end_point.x*0.6), y=(start_point.y*0.4+end_point.y*0.6), z=0.0),
-                 Point(x=end_point.x, y=end_point.y, z=0.0)]
+            marker.scale.y = 0.1 * val / max(values.values())
+            marker.scale.z = 0.1 * val / max(values.values())
+            marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
             marker.color = self.get_robot_color()
-            edge_msg.markers.append(marker)
+            node_msg.markers.append(marker)
             id += 1 
-        self.cell_pub.publish(edge_msg)
-
-        return edge_msg
+        self.cell_pub.publish(node_msg)
 
     def publish_p_values(self, ns="p", id=1):
         values = {}
@@ -299,6 +298,8 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         return msg
 
     def get_robot_color(self):
+        if len(self.robot_names) == 1:
+            return ColorRGBA(r=0.0, g=1.0, b=0.0, a=.2)
         robot_index = self.robot_names.index(self.robot_name)
         r = robot_index / (len(self.robot_names) - 1)
         b = 1.0 - r

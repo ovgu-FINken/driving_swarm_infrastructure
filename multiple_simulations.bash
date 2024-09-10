@@ -40,6 +40,9 @@ make_runs
 export CCR_VERSION="global_planner"
 make_runs
 
+export CCR_VERSION="global_planner_aco"
+make_runs
+
 export MODE="sim"
 export RUN_TIMEOUT="900.0"
 export CCR_VERSION="global_planner_baseline"
@@ -50,4 +53,7 @@ export CCR_PRIORITIES="same"
 make_runs
 
 export CCR_VERSION="global_planner"
+make_runs
+
+export CCR_VERSION="global_planner_aco"
 make_runs

@@ -109,7 +109,7 @@ class CCRFakeExecution(DrivingSwarmNode):
             if len(plan) < 2:
                 continue
             if plan[0] != self.states[robot]:
-                self.get_logger().warn(f'{robot} is not at the expected state {plan[0]}, instead at {self.state[robot]}')
+                self.get_logger().warn(f'{robot} is not at the expected state {plan[0]}, instead at {self.states[robot]}')
                 continue
             # check there is no collision:
             for r in self.robots:

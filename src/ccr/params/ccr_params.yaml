@@ -13,7 +13,7 @@ local_planner_params:
   inflation_size: 0.08
   laser_inflation_size: 0.13
   vehicle_model: 3
-  step_size: 0.1
+  step_size: 0.05
   turn_speed: 0.5
 
 global_planner_params:
