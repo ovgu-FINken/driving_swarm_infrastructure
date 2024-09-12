@@ -5,7 +5,8 @@ from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
-from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, PBSPlanner
+from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner
+from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
 class CCRCentralizedPlanner(DrivingSwarmNode):
 
@@ -99,12 +100,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         # TODO : calculate plan and add them to the central_plan dictionary
 
-
         self.env.state= [self.central_plan[robot]['state']  for robot in self.robot_names]
         self.env.goal = [self.central_plan[robot]['goal']  for robot in self.robot_names]
 
-        cbs = PriorityAgentPlanner   (self.env, max_iter = 1_000_000)
+        cbs = CBSPlanner(self.env, max_iter = 1_000_000)
+        pp = PriorityAgentPlanner(self.env, priority_method="longest" ,max_iter = 1_000_000)
         pbs = PBSPlanner(self.env, max_iter = 1_000_000)
+
         all_plans = []
         try:
             all_plans = cbs.create_plan(self.env)
@@ -118,8 +120,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     self.central_plan[robot]['plan'] = all_plans.plans[i]
 
     def distribute_plans(self):
-
-
 
         # Example logic to generate and distribute plans to all robots
         
