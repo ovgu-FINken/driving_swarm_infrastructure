@@ -100,6 +100,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         self.q_pub = self.create_publisher(Float32MultiArray, "nav/q", 10)
         self.occupancy = {}
         self.q = {}
+        self.other_states = {}
 
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
@@ -122,7 +123,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
             
         
         self.create_timer(2.0, self.timer_cb)
-        self.create_timer(0.3, self.fast_timer_cb)
+        self.create_timer(0.1, self.fast_timer_cb)
         
     def timer_cb(self):
         if self.state is None:
@@ -130,7 +131,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         if self.goal is None:
             return
         
-       # publish things 
+        # publish things 
         self.publish_plan(change_only=False)
         self.publish_q_values(ns=f"{self.robot_name}_q")
         self.publish_p_values(ns=f"{self.robot_name}_p")
@@ -186,26 +187,34 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
                     self.get_logger().warn(f"plan is not feasible")
                     self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
                     self.get_logger().warn(f"path: self.plan")
+        # dont go where another robot is at the moment.
+        if len(self.plan) > 1:
+            if self.plan[1] in self.other_states.values():
+                self.plan = [self.state]
         msg = Int32MultiArray()
         msg.data = self.plan
         self.plan_pub.publish(msg)
         self._published_plan = self.plan
 
     def robot_cb(self, robot, msg):
-        # check if plan has changed
+        if robot == self.robot_name:
+            return 
         plan = list(msg.data)
-        # nothing to see here
-        # TODO: check if other robots are in the next position, cancel own plans
+        self.other_states[robot] = plan[0]
         
     def occupancy_cb(self, robot, msg):
         if robot == self.robot_name:
             return 
-        occupancy = self.ccr_agent.get_occupancy()
+        occupancy = np.zeros_like(self.ccr_agent.get_occupancy())
         self.occupancy[robot] = np.array(list(msg.data)).reshape(occupancy.shape)
-        #self.get_logger().info(f"received occupancy from {robot}: {self.occupancy[robot]}")
-        #self.get_logger().info(f"occupancy: {self.occupancy}")
+        occupancy = sum(self.occupancy.values())
+        occupancy_plus = np.zeros_like(occupancy)
+        occupancy_plus[:, :-1] += occupancy[:, 1:]
+        occupancy_plus[:, 1:] += occupancy[:, :-1]
+        #occupancy_plus += 0.0001 * np.sum(occupancy, axis=1, keepdims=True)
+        self.ccr_agent.set_occupancy(occupancy + occupancy_plus)
+
         
-        self.ccr_agent.set_occupancy(sum(self.occupancy.values()))
 
     def q_cb(self, robot, msg):
         if robot == self.robot_name:
@@ -213,7 +222,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         self.q[robot] = np.array(list(msg.data)).reshape(self.ccr_agent.get_q_matrix().shape)
 
         q_sum = sum(self.q.values())
-        self.ccr_agent.set_other_q(q_sum / sum(q_sum.flatten()))
+        self.ccr_agent.set_other_q( len(self.q) * q_sum / sum(q_sum.flatten()))
     
     def communicate(self):
         if self.goal is None:
@@ -236,10 +245,12 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
             return 
         if self.state is None:
             return
-        episodes = self.ccr_agent.iteration()
-        #self.get_logger().info(f"episodes: {episodes}")
-        self.plan = self.ccr_agent.get_plan()
-        #self.get_logger().info(f"q: {self.ccr_agent.get_q_matrix()}")
+        last_plan = self.plan
+        for _ in range(20):
+            episodes = self.ccr_agent.iteration()
+            #self.get_logger().info(f"episodes: {episodes}")
+            self.plan = self.ccr_agent.get_plan(last_plan=last_plan)
+            #self.get_logger().info(f"q: {self.ccr_agent.get_q_matrix()}")
 
     def publish_q_values(self, ns="q", id=1):
         values = {}
@@ -251,9 +262,13 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
             point = self.env.g.nodes()[key]['geometry'].center
             marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
             marker.header.frame_id = 'map'
-            marker.scale.x = 0.1 * val / max(values.values())
-            marker.scale.y = 0.1 * val / max(values.values())
-            marker.scale.z = 0.1 * val / max(values.values())
+            scale = (val + 0.0001) / (max(values.values())+0.0001)
+            scale = 0.1 * scale # np.log(scale+1.0)
+            if scale < 0:
+                scale = 0.0
+            marker.scale.x = scale
+            marker.scale.y = scale
+            marker.scale.z = scale
             marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
             marker.color = self.get_robot_color()
             node_msg.markers.append(marker)

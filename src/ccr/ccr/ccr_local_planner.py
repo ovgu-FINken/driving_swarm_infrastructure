@@ -186,7 +186,6 @@ class CCRLocalPlanner(DrivingSwarmNode):
     def save_graph(self, req, res):
         self.g.save(req.filename)
         return res
-    
 
     def publish_state(self):
         tf_pose = self.get_tf_pose()

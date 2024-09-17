@@ -1,0 +1,10 @@
+alpha: 0.4
+beta: 0.1
+gamma: 1
+delta: 0.0
+discount: 0.8
+epsilon: 0.2
+time_horizon: 6
+episodes: 5
+method: 'sq'
+collision_weight: 0.5
