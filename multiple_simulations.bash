@@ -30,30 +30,33 @@ export MAP="icra2024_waypoints.yaml"
 export MODE="fake"
 export RUN_TIMEOUT="300.0"
 export CCR_VERSION="global_planner_baseline"
+export CCR_PLANNER_PARAMS="planner_diffq.yaml"
+
+export CCR_VERSION="global_planner_aco"
+make_runs
 
 export CCR_PRIORITIES="index"
 make_runs
 
-export CCR_PRIORITIES="same"
-make_runs
+#export CCR_PRIORITIES="same"
+#make_runs
 
 export CCR_VERSION="global_planner"
 make_runs
 
-export CCR_VERSION="global_planner_aco"
-make_runs
 
 export MODE="sim"
 export RUN_TIMEOUT="900.0"
 export CCR_VERSION="global_planner_baseline"
+
+export CCR_VERSION="global_planner_aco"
+make_runs
+
 export CCR_PRIORITIES="index"
 make_runs
 
-export CCR_PRIORITIES="same"
-make_runs
+#export CCR_PRIORITIES="same"
+#make_runs
 
 export CCR_VERSION="global_planner"
-make_runs
-
-export CCR_VERSION="global_planner_aco"
 make_runs
