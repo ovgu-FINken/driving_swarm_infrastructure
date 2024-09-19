@@ -1,8 +1,10 @@
 algorithms:
+  global_planner_aco:
+    planner_params_file: [planner_diffq.yaml]#, planner_aco.yaml]
   global_planner_baseline:
     priorities: [same]#, index]
-  global_planner_aco:
-    planner_params: [planner_diffq.yaml]
+  global_planner:
+    quality_metric: ['flow']
 modes:
   - sim
   - fake

@@ -52,7 +52,7 @@ def main():
     parser.add_argument("-output_dir", type=str, default=f"experiment_{time.strftime('%Y-%m-%d')}")
     parser.add_argument("--check", action="store_true")
     parser.add_argument('--only-max-agents', action='store_true', help='only use the maximum number of agents per experiment (the default behavior is to iterate over all N=1, ... agents)')
-    parser.add_argument("--print_ros", action="store_true", help="print ros logging output to stdout")
+    parser.add_argument("--print-ros", action="store_true", help="print ros logging output to stdout")
     args = parser.parse_args()
 
     config = {}
@@ -154,12 +154,18 @@ def main():
         else:
             os.makedirs(run_dir)
 
-        # execute command: ros2 launch ccr ccr_$MODE.launch.py use_rviz:=false use_rosbag:=true n_robots:=$N_ROBOTS waypoints_file:=$MAP
+        algo_params = run_cfg["algo"][1]
+        param_list = [f"{k}:={v}" for k, v in algo_params.items()]
+
+
+        
+        # launch the code
         command = [
             "ros2", 
             "launch",
             "ccr",
             f"ccr_{run_cfg['mode']}.launch.py",
+            f"ccr_version:={run_cfg['algo'][0]}",
             f"n_robots:={run_cfg['n']}",
             f"waypoints_file:={config['waypoints_file']}",
             f"run_timeout:={config['run_timeout']:.1f}",
@@ -168,6 +174,7 @@ def main():
             "use_rosbag:=true",
             "simulator:=gzserver"
         ]
+        command += param_list
         logging.info(f"===================\n{run_cfg_to_str(run_cfg)}\n===================")
         logging.info(f"===================\n{' '.join(command)}\n===================")
         if args.check:

@@ -72,7 +72,7 @@ def controller_spawning(context, *args, robots_file=None, poses_file=None, **kwa
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
               'priorities': LaunchConfiguration('priorities').perform(context),
-              'planner_params_file': LaunchConfiguration('planner_params_file').perform(context),
+              'planner_params_file': os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('planner_params_file').perform(context)),
            }, grid_params, local_planner_params, global_planner_params
               ],
            output='both',
