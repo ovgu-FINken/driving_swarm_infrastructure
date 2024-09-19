@@ -127,9 +127,9 @@ def main():
                             ]
     else: 
         run_configurations = [{"algo": algo, "mode": mode, "n": n, "run": run} \
+                               for n in range(1, config["n_robots"]+1)
                                for algo in algorithms
                                for mode in config["modes"]
-                               for n in range(1, config["n_robots"]+1)
                                for run in range(1, config["n_runs"]+1)
                             ]
     
