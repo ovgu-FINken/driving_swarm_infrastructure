@@ -2,7 +2,7 @@ alpha: 2
 beta: 2
 gamma: 1
 delta: 0.0
-discount: 0.9
+discount: 1.0
 evaporation_rate: 0.2
 dispersion_rate: 0.05
 epsilon: 0.02

@@ -134,7 +134,7 @@ class CCRGlobalPlannerAco(DrivingSwarmNode):
         # publish things 
         self.publish_plan(change_only=False)
         self.publish_q_values(ns=f"{self.robot_name}_q")
-        self.publish_p_values(ns=f"{self.robot_name}_p")
+        #self.publish_p_values(ns=f"{self.robot_name}_p")
         self.publish_episodes(ns=f"{self.robot_name}_ep")
         
     def fast_timer_cb(self):

@@ -10,7 +10,7 @@ grid_params:
 
 local_planner_params:
   transition_prob: 0.5
-  inflation_size: 0.08
+  inflation_size: 0.17
   laser_inflation_size: 0.13
   vehicle_model: 3
   step_size: 0.1
