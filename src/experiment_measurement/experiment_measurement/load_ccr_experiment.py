@@ -61,9 +61,9 @@ def get_robot_id(x, y, start_pos):
     return int(np.argmin(np.array(dist)))
 
 # because we switched turtlebots during experiments we have to assign new names and pairs by the robots starting position
-def data_assignments(dfs, db3_files):
-    
-    pos_file = '/home/semai/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints1m.yaml'
+def data_assignments(dfs, db3_files, pos_file=None):
+    if pos_file is None: 
+        pos_file = '~/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints.yaml'
     with open(pos_file, 'r') as file:
         waypoints = yaml.safe_load(file)
     starting_positions = [w['waypoints'][1] for w in waypoints]
@@ -125,6 +125,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', type=int, default=8, help='number of processes to use')
     parser.add_argument('--no-cache', action='store_true', help='do not use the cached data for the db3 files')
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose logging (sets log level to INFO)')
+    parser.add_argument('--waypoints-file', metavar='waypoints_file', default=None, type=str, help='path to the waypoints file')
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     with Pool(args.p) as pool:
         dfs = pool.map(partial(aggregate_file, use_cached=not args.no_cache), db3)
     logging.info(f'found {len(dfs)} dfs' )
-    dfs = data_assignments(dfs, db3)
+    dfs = data_assignments(dfs, db3, pos_file=args.waypoints_file)
     df = pd.concat(dfs)
     df.robot_id = df.robot_id.astype("category")
     df.pair_id = df.pair_id.astype("category")
