@@ -69,7 +69,7 @@ def controller_spawning(context, *args, **kwargs):
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='both',
         ))
-        controllers.append(Node(
+        '''controllers.append(Node(
            package='ccr',
            executable=f'ccr_{ccr_version}',
            namespace=robot,
@@ -80,8 +80,19 @@ def controller_spawning(context, *args, **kwargs):
            }, grid_params, local_planner_params, global_planner_params
               ],
            output='both',
-        ))
+        ))'''
     
+    controllers.append(Node(
+	   package='ccr',
+	   executable=f'ccr_centralized_planner',
+	   parameters=[{
+	      'use_sim_time': use_sim_time,
+	      'robot_names': robots[:n_robots],
+	      'priorities': LaunchConfiguration('priorities').perform(context),
+	   }, grid_params, local_planner_params, global_planner_params
+	      ],
+	   output='both',
+	))
     return controllers
 
 

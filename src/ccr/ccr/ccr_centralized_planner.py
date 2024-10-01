@@ -8,6 +8,9 @@ from polygonal_roadmaps import geometry, environment, planning
 from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner
 from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
+
+import copy
+
 class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def __init__(self, name):
@@ -71,9 +74,15 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.central_plan[robot]['state'] = -1
             self.central_plan[robot]['goal'] = -1
             self.central_plan[robot]['plan'] = (0,0)
+            self.central_plan[robot]['origin_plan'] = []
 
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.distribute_plans)
+
+        self.use_optimization = True
+        #self.use_optimization = False
+
+        
 
     def create_state_callback(self, robot_name):
         def callback(msg):
@@ -92,6 +101,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().info(f'Received goal {msg.data} from {robot_name}')
             # Example of updating internal plan goal
             self.central_plan[robot_name]['goal'] = msg.data
+
+            self.got_new_goal = True
+
         return callback
     
 
@@ -118,6 +130,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             for i in range(len(all_plans.plans)) :
                 if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])-1] == self.central_plan[robot]['goal']):
                     self.central_plan[robot]['plan'] = all_plans.plans[i]
+                    self.central_plan[robot]['origin_plan'] = copy.deepcopy(all_plans.plans[i])
+                    
+
 
     def distribute_plans(self):
 
@@ -128,7 +143,63 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             if (self.central_plan[robot]['state']== -1 or self.central_plan[robot]['goal']== -1) :
                 return
         
-        self.generate_plan_for_robots()
+
+        if (self.use_optimization) :
+
+            already_replaned = False
+
+            if (self.got_new_goal) :
+                already_replaned = True
+                self.get_logger().info("\n\n replaned due to new goal\n")
+                self.generate_plan_for_robots()
+
+            
+            self.got_new_goal = False
+
+
+            if not(already_replaned) :
+
+                min_timestep = -1
+                max_timestep = -1
+
+                # shorten paths if state progressed since last call
+                # also calculate max time difference 
+                for robot in self.robot_names :
+                    
+                    # robot moved to second step of plan
+                    if (self.central_plan[robot]['plan'][1] == self.central_plan[robot]['state']) :
+                        self.central_plan[robot]['plan'].pop(0)
+                    
+                    # robot moved, but outside of considered range 
+                    elif (self.central_plan[robot]['plan'][0] != self.central_plan[robot]['state']) :
+                        self.get_logger().info("plan progressed far more than expected (current state not first or second step in plan)")
+                        exit()
+                    
+
+                    a = len(self.central_plan[robot]['origin_plan'])
+                    b =  len(self.central_plan[robot]['plan'])
+                    temp_timestep = a - b
+
+                    # is timestep new maximum?
+                    if (temp_timestep > max_timestep or max_timestep == -1) :
+                        max_timestep = temp_timestep 
+
+                    # is timestep new minimum?
+                    if (temp_timestep < min_timestep or min_timestep == -1) :
+                        min_timestep = temp_timestep
+
+                    
+                total_time_diff = max_timestep - min_timestep
+
+                if (total_time_diff > 1) :
+                    self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
+                    self.generate_plan_for_robots()
+                else : 
+                    self.get_logger().info("\n\n did not replan \n")
+
+
+        else :
+            self.generate_plan_for_robots()
         
         for robot in self.robot_names:
             plan = self.central_plan[robot]['plan']

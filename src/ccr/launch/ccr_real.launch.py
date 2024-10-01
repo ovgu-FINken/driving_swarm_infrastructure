@@ -5,7 +5,7 @@ import yaml
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -41,6 +41,16 @@ def controller_spawning(context, *args, **kwargs):
            }, grid_params, local_planner_params, global_planner_params],
            output='both',
     ))
+    controllers.append(Node(
+	   package='ccr',
+	   executable=f'ccr_centralized_planner',
+	   parameters=[{
+	      'robot_names': robots[:n_robots],
+	      'priorities': LaunchConfiguration('priorities').perform(context),
+	   }, grid_params, local_planner_params, global_planner_params
+	      ],
+	   output='both',
+	))
     
     for robot in robots[:n_robots]:
         controllers.append(Node(
@@ -64,17 +74,6 @@ def controller_spawning(context, *args, **kwargs):
            remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
            output='both',
         ))
-        controllers.append(Node(
-           package='ccr',
-           executable='ccr_global_planner_baseline',
-           namespace=robot,
-           parameters=[{
-              'robot_names': robots[:n_robots],
-           }, grid_params, local_planner_params, global_planner_params
-              ],
-           output='both',
-        ))
-    
     return controllers
 
 
@@ -93,8 +92,10 @@ def generate_launch_description():
         launch_arguments=args.items())
 
     ld = LaunchDescription()
+
+    ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
+    ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     ld.add_action(multi_robot_launch)
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(OpaqueFunction(function=controller_spawning))
-    ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     return ld
