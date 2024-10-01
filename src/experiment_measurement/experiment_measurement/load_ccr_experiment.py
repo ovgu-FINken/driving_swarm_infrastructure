@@ -28,6 +28,9 @@ def aggregate_file(db3_file, use_cached=True):
         data = read_rosbag_all_in_one(db3_file, topics=topics)
         logging.info(f'table aggregating {db3_file}')
         converter = DataConverter()
+        if "robot" not in data.columns:
+            logging.warning(f'no robot in {db3_file}')
+            return pd.DataFrame()
         df = converter.convert_df(data)
         df['db3'] = db3_file
         # read experiment ../params.yaml which is stored next to the rosbag folder

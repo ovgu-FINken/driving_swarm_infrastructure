@@ -90,13 +90,13 @@ class DataConverter:
             return self._types_func[row['type']](row['timestamp'], row['name'], row['type'], row['data'])
          
     def convert_df(self, df):
-        
+        assert "robot" in df.columns
         # convert the data in the dataframe by using the registered functions
         for type_name in df.type.unique():
             if type_name not in self._types_func:
                 topics = df[df.type == type_name].name.unique()
-                logging.warn('type not registered: ' + type_name)
-                logging.warn('topics: ' + str(topics))
+                logging.warning('type not registered: ' + type_name)
+                logging.warning('topics: ' + str(topics))
         out = [self._convert_row(row) for _, row in df.iterrows() if row['type'] in self._types_func]
         out = pd.DataFrame.from_records(out)
         out["timestamp"] = pd.to_timedelta(out["timestamp"], unit='ns')
