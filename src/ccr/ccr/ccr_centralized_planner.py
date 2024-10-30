@@ -5,7 +5,7 @@ from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
-from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner
+from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, compute_all_k_conflicts
 from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
 
@@ -82,6 +82,11 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.use_optimization = True
         #self.use_optimization = False
 
+        self.get_logger().info(f'------------------')
+        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n\n')
+        self.get_logger().info(f'------------------')
+
+
         
 
     def create_state_callback(self, robot_name):
@@ -121,7 +126,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_plans = []
         try:
-            all_plans = cbs.create_plan(self.env)
+            all_plans = pbs.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("################# Error ##################")
             
@@ -150,7 +155,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal\n")
+                self.get_logger().info("\n\n replaned due to new goal  Runde 2\n")
                 self.generate_plan_for_robots()
 
             
@@ -161,6 +166,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
                 min_timestep = -1
                 max_timestep = -1
+
+                wrong_localization = False
 
                 # shorten paths if state progressed since last call
                 # also calculate max time difference 
@@ -173,7 +180,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     # robot moved, but outside of considered range 
                     elif (self.central_plan[robot]['plan'][0] != self.central_plan[robot]['state']) :
                         self.get_logger().info("plan progressed far more than expected (current state not first or second step in plan)")
-                        exit()
+                        wrong_localization = True
+                        break
                     
 
                     a = len(self.central_plan[robot]['origin_plan'])
@@ -194,7 +202,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 if (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
                     self.generate_plan_for_robots()
+                elif (wrong_localization) :
+                    self.get_logger().info(f"\n\n replaned due to wrong localization \n")
+                    self.generate_plan_for_robots()
                 else : 
+
+                    
                     self.get_logger().info("\n\n did not replan \n")
 
 

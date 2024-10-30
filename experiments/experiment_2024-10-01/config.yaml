@@ -1,0 +1,18 @@
+algorithms:
+  global_planner:
+    quality_metric:
+    - criticality
+    - flow
+  global_planner_baseline:
+    priorities:
+    - same
+    - index
+init_timeout: 300
+modes:
+- fake
+- sim
+n_robots: 2
+n_runs: 3
+output_dir: experiment_2024-10-01
+run_timeout: 900
+waypoints_file: icra2024_waypoints.yaml

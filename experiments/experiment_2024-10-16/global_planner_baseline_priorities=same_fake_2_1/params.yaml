@@ -1,0 +1,6 @@
+algorithm: global_planner_baseline
+algorithm_params:
+  priorities: same
+mode: fake
+n: 2
+run: 1

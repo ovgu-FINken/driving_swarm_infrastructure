@@ -1,0 +1,435 @@
+[INFO] [launch]: All log files can be found below /home/phlinke/.ros/log/2024-10-01-10-11-13-358488-pinky-72485
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [ccr_goal_provider-1]: process started with pid [72507]
+[INFO] [ccr_fake_execution-2]: process started with pid [72509]
+[INFO] [ccr_centralized_planner-3]: process started with pid [72511]
+[INFO] [ros2-4]: process started with pid [72513]
+[ros2-4] stdin is not a terminal device. Keyboard handling disabled.[INFO] [1727770274.969256981] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[ros2-4] [INFO] [1727770274.995052681] [rosbag2_storage]: Opened database 'rosbag_1 robots_2024-10-01_08:11:14/rosbag_1 robots_2024-10-01_08:11:14_0.db3' for READ_WRITE.
+[ros2-4] [INFO] [1727770274.995936626] [rosbag2_recorder]: Listening for topics...
+[ros2-4] [INFO] [1727770275.007769351] [rosbag2_recorder]: Event publisher thread: Starting
+[ccr_goal_provider-1] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_goal_provider-1]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ccr_centralized_planner-3] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_centralized_planner-3]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ccr_fake_execution-2] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_fake_execution-2]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ccr_goal_provider-1] [INFO] [1727770281.197473923] [ccr_goal_provider]: starting node [32mccr_goal_provider[0m
+[ccr_fake_execution-2] [INFO] [1727770281.197476448] [ccr_fake_execution]: starting node [32mccr_fake_execution[0m
+[ccr_fake_execution-2] [INFO] [1727770281.200280488] [ccr_fake_execution]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_goal_provider-1] [INFO] [1727770281.200482576] [ccr_goal_provider]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_fake_execution-2] [INFO] [1727770281.201017127] [ccr_fake_execution]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_goal_provider-1] [INFO] [1727770281.201351393] [ccr_goal_provider]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_centralized_planner-3] [INFO] [1727770281.202427838] [ccr_centralized_planner]: starting node [32mccr_centralized_planner[0m
+[ccr_centralized_planner-3] [INFO] [1727770281.205423327] [ccr_centralized_planner]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_centralized_planner-3] [INFO] [1727770281.206037346] [ccr_centralized_planner]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_goal_provider-1] [INFO] [1727770281.898489790] [ccr_goal_provider]: read waypoints from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/params/icra2024_waypoints.yaml
+[ccr_fake_execution-2] [INFO] [1727770281.902368121] [ccr_fake_execution]: read poses from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/params/icra2024_poses.yaml
+[ccr_fake_execution-2] [INFO] [1727770281.908270363] [ccr_fake_execution]: robotA at position [2.5, 1.0, 0.0] = state 1
+[ccr_goal_provider-1] [INFO] [1727770281.909278971] [ccr_goal_provider]: goals: {'robotA': [9, 1]}
+[ros2-4] [INFO] [1727770281.957452440] [rosbag2_recorder]: Subscribed to topic '/command'
+[ros2-4] [INFO] [1727770281.961654668] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/current_node'
+[ros2-4] [INFO] [1727770281.964285885] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/goal_completed'
+[ros2-4] [INFO] [1727770281.966274148] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/goal_node'
+[ros2-4] [INFO] [1727770281.968204392] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/plan'
+[ccr_centralized_planner-3] [INFO] [1727770282.025953360] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770286.917206941] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770286.917999254] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770286.941146364] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770286.942815199] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770287.917083077] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770287.917936325] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770287.918658277] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770287.918799671] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770288.916768309] [ccr_fake_execution]: robotA: 1 -> 44
+[ccr_centralized_planner-3] [INFO] [1727770288.917435288] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770288.918170113] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770288.918265752] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770288.919038479] [ccr_centralized_planner]: Received state 44 from robotA
+[ccr_fake_execution-2] [WARN] [1727770289.916877473] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 44
+[ccr_centralized_planner-3] [INFO] [1727770289.917390904] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770289.918106905] [ccr_centralized_planner]: Sent plan [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770289.918248700] [ccr_fake_execution]: got plan for robotA: [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770289.918966725] [ccr_centralized_planner]: Received state 44 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770290.917064822] [ccr_centralized_planner]: Received state 44 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770290.917942235] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770290.918651283] [ccr_centralized_planner]: Sent plan [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770290.918811553] [ccr_fake_execution]: got plan for robotA: [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770291.916872201] [ccr_fake_execution]: robotA: 44 -> 45
+[ccr_centralized_planner-3] [INFO] [1727770291.917415208] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770291.918180992] [ccr_centralized_planner]: Sent plan [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770291.918282993] [ccr_fake_execution]: got plan for robotA: [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770291.919058465] [ccr_centralized_planner]: Received state 45 from robotA
+[ccr_fake_execution-2] [WARN] [1727770292.916879305] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 45
+[ccr_centralized_planner-3] [INFO] [1727770292.917378259] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770292.918094861] [ccr_centralized_planner]: Sent plan [45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770292.918228451] [ccr_fake_execution]: got plan for robotA: [45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770292.918953338] [ccr_centralized_planner]: Received state 45 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770293.917094544] [ccr_centralized_planner]: Received state 45 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770293.917929858] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770293.918689650] [ccr_centralized_planner]: Sent plan [45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770293.918852485] [ccr_fake_execution]: got plan for robotA: [45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770294.916750499] [ccr_fake_execution]: robotA: 45 -> 56
+[ccr_centralized_planner-3] [INFO] [1727770294.917471258] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770294.918302825] [ccr_centralized_planner]: Sent plan [45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770294.918360373] [ccr_fake_execution]: got plan for robotA: [45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770294.919230282] [ccr_centralized_planner]: Received state 56 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770295.916977243] [ccr_centralized_planner]: Received state 56 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770295.917752745] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770295.918442286] [ccr_centralized_planner]: Sent plan [56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770295.918594551] [ccr_fake_execution]: got plan for robotA: [56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770296.917087007] [ccr_centralized_planner]: Received state 56 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770296.917875133] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770296.918550507] [ccr_centralized_planner]: Sent plan [56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770296.918772853] [ccr_fake_execution]: got plan for robotA: [56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770297.916692096] [ccr_fake_execution]: robotA: 56 -> 55
+[ccr_centralized_planner-3] [INFO] [1727770297.917442491] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770297.918156799] [ccr_centralized_planner]: Sent plan [56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770297.918319393] [ccr_fake_execution]: got plan for robotA: [56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770297.918962818] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_fake_execution-2] [WARN] [1727770298.916803614] [ccr_fake_execution]: robotA is not at the expected state 56, instead at 55
+[ccr_centralized_planner-3] [INFO] [1727770298.917431029] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770298.918114128] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770298.918278205] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770298.918964580] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_fake_execution-2] [INFO] [1727770299.916710279] [ccr_fake_execution]: robotA: 55 -> 39
+[ccr_centralized_planner-3] [INFO] [1727770299.917471284] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770299.918142370] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770299.918288253] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770299.918936928] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770300.917024244] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770300.917781913] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770300.918416631] [ccr_centralized_planner]: Sent plan [39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770300.918683601] [ccr_fake_execution]: got plan for robotA: [39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770301.916812659] [ccr_fake_execution]: robotA: 39 -> 53
+[ccr_centralized_planner-3] [INFO] [1727770301.917621493] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_fake_execution-2] [INFO] [1727770301.918507652] [ccr_fake_execution]: got plan for robotA: [39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770301.918590928] [ccr_centralized_planner]: Sent plan [39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_centralized_planner-3] [INFO] [1727770301.919624213] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_fake_execution-2] [WARN] [1727770302.916797879] [ccr_fake_execution]: robotA is not at the expected state 39, instead at 53
+[ccr_centralized_planner-3] [INFO] [1727770302.917459498] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770302.918117400] [ccr_centralized_planner]: Sent plan [53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770302.918323796] [ccr_fake_execution]: got plan for robotA: [53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770302.918882162] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770303.917162260] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770303.917952560] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770303.918610381] [ccr_centralized_planner]: Sent plan [53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770303.918851353] [ccr_fake_execution]: got plan for robotA: [53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770304.916795774] [ccr_fake_execution]: robotA: 53 -> 51
+[ccr_centralized_planner-3] [INFO] [1727770304.917391479] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770304.917996883] [ccr_centralized_planner]: Sent plan [53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770304.918226533] [ccr_fake_execution]: got plan for robotA: [53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770304.918768738] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770305.917151870] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770305.917910360] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770305.918521966] [ccr_centralized_planner]: Sent plan [51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770305.918790568] [ccr_fake_execution]: got plan for robotA: [51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770306.916781857] [ccr_fake_execution]: robotA: 51 -> 32
+[ccr_centralized_planner-3] [INFO] [1727770306.917462432] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770306.918105606] [ccr_centralized_planner]: Sent plan [51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770306.918300992] [ccr_fake_execution]: got plan for robotA: [51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770306.918877361] [ccr_centralized_planner]: Received state 32 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770307.917024852] [ccr_centralized_planner]: Received state 32 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770307.917795996] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770307.918474486] [ccr_centralized_planner]: Sent plan [32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770307.918658500] [ccr_fake_execution]: got plan for robotA: [32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1727770308.916888265] [ccr_fake_execution]: robotA: 32 -> 35
+[ccr_centralized_planner-3] [INFO] [1727770308.917608293] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_fake_execution-2] [INFO] [1727770308.918529949] [ccr_fake_execution]: got plan for robotA: [32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770308.918576606] [ccr_centralized_planner]: Sent plan [32, 35, 10, 9] to robotA
+[ccr_centralized_planner-3] [INFO] [1727770308.919606344] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_fake_execution-2] [WARN] [1727770309.916840735] [ccr_fake_execution]: robotA is not at the expected state 32, instead at 35
+[ccr_centralized_planner-3] [INFO] [1727770309.917722896] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770309.918419440] [ccr_centralized_planner]: Sent plan [35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770309.918590501] [ccr_fake_execution]: got plan for robotA: [35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770309.919191887] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_fake_execution-2] [INFO] [1727770310.916752148] [ccr_fake_execution]: robotA: 35 -> 10
+[ccr_centralized_planner-3] [INFO] [1727770310.917426701] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770310.918111152] [ccr_centralized_planner]: Sent plan [35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770310.918264870] [ccr_fake_execution]: got plan for robotA: [35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770310.918925657] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_fake_execution-2] [WARN] [1727770311.916969684] [ccr_fake_execution]: robotA is not at the expected state 35, instead at 10
+[ccr_centralized_planner-3] [INFO] [1727770311.917483366] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770311.918197953] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770311.918339869] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770311.919003432] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770312.917067707] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770312.917855752] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770312.918500910] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770312.918723196] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_fake_execution-2] [INFO] [1727770313.916769878] [ccr_fake_execution]: robotA: 10 -> 9
+[ccr_centralized_planner-3] [INFO] [1727770313.917658302] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_goal_provider-1] [INFO] [1727770313.917772616] [ccr_goal_provider]: [32mgoal completed:[0m robotA reached goal 9, going to goal 1 within state 1
+[ccr_centralized_planner-3] [INFO] [1727770313.918591519] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1727770313.918871624] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_centralized_planner-3] [INFO] [1727770313.919688052] [ccr_centralized_planner]: Received state 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770313.925500776] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770314.917053059] [ccr_centralized_planner]: Received state 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770314.917702325] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770314.938977861] [ccr_centralized_planner]: Sent plan [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770314.939239611] [ccr_fake_execution]: got plan for robotA: [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770315.917154468] [ccr_centralized_planner]: Received state 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770315.917912688] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770315.918830185] [ccr_centralized_planner]: Sent plan [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770315.919120148] [ccr_fake_execution]: got plan for robotA: [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770316.916734602] [ccr_fake_execution]: robotA: 9 -> 11
+[ccr_centralized_planner-3] [INFO] [1727770316.917418703] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770316.918047320] [ccr_centralized_planner]: Sent plan [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770316.918272351] [ccr_fake_execution]: got plan for robotA: [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770316.918825697] [ccr_centralized_planner]: Received state 11 from robotA
+[ccr_fake_execution-2] [WARN] [1727770317.916900072] [ccr_fake_execution]: robotA is not at the expected state 9, instead at 11
+[ccr_centralized_planner-3] [INFO] [1727770317.917528709] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770317.918409578] [ccr_centralized_planner]: Sent plan [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770317.918435457] [ccr_fake_execution]: got plan for robotA: [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770317.919350800] [ccr_centralized_planner]: Received state 11 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770318.917140582] [ccr_centralized_planner]: Received state 11 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770318.917945339] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770318.918576260] [ccr_centralized_planner]: Sent plan [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770318.918779711] [ccr_fake_execution]: got plan for robotA: [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770319.916774405] [ccr_fake_execution]: robotA: 11 -> 35
+[ccr_centralized_planner-3] [INFO] [1727770319.917405526] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770319.918052177] [ccr_centralized_planner]: Sent plan [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770319.918301293] [ccr_fake_execution]: got plan for robotA: [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770319.918829452] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770320.917062773] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770320.917891395] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770320.918528527] [ccr_centralized_planner]: Sent plan [35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770320.918778295] [ccr_fake_execution]: got plan for robotA: [35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770321.916829716] [ccr_fake_execution]: robotA: 35 -> 50
+[ccr_centralized_planner-3] [INFO] [1727770321.917464895] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770321.918157452] [ccr_centralized_planner]: Sent plan [35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770321.918304637] [ccr_fake_execution]: got plan for robotA: [35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770321.918918727] [ccr_centralized_planner]: Received state 50 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770322.917067690] [ccr_centralized_planner]: Received state 50 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770322.918045070] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770322.919002993] [ccr_centralized_planner]: Sent plan [50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770322.919043148] [ccr_fake_execution]: got plan for robotA: [50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770323.917068350] [ccr_centralized_planner]: Received state 50 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770323.918036804] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770323.918982364] [ccr_centralized_planner]: Sent plan [50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770323.919039461] [ccr_fake_execution]: got plan for robotA: [50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770324.917094327] [ccr_centralized_planner]: Received state 50 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770324.917881942] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770324.918566443] [ccr_centralized_planner]: Sent plan [50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770324.918803988] [ccr_fake_execution]: got plan for robotA: [50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770325.916825402] [ccr_fake_execution]: robotA: 50 -> 51
+[ccr_centralized_planner-3] [INFO] [1727770325.917457987] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770325.918157917] [ccr_centralized_planner]: Sent plan [50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770325.918297879] [ccr_fake_execution]: got plan for robotA: [50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770325.918953927] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_fake_execution-2] [WARN] [1727770326.917031558] [ccr_fake_execution]: robotA is not at the expected state 50, instead at 51
+[ccr_centralized_planner-3] [INFO] [1727770326.917442518] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770326.918149912] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770326.918300053] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770326.918964057] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770327.916940437] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770327.917545680] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770327.918045075] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770327.918365515] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770328.917043387] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770328.917792409] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770328.918450381] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770328.918616161] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770329.917518936] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770329.918404925] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770329.918655775] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770329.919303758] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_fake_execution-2] [INFO] [1727770330.916925015] [ccr_fake_execution]: robotA: 51 -> 53
+[ccr_centralized_planner-3] [INFO] [1727770330.917610578] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_fake_execution-2] [INFO] [1727770330.918659933] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770330.918707803] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_centralized_planner-3] [INFO] [1727770330.920044085] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770331.917069646] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770331.917844146] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770331.918510854] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770331.918690791] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770332.917006566] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770332.917973487] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770332.918897657] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770332.918927192] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770333.917073691] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770333.917834896] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770333.918474424] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770333.918746984] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770334.917019789] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770334.917758913] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770334.918366160] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770334.918607091] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770335.916849891] [ccr_fake_execution]: robotA: 53 -> 39
+[ccr_centralized_planner-3] [INFO] [1727770335.917392878] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770335.918004493] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770335.918251896] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770335.918772922] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770336.917031601] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1727770336.917782898] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770336.918404912] [ccr_centralized_planner]: Sent plan [39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770336.918665821] [ccr_fake_execution]: got plan for robotA: [39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1727770337.916877160] [ccr_fake_execution]: robotA: 39 -> 55
+[ccr_centralized_planner-3] [INFO] [1727770337.917378819] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770337.917980586] [ccr_centralized_planner]: Sent plan [39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770337.918213602] [ccr_fake_execution]: got plan for robotA: [39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770337.918756649] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_fake_execution-2] [WARN] [1727770338.917010638] [ccr_fake_execution]: robotA is not at the expected state 39, instead at 55
+[ccr_centralized_planner-3] [INFO] [1727770338.917388655] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1727770338.918000321] [ccr_centralized_planner]: Sent plan [55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1727770338.918223478] [ccr_fake_execution]: got plan for robotA: [55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1727770338.918761175] [ccr_centralized_planner]: Received state 55 from robotA

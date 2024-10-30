@@ -1,0 +1,961 @@
+[INFO] [launch]: All log files can be found below /home/phlinke/.ros/log/2024-10-16-15-52-53-137914-pinky-56245
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [ccr_goal_provider-1]: process started with pid [56246]
+[INFO] [ccr_fake_execution-2]: process started with pid [56248]
+[INFO] [ccr_centralized_planner-3]: process started with pid [56250]
+[INFO] [ros2-4]: process started with pid [56252]
+[ccr_goal_provider-1] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_goal_provider-1]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ccr_centralized_planner-3] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_centralized_planner-3]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ccr_fake_execution-2] /usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+[ccr_fake_execution-2]   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+[ros2-4] stdin is not a terminal device. Keyboard handling disabled.[INFO] [1729086773.752924011] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[ros2-4] [INFO] [1729086773.765831370] [rosbag2_storage]: Opened database 'rosbag_1 robots_2024-10-16_13:52:53/rosbag_1 robots_2024-10-16_13:52:53_0.db3' for READ_WRITE.
+[ros2-4] [INFO] [1729086773.766005055] [rosbag2_recorder]: Event publisher thread: Starting
+[ros2-4] [INFO] [1729086773.766476990] [rosbag2_recorder]: Listening for topics...
+[ccr_goal_provider-1] [INFO] [1729086774.868824294] [ccr_goal_provider]: starting node [32mccr_goal_provider[0m
+[ccr_goal_provider-1] [INFO] [1729086774.870028360] [ccr_goal_provider]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_goal_provider-1] [INFO] [1729086774.870793594] [ccr_goal_provider]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_centralized_planner-3] [INFO] [1729086774.875967831] [ccr_centralized_planner]: starting node [32mccr_centralized_planner[0m
+[ccr_fake_execution-2] [INFO] [1729086774.876846898] [ccr_fake_execution]: starting node [32mccr_fake_execution[0m
+[ccr_centralized_planner-3] [INFO] [1729086774.877280581] [ccr_centralized_planner]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_centralized_planner-3] [INFO] [1729086774.877873252] [ccr_centralized_planner]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_fake_execution-2] [INFO] [1729086774.878277429] [ccr_fake_execution]: loading graph from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/maps/icra2024.yaml
+[ccr_fake_execution-2] [INFO] [1729086774.878931485] [ccr_fake_execution]: generating square graph with grid size 0.5 and working area (-2.25, 2.75)x(-1.75, 1.25)
+[ccr_goal_provider-1] [INFO] [1729086775.560513343] [ccr_goal_provider]: read waypoints from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/params/icra2024_waypoints.yaml
+[ccr_fake_execution-2] [INFO] [1729086775.563219455] [ccr_fake_execution]: read poses from /home/phlinke/ros/driving_swarm_infrastructure/install/driving_swarm_bringup/share/driving_swarm_bringup/params/icra2024_poses.yaml
+[ccr_fake_execution-2] [INFO] [1729086775.566504972] [ccr_fake_execution]: robotA at position [2.5, 1.0, 0.0] = state 1
+[ccr_goal_provider-1] [INFO] [1729086775.566788063] [ccr_goal_provider]: goals: {'robotA': [9, 1]}
+[ros2-4] [INFO] [1729086775.591802801] [rosbag2_recorder]: Subscribed to topic '/command'
+[ros2-4] [INFO] [1729086775.594166591] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/current_node'
+[ros2-4] [INFO] [1729086775.596259183] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/goal_completed'
+[ros2-4] [INFO] [1729086775.598236970] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/goal_node'
+[ros2-4] [INFO] [1729086775.600177606] [rosbag2_recorder]: Subscribed to topic '/robotA/nav/plan'
+[ccr_centralized_planner-3] [INFO] [1729086775.670189462] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086780.569029205] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086781.565009021] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086781.591151052] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_centralized_planner-3] [INFO] [1729086781.591622035] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_fake_execution-2] [INFO] [1729086781.591743081] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086782.565054185] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086782.565723840] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086782.566074487] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086782.568839619] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086783.565007578] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086783.565672524] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086783.566200383] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086783.568841363] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086784.565013940] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086784.565686851] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086784.566020987] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086784.568796348] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086785.564981108] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086785.565653388] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086785.566148225] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086785.568661285] [ccr_fake_execution]: robotA: 1 -> 44
+[ccr_centralized_planner-3] [INFO] [1729086785.569360014] [ccr_centralized_planner]: Received state 44 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086786.564970128] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086786.565627329] [ccr_centralized_planner]: Sent plan [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086786.566116436] [ccr_fake_execution]: got plan for robotA: [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086786.568813290] [ccr_centralized_planner]: Received state 44 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086787.564969207] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086787.565617451] [ccr_centralized_planner]: Sent plan [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086787.566117569] [ccr_fake_execution]: got plan for robotA: [44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086787.568636048] [ccr_fake_execution]: robotA: 44 -> 45
+[ccr_centralized_planner-3] [INFO] [1729086787.569336010] [ccr_centralized_planner]: Received state 45 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086788.564960410] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086788.565613815] [ccr_centralized_planner]: Sent plan [45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086788.566134651] [ccr_fake_execution]: got plan for robotA: [45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086788.568639495] [ccr_fake_execution]: robotA: 45 -> 56
+[ccr_centralized_planner-3] [INFO] [1729086788.569339306] [ccr_centralized_planner]: Received state 56 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086789.564913332] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086789.565518696] [ccr_centralized_planner]: Sent plan [56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086789.565961496] [ccr_fake_execution]: got plan for robotA: [56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086789.568810786] [ccr_centralized_planner]: Received state 56 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086790.564996247] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086790.565655874] [ccr_centralized_planner]: Sent plan [56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086790.566026138] [ccr_fake_execution]: got plan for robotA: [56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086790.568622544] [ccr_fake_execution]: robotA: 56 -> 55
+[ccr_centralized_planner-3] [INFO] [1729086790.569325892] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086791.564950001] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086791.565563911] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086791.565826463] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086791.568618936] [ccr_fake_execution]: robotA: 55 -> 39
+[ccr_centralized_planner-3] [INFO] [1729086791.569399890] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086792.564966341] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086792.565676212] [ccr_centralized_planner]: Sent plan [39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086792.565852742] [ccr_fake_execution]: got plan for robotA: [39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086792.568895865] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086793.564950081] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086793.565753507] [ccr_centralized_planner]: Sent plan [39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086793.565833897] [ccr_fake_execution]: got plan for robotA: [39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086793.568618757] [ccr_fake_execution]: robotA: 39 -> 53
+[ccr_centralized_planner-3] [INFO] [1729086793.569497884] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086794.564980919] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086794.565814521] [ccr_centralized_planner]: Sent plan [53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086794.565871387] [ccr_fake_execution]: got plan for robotA: [53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086794.569061956] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086795.564974076] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086795.565771961] [ccr_centralized_planner]: Sent plan [53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086795.565868772] [ccr_fake_execution]: got plan for robotA: [53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086795.568655935] [ccr_fake_execution]: robotA: 53 -> 51
+[ccr_centralized_planner-3] [INFO] [1729086795.569607369] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086796.565014772] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086796.565785657] [ccr_centralized_planner]: Sent plan [51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086796.566029213] [ccr_fake_execution]: got plan for robotA: [51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086796.568849699] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086797.564937978] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086797.565727227] [ccr_centralized_planner]: Sent plan [51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086797.565796788] [ccr_fake_execution]: got plan for robotA: [51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086797.569109856] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086798.564957676] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086798.565784996] [ccr_centralized_planner]: Sent plan [51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086798.565805174] [ccr_fake_execution]: got plan for robotA: [51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086798.568675894] [ccr_fake_execution]: robotA: 51 -> 32
+[ccr_centralized_planner-3] [INFO] [1729086798.569595046] [ccr_centralized_planner]: Received state 32 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086799.564989656] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086799.565791288] [ccr_centralized_planner]: Sent plan [32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086799.565845259] [ccr_fake_execution]: got plan for robotA: [32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086799.569055095] [ccr_centralized_planner]: Received state 32 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086800.565016416] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086800.565818339] [ccr_centralized_planner]: Sent plan [32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086800.566123961] [ccr_fake_execution]: got plan for robotA: [32, 35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086800.568638674] [ccr_fake_execution]: robotA: 32 -> 35
+[ccr_centralized_planner-3] [INFO] [1729086800.569632226] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086801.565015253] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086801.565860047] [ccr_centralized_planner]: Sent plan [35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086801.566088184] [ccr_fake_execution]: got plan for robotA: [35, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086801.568688587] [ccr_fake_execution]: robotA: 35 -> 10
+[ccr_centralized_planner-3] [INFO] [1729086801.569707387] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086802.564969157] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086802.565787150] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086802.565880365] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086802.569157316] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086803.564977574] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086803.565660744] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086803.565912836] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086803.568856222] [ccr_centralized_planner]: Received state 10 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086804.564974057] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086804.565655744] [ccr_centralized_planner]: Sent plan [10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086804.565978409] [ccr_fake_execution]: got plan for robotA: [10, 9]
+[ccr_fake_execution-2] [INFO] [1729086804.568679691] [ccr_fake_execution]: robotA: 10 -> 9
+[ccr_centralized_planner-3] [INFO] [1729086804.569458501] [ccr_centralized_planner]: Received state 9 from robotA
+[ccr_goal_provider-1] [INFO] [1729086804.569591460] [ccr_goal_provider]: [32mgoal completed:[0m robotA reached goal 9, going to goal 1 within state 1
+[ccr_centralized_planner-3] [INFO] [1729086804.570569102] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086805.564973726] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_fake_execution-2] [WARN] [1729086805.568820846] [ccr_fake_execution]: robotA is not at the expected state 10, instead at 9
+[ccr_centralized_planner-3] [INFO] [1729086805.588567993] [ccr_centralized_planner]: Sent plan [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_centralized_planner-3] [INFO] [1729086805.589033625] [ccr_centralized_planner]: Received state 9 from robotA
+[ccr_fake_execution-2] [INFO] [1729086805.589069513] [ccr_fake_execution]: got plan for robotA: [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1729086806.565001769] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086806.565759519] [ccr_centralized_planner]: Sent plan [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086806.566343443] [ccr_fake_execution]: got plan for robotA: [9, 11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086806.568691384] [ccr_fake_execution]: robotA: 9 -> 11
+[ccr_centralized_planner-3] [INFO] [1729086806.569498937] [ccr_centralized_planner]: Received state 11 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086807.565033148] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086807.565813561] [ccr_centralized_planner]: Sent plan [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086807.566331040] [ccr_fake_execution]: got plan for robotA: [11, 35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086807.568676035] [ccr_fake_execution]: robotA: 11 -> 35
+[ccr_centralized_planner-3] [INFO] [1729086807.569510629] [ccr_centralized_planner]: Received state 35 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086808.564958869] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086808.565715066] [ccr_centralized_planner]: Sent plan [35, 50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086808.566274534] [ccr_fake_execution]: got plan for robotA: [35, 50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086808.568672348] [ccr_fake_execution]: robotA: 35 -> 50
+[ccr_centralized_planner-3] [INFO] [1729086808.569485512] [ccr_centralized_planner]: Received state 50 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086809.564968057] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086809.565676555] [ccr_centralized_planner]: Sent plan [50, 51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086809.566019227] [ccr_fake_execution]: got plan for robotA: [50, 51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086809.568647243] [ccr_fake_execution]: robotA: 50 -> 51
+[ccr_centralized_planner-3] [INFO] [1729086809.569365278] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086810.564984038] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086810.565605622] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086810.566235062] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1729086810.568921226] [ccr_centralized_planner]: Received state 51 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086811.565033610] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086811.565725798] [ccr_centralized_planner]: Sent plan [51, 53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086811.566324369] [ccr_fake_execution]: got plan for robotA: [51, 53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086811.568676307] [ccr_fake_execution]: robotA: 51 -> 53
+[ccr_centralized_planner-3] [INFO] [1729086811.569555214] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086812.565151541] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086812.565859919] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086812.566602721] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1729086812.569030661] [ccr_centralized_planner]: Received state 53 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086813.565103321] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086813.565862123] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086813.566299463] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_centralized_planner-3] [INFO] [1729086813.569001066] [ccr_centralized_planner]: Received state 53 from robotA
+[ros2-4] [INFO] [1729086814.496144759] [rosbag2_recorder]: Subscribed to topic '/clock'
+[ros2-4] [INFO] [1729086814.499608761] [rosbag2_recorder]: Subscribed to topic '/tf'
+[ccr_centralized_planner-3] [INFO] [1729086814.565115855] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086814.565852455] [ccr_centralized_planner]: Sent plan [53, 39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086814.566034566] [ccr_fake_execution]: got plan for robotA: [53, 39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086814.568444773] [ccr_fake_execution]: robotA: 53 -> 39
+[ccr_centralized_planner-3] [INFO] [1729086814.569225456] [ccr_centralized_planner]: Received state 39 from robotA
+[ros2-4] [INFO] [1729086814.614853856] [rosbag2_recorder]: Subscribed to topic '/robotA/cmd_vel'
+[ccr_centralized_planner-3] [INFO] [1729086815.565220812] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086815.566176693] [ccr_centralized_planner]: Sent plan [39, 55, 56, 57, 5, 1] to robotA
+[ccr_fake_execution-2] [INFO] [1729086815.566676440] [ccr_fake_execution]: got plan for robotA: [39, 55, 56, 57, 5, 1]
+[ccr_fake_execution-2] [INFO] [1729086815.568698810] [ccr_fake_execution]: robotA: 39 -> 55
+[ccr_centralized_planner-3] [INFO] [1729086815.569848194] [ccr_centralized_planner]: Received state 55 from robotA
+[ros2-4] [INFO] [1729086815.875469323] [rosbag2_recorder]: Subscribed to topic '/robotA/scan'
+[ros2-4] [INFO] [1729086815.993650891] [rosbag2_recorder]: Subscribed to topic '/robotA/status'
+[ccr_centralized_planner-3] [INFO] [1729086816.460766088] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.470133824] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.549955684] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.565084817] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086816.589004233] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086816.589366953] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086816.589816856] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.590179045] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.649714126] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.670383291] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.749689736] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.770226693] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.849853588] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.870259189] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.949578177] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086816.970708296] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.050191661] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.070398610] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.150581346] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.170281786] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.250325763] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.270368864] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.350744593] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.370213529] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.451502728] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.470311296] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.551422273] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.564908086] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086817.588321804] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086817.588712777] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086817.589090264] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.589542893] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.651003984] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.670213624] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.751441338] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.770979564] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.851549877] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.870265150] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.951562806] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086817.970402883] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.052159880] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.070302189] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.151997531] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.170373298] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.253121973] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.270535136] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.352272125] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.370231302] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.452710993] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.470455747] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.552759829] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.564868391] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086818.591667504] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.592292796] [ccr_centralized_planner]: Received state 55 from robotA
+[ccr_fake_execution-2] [INFO] [1729086818.592350584] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086818.592674962] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.652952035] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.670344118] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.753011982] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.770515434] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.853358126] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.870313320] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.953584685] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086818.970149188] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.054093233] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.070306398] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.153636312] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.170712664] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.253737537] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.270647647] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.353691916] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.370736138] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.454471913] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.470744078] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.553966901] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.565155871] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_fake_execution-2] [INFO] [1729086819.568733415] [ccr_fake_execution]: robotA: 55 -> 39
+[ccr_centralized_planner-3] [INFO] [1729086819.586955684] [ccr_centralized_planner]: Sent plan [55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086819.587395969] [ccr_fake_execution]: got plan for robotA: [55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086819.587547303] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.587883493] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.654369912] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.670434478] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.755680613] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.770371465] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.854648554] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.870215698] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.955389237] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086819.970398145] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.055250122] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.070453303] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.155623356] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.170821277] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.256352478] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.270111462] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.355713515] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.370185015] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.456082371] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.470426302] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.556837141] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.564911022] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086820.589969492] [ccr_centralized_planner]: Sent plan [39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.590607979] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_fake_execution-2] [INFO] [1729086820.590654586] [ccr_fake_execution]: got plan for robotA: [39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086820.590912840] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.656224307] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.670291630] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.756332906] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.770184795] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.856861191] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.870509328] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.956626155] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086820.970573784] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.057582232] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.070548822] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.157599038] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.170568234] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.257731732] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.270326806] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.359283946] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.370245218] [ccr_centralized_planner]: Received goal 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.384527123] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_goal_provider-1] [INFO] [1729086821.384589920] [ccr_goal_provider]: [32mgoal completed:[0m robotA reached goal 1, going to goal 0 within state 9
+[ccr_centralized_planner-3] [INFO] [1729086821.459007433] [ccr_centralized_planner]: Received goal 9 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.560541343] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.564831412] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  replaned due to new goal
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086821.590206166] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086821.590725570] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086821.590882283] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_fake_execution-2] [INFO] [1729086821.593377890] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086821.765942344] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086821.978991720] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086822.162950007] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086822.362272557] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086822.565102440] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086822.565802362] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086822.566467348] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729086822.568905087] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_centralized_planner-3] [INFO] [1729086822.569908267] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086822.579074946] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086822.764622291] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.063126332] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.262884880] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.475482949] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.564922714] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086823.565607918] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086823.566199046] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_centralized_planner-3] [INFO] [1729086823.569256776] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.665938452] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086823.865941378] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086824.079048041] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086824.282992903] [ccr_centralized_planner]: Received state 1 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086824.565123640] [ccr_centralized_planner]: 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3]  did not replan 
+[ccr_centralized_planner-3] 
+[ccr_centralized_planner-3] [INFO] [1729086824.565791301] [ccr_centralized_planner]: Sent plan [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9] to robotA
+[ccr_fake_execution-2] [INFO] [1729086824.566309753] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 56, 55, 39, 53, 51, 32, 35, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729086824.568790722] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_centralized_planner-3] [INFO] [1729086824.569668167] [ccr_centralized_planner]: Received state 39 from robotA
+[ccr_centralized_planner-3] [INFO] [1729086825.565250057] [ccr_centralized_planner]: plan progressed far more than expected (current state not first or second step in plan)
+[ccr_fake_execution-2] [WARN] [1729086825.569422026] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086826.568900689] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[INFO] [ccr_centralized_planner-3]: process has finished cleanly [pid 56250]
+[ccr_fake_execution-2] [WARN] [1729086829.568797946] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086830.568772940] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086832.568838562] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086836.568891532] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086837.568836289] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086840.568821601] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086841.568825358] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086842.568796664] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086843.568849773] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086844.568818866] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086845.568819367] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086849.568845645] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086851.568868718] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086852.568793918] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086854.568823034] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086856.568799584] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086857.568834652] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086859.568814270] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086860.568758538] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086862.568786065] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086863.568773023] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086864.568772484] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086865.568772898] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086867.568782510] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086871.568815823] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086873.568779619] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086877.568935521] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086878.568884901] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086879.568770999] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086882.568829427] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086883.568970534] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086884.569066446] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086886.569153474] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086888.568805196] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086889.569063793] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086890.569121012] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729086890.804648093] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086890.969812043] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086891.171214799] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086891.371610669] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729086891.569158845] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729086891.572332129] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086891.772260954] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086891.973230658] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086892.273509839] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086892.473281650] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086892.673319109] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086892.874205057] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086893.074398578] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086893.275096203] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086893.475540373] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086893.710352014] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086893.976244198] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086894.176526695] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729086894.377198041] [ccr_fake_execution]: got plan for robotA: [44, 45, 40, 27, 25, 24, 34, 29, 31, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729086894.569072781] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086895.569136814] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086896.568822768] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086897.569407906] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086899.569161559] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086902.568963906] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086903.568945143] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086904.568980612] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086907.568941835] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086908.568927060] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086910.568814454] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086913.568870596] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086914.568914791] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086915.568937757] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086916.568935575] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086917.568980923] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086918.568963693] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086920.568760032] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086922.568859665] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086931.568827459] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086934.568765655] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086936.568757046] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086937.568757260] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086941.568830652] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086942.568809957] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086944.568914050] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086945.568912040] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086946.568763797] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086948.568767802] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086950.568922939] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086951.568913505] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086952.568910954] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086955.568824123] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086958.568777484] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086960.568794557] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086963.568765828] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086964.568756225] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086966.568763060] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086967.568755460] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086969.568755841] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086970.568751339] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086972.568757309] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086973.568763066] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086974.568956795] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086976.568834045] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086979.568792053] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086980.568768114] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086982.568793473] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086983.568758894] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086984.568770861] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086986.568752718] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086987.568753615] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086988.568749864] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086989.568758075] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086992.568775815] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086993.568766372] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086997.568796509] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086998.568769885] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729086999.568759342] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087000.568772421] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087001.568762728] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087002.568762634] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087003.568759262] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087006.568833749] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087008.568773738] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087009.568736573] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087010.568758931] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087011.568775147] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087012.568761006] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087014.568757159] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087016.568845925] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087017.568785868] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087020.568776212] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087021.568768901] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087022.568755202] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087027.568784093] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087029.568762906] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087031.568799476] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087033.568828389] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087034.568901381] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087039.568872233] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087041.568764502] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087045.569100846] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087046.568635970] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087047.568755138] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087048.568755083] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087050.568776188] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087052.568768568] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087053.568762575] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087055.568784252] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087057.568736788] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087065.568871161] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087068.568809419] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087072.568761761] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087074.568759021] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087075.568752096] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087076.568751582] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087077.568755717] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087079.568751936] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087080.568748828] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087081.568749567] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087082.568750877] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087083.568755534] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087084.568751644] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087087.568763950] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087088.568754599] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087089.568756921] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087090.568963456] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087092.568759079] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087093.568756391] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087096.568809635] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087097.568771761] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087102.568915568] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087103.568963225] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087104.568778277] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087107.569019952] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087109.568916373] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087111.568776377] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087112.568799538] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087116.568805296] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087117.568767845] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087124.568960933] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087125.568771457] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087126.568761777] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087130.568798895] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087134.568865393] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087137.568867783] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087138.568919257] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087140.568840396] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087143.568761052] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087145.568765186] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087146.568760705] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087149.568833146] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087150.568774074] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087151.568758554] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087154.568879765] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087156.568757192] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087158.568781615] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087161.568797878] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087162.568760745] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087163.568745642] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087165.568757357] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087166.568752131] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087170.568753016] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087171.568749137] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087174.568753496] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087177.568758556] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087178.568746971] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087181.568762470] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087184.568887005] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087185.568781273] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087187.568770237] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087188.568752200] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087189.568752778] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087191.568753092] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087192.568753640] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087194.568747022] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087196.568808682] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087200.568764356] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087203.568804992] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087205.568755694] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087206.568792310] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087207.568758453] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087208.568770031] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087211.568751898] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087212.568761122] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087213.568758985] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087214.568879087] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087217.568818514] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087223.568805620] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087225.568758526] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087228.568756293] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087229.568756129] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087235.568754599] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087237.568757327] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087238.568751683] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087240.568753651] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087241.568758577] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087242.568754566] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087243.568756757] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087245.568815720] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087247.568809277] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087248.568759347] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087250.568943971] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087252.568859542] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087253.568898940] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087256.568895656] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087259.568829074] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087261.568818191] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087262.568781757] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087264.568753854] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087266.568747620] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087267.568744429] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087270.568823679] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087272.568768375] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087278.568843901] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087280.568799086] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087281.568791606] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087283.568831909] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087284.568768225] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087287.568824642] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087288.568789742] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087289.568782833] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087290.568942456] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087291.568920208] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087294.569331080] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087302.569109980] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087303.568927782] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087304.568952263] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087305.568936758] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087306.568794636] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087307.568944851] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087309.568954899] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087311.568895205] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087314.568914544] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087317.568848002] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087319.568834495] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087322.569090607] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087323.569051809] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087326.569034068] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087329.568868160] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087330.569080923] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087331.568973435] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087333.569089331] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087336.568908214] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087337.568999650] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087348.568826331] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087349.568920150] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087350.568933921] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087351.568910892] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087352.568811129] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087353.568960763] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087354.568932515] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087356.568916153] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087357.568942216] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087359.568947885] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087362.568908404] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087363.568974502] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087365.569033069] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087370.568999568] [ccr_fake_execution]: robotA is not at the expected state 44, instead at 39
+[ccr_fake_execution-2] [INFO] [1729087372.034420980] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087372.202940550] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087372.403354007] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [WARN] [1729087372.568982564] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729087372.705043320] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087372.906091136] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087373.105776719] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087373.306045956] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [INFO] [1729087373.507226129] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 35, 11, 9]
+[ccr_fake_execution-2] [WARN] [1729087373.569037541] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087374.568985438] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087375.568843246] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087376.569069093] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087377.569166950] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087381.568773721] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087382.568932442] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087383.568961090] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087385.568933697] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087387.568951810] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087388.568944971] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087390.568946933] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087391.569062153] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087392.568966278] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087395.568940492] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087397.568831206] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087398.569087299] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087399.568854668] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087403.568845007] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087408.568794844] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087409.569113364] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087410.569468804] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087415.569081109] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729087416.145306726] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729087416.312201223] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729087416.512391834] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729087416.568971738] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729087416.813369323] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729087417.013227831] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729087417.214626693] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [INFO] [1729087417.414055947] [ccr_fake_execution]: got plan for robotA: [1, 44, 45, 40, 27, 25, 24, 33, 32, 31, 10, 9]
+[ccr_fake_execution-2] [WARN] [1729087421.568847266] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087425.568972457] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087429.568839179] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087432.568835506] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087433.568799600] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087436.568937021] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087437.568908458] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087442.568827071] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087444.568846009] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087448.568933817] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087450.568985216] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087451.568952505] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087452.568958488] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087455.568827025] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087457.568909922] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087460.568812593] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087462.568935625] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087463.568963579] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087464.568942891] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087465.568940728] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087468.569030570] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087469.569315054] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087470.569027216] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087471.568932269] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087472.569105615] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087473.568844717] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087474.569059020] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087475.568925481] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087477.568943917] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087480.569011287] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087481.569167481] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087482.568951397] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087486.568999622] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087490.569298816] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087491.568914628] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087492.568931120] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087493.569090249] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087495.568864439] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087498.568899207] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087503.568988810] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087505.569064654] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087506.568936986] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087508.568916781] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087509.568909007] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087510.568905832] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087512.568909351] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087514.568894004] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087515.568924312] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087517.568926939] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087519.568883820] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087522.568880096] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087524.568914192] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087525.568916869] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087527.568999756] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087528.568869473] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087529.569001591] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087531.568932294] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087533.568883405] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087534.568885510] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087538.568872770] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087543.568894887] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087546.568818126] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087547.569121265] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087548.568856821] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087550.568828510] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087553.568790822] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087556.568888798] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087559.568898199] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087562.568813494] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087563.568869640] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087565.568902283] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087568.568904160] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087569.568913438] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087570.568899684] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087572.568899025] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087573.568889698] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087574.568892996] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087575.568889961] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087580.568880479] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087581.568789439] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087589.568885869] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087592.568929094] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087594.568894090] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087595.568941459] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087596.568874004] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087597.569227397] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087600.568923481] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087602.568921078] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087603.568916411] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087605.568933926] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087611.568956885] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087614.568955996] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087615.569073868] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087617.568946722] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087618.568946903] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087620.568986149] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087621.568975400] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087623.568960594] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087628.568904364] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087631.568928813] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087632.568935842] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087634.568925152] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087636.568896709] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087639.568896384] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087640.568895157] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087641.568930087] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087642.568910456] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087644.568938939] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087645.568943733] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087646.568914474] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087647.568889272] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087652.568868729] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087655.568956478] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087656.568964549] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087660.568912692] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087664.568927280] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087665.568926854] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087666.568930275] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087667.568931713] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087672.568938682] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [WARN] [1729087678.568923144] [ccr_fake_execution]: robotA is not at the expected state 1, instead at 39
+[ccr_fake_execution-2] [INFO] [1729087681.568897902] [ccr_fake_execution]: exiting after timeout
+[ccr_fake_execution-2] [INFO] [1729087681.569562595] [ccr_fake_execution]: shutting down
+[INFO] [ccr_fake_execution-2]: process has finished cleanly [pid 56248]
+[INFO] [ros2-4]: sending signal 'SIGINT' to process[ros2-4]
+[INFO] [ccr_goal_provider-1]: sending signal 'SIGINT' to process[ccr_goal_provider-1]
+[ros2-4] [INFO] [1729087681.972354167] [rclcpp]: signal_handler(signum=2)
+[ros2-4] [INFO] [1729087682.013057738] [rosbag2_recorder]: Event publisher thread: Exiting
+[ros2-4] [INFO] [1729087682.013276677] [rosbag2_cpp]: Writing remaining messages from cache to the bag. It may take a while
+[INFO] [ros2-4]: process has finished cleanly [pid 56252]
+[INFO] [ccr_goal_provider-1]: process has finished cleanly [pid 56246]
