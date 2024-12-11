@@ -76,6 +76,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.central_plan[robot]['plan'] = (0,0)
             self.central_plan[robot]['origin_plan'] = []
 
+        self.stop_flag = False
+
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.distribute_plans)
 
@@ -126,9 +128,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_plans = []
         try:
-            all_plans = pbs.create_plan(self.env)
+            all_plans = pp.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("################# Error ##################")
+            exit()
             
         # match plans to robots
         for robot in self.robot_names :
@@ -138,6 +141,18 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     self.central_plan[robot]['origin_plan'] = copy.deepcopy(all_plans.plans[i])
                     
 
+    def global_stop(self):
+        # sending the current state as a plan to each robot 
+        self.stop_flag = True
+
+        for robot in self.robot_names:
+            plan = [self.central_plan[robot]['state']]
+            msg = Int32MultiArray()
+            msg.data = plan
+            self.publishers_[robot].publish(msg)
+        
+        self.get_logger().info(f'global stop : active')
+        
 
     def distribute_plans(self):
 
@@ -149,14 +164,31 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 return
         
 
+        if (self.stop_flag):
+            self.get_logger().info(f'global stop : not active')
+
+            self.generate_plan_for_robots()
+
+            self.stop_flag = False
+
+            for robot in self.robot_names:
+                plan = self.central_plan[robot]['plan']
+                msg = Int32MultiArray()
+                msg.data = plan
+                self.publishers_[robot].publish(msg)
+                self.get_logger().info(f'Sent plan {plan} to {robot}')
+            return
+
+
         if (self.use_optimization) :
 
             already_replaned = False
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal  Runde 2\n")
-                self.generate_plan_for_robots()
+                self.get_logger().info("\n\n replaned due to new goal  Runde 4\n")
+                #self.generate_plan_for_robots()
+                self.global_stop()
 
             
             self.got_new_goal = False
@@ -202,6 +234,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 
                 all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
 
+                unique_robots = []
                 for i in range(len(all_conflicts)):
                     unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
                     if (len(unique_robots) > 1) :
@@ -211,15 +244,18 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
                 total_time_diff = max_timestep - min_timestep
 
-                if (unique_robots > 1) :
+                if (len(unique_robots) > 1) :
                     self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
+                    self.global_stop()
                 elif (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
+                    self.global_stop()
                 elif (wrong_localization) :
                     self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
+                    self.global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")
 
@@ -227,6 +263,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         else :
             self.generate_plan_for_robots()
         
+        if (self.stop_flag):
+            return
+
         for robot in self.robot_names:
             plan = self.central_plan[robot]['plan']
             msg = Int32MultiArray()
