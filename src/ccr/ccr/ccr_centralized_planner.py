@@ -8,6 +8,7 @@ from polygonal_roadmaps import geometry, environment, planning
 from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, compute_all_k_conflicts
 from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
+import time
 
 import copy
 
@@ -77,9 +78,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.central_plan[robot]['origin_plan'] = []
 
         self.stop_flag = False
+        self.timer_start = time.time() - 100
+        
+        
 
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.distribute_plans)
+        
 
         self.use_optimization = True
         #self.use_optimization = False
@@ -144,6 +149,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
     def global_stop(self):
         # sending the current state as a plan to each robot 
         self.stop_flag = True
+        self.timer_start = time.time()
 
         for robot in self.robot_names:
             plan = [self.central_plan[robot]['state']]
@@ -158,6 +164,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         # Example logic to generate and distribute plans to all robots
         
+        if time.time() - self.timer_start <= 5:
+            return
+
         # check if all robots have a state and goal
         for robot in self.robot_names :
             if (self.central_plan[robot]['state']== -1 or self.central_plan[robot]['goal']== -1) :
@@ -186,7 +195,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal  Runde 4\n")
+                self.get_logger().info("\n\n replaned due to new goal  Runde 5\n")
                 #self.generate_plan_for_robots()
                 self.global_stop()
 
