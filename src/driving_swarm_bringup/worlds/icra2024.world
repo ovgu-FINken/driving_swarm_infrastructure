@@ -73,7 +73,7 @@
     <atmosphere type='adiabatic'/>
     <physics type='ode'>
       <max_step_size>0.002</max_step_size>
-      <real_time_factor>5</real_time_factor>
+      <real_time_factor>1</real_time_factor>
       <real_time_update_rate>2500</real_time_update_rate>
     </physics>
     <scene>

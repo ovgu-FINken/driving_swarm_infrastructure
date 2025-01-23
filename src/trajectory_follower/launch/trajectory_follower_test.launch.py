@@ -70,7 +70,7 @@ def controller_spawning(context, *args, **kwargs):
                   "fail_radius": 0.3
               }
            ],
-           remappings=[('/tf',"tf"), ('/tf_static',"tf_static")],
+           remappings=[('/tf',"tf"), ('/tf_static',"tf_static"), ('cmd_vel',"cmd_vel_new")],
            output='screen',
         ))
     

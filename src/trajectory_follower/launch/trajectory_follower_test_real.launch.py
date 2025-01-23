@@ -66,6 +66,7 @@ def controller_spawning(context, *args, **kwargs):
                         "fail_radius": 0.3
                     }
                 ],
+                remappings=[('cmd_vel',"cmd_vel_new")],
                 output="screen",
                 # arguments=[],
             )

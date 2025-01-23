@@ -63,7 +63,7 @@ def get_robot_id(x, y, start_pos):
 # because we switched turtlebots during experiments we have to assign new names and pairs by the robots starting position
 def data_assignments(dfs, db3_files):
     
-    pos_file = '/home/semai/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints1m.yaml'
+    pos_file = '/home/phlinke/ros/driving_swarm_infrastructure/src/driving_swarm_bringup/params/icra2024_waypoints1m.yaml'
     with open(pos_file, 'r') as file:
         waypoints = yaml.safe_load(file)
     starting_positions = [w['waypoints'][1] for w in waypoints]

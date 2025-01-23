@@ -1,7 +1,7 @@
 
 from std_msgs.msg import Int32, Int32MultiArray, String
 from driving_swarm_messages.msg import BeliefState as BeliefStateMsg
-
+from geometry_msgs.msg import Twist
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
@@ -60,6 +60,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         # Subscriber and Publisher dictionaries for each robot
         self.subscribers = {}
         self.publishers_ = {}
+        self.velocity_publishers_ = {}
 
         for robot in self.robot_names:
             self.subscribers[robot] = {
@@ -67,6 +68,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 'goal': self.create_subscription(Int32, f'/{robot}/nav/goal_node', self.create_goal_callback(robot), 10)
             }
             self.publishers_[robot] = self.create_publisher(Int32MultiArray, f'/{robot}/nav/plan', 10)
+            self.velocity_publishers_[robot] = self.create_publisher(Twist, f'/{robot}/cmd_vel', 10)
+
+            # global stop service
+            ##self.global_stop_client[robot] = self.create_client(bool, f'/{robot}/global_stop')
 
 	    # initialize dictionary for state and goal information
         self.central_plan = {}
@@ -92,6 +97,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.get_logger().info(f'------------------')
         self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n\n')
         self.get_logger().info(f'------------------')
+        
 
 
         
@@ -118,6 +124,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         return callback
     
+
+
 
     def generate_plan_for_robots(self):
 
@@ -156,29 +164,59 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             msg = Int32MultiArray()
             msg.data = plan
             self.publishers_[robot].publish(msg)
-        
+
+            stop_msg = Twist()
+            stop_msg.linear.x = 0.0
+            stop_msg.angular.z = 0.0
+            self.velocity_publishers_[robot].publish(stop_msg)
+
         self.get_logger().info(f'global stop : active')
-        
+
+
+    def activate_global_stop(self):
+        self.stop_flag = True
+
+        for robot in self.robot_names:
+            msg = std_srvs.SetBool
+            msg.request = True
+            self.global_stop_client[robot].call(msg)
+
+        self.get_logger().info(f'global stop : activated')
+
+    def deactivate_global_stop(self):
+        self.stop_flag = False
+
+        for robot in self.robot_names:
+            msg = std_srvs.SetBool
+            msg.request = False
+            self.global_stop_client[robot].call(msg)
+
+        self.get_logger().info(f'global stop : deactivated')
+
 
     def distribute_plans(self):
 
         # Example logic to generate and distribute plans to all robots
         
-        if time.time() - self.timer_start <= 5:
+        if time.time() - self.timer_start <= 1:
             return
 
         # check if all robots have a state and goal
         for robot in self.robot_names :
             if (self.central_plan[robot]['state']== -1 or self.central_plan[robot]['goal']== -1) :
                 return
-        
+    
 
         if (self.stop_flag):
-            self.get_logger().info(f'global stop : not active')
+            #self.get_logger().info(f'global stop : not active')
+
+            ##self.deactivate_global_stop()
 
             self.generate_plan_for_robots()
 
             self.stop_flag = False
+
+
 
             for robot in self.robot_names:
                 plan = self.central_plan[robot]['plan']
@@ -186,6 +224,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 msg.data = plan
                 self.publishers_[robot].publish(msg)
                 self.get_logger().info(f'Sent plan {plan} to {robot}')
+
+            
             return
 
 
@@ -195,9 +235,11 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal  Runde 5\n")
+                self.get_logger().info("\n\n replaned due to new goal  Runde 9\n")
                 #self.generate_plan_for_robots()
                 self.global_stop()
+                
+                ##self.activate_global_stop()
 
             
             self.got_new_goal = False
@@ -256,14 +298,17 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 if (len(unique_robots) > 1) :
                     self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
                     #self.generate_plan_for_robots()
+                    ##self.activate_global_stop()
                     self.global_stop()
                 elif (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
                     #self.generate_plan_for_robots()
+                    ##self.activate_global_stop()
                     self.global_stop()
                 elif (wrong_localization) :
                     self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
                     #self.generate_plan_for_robots()
+                    ##self.activate_global_stop()
                     self.global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")

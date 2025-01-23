@@ -76,6 +76,20 @@ class TrajectoryFollower(DrivingSwarmNode):
 
         self.create_timer(0.1, self.timer_cb)
 
+        self.stop_flag = False
+        """
+        self.create_service(
+            bool,
+            'global_stop',
+            self.set_stop_flag_cb
+        )
+        
+
+    def set_stop_flag_cb(self, msg):
+        self.stop_flag = msg.data
+        response.accepted
+        return response
+        """
     def update_trajectory_cb(self, request, response):
         # todo: check if trajectories submitted are valid
         # self.get_logger().info(colored('updating trajectory', 'blue')+f': {request.trajectory}')
@@ -240,7 +254,12 @@ class TrajectoryFollower(DrivingSwarmNode):
             return
         
         self.set_cmd_vel(control)
-        self.cmd_publisher.publish(self.cmd_vel)
+
+        if (self.stop_flag):
+            self.cmd_publisher.publish(Twist())
+        else :
+            self.cmd_publisher.publish(self.cmd_vel)
+            #self.get_logger().info('pid used')
 
         # publish topics for vizual debugging and analysis
         if self.trajectory is None:
