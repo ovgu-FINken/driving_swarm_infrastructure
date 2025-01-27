@@ -9,6 +9,7 @@ from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner,
 from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
 import time
+from std_srvs.srv import SetBool
 
 import copy
 
@@ -61,6 +62,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.subscribers = {}
         self.publishers_ = {}
         self.velocity_publishers_ = {}
+        self.global_stop_client = {}
 
         for robot in self.robot_names:
             self.subscribers[robot] = {
@@ -71,7 +73,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.velocity_publishers_[robot] = self.create_publisher(Twist, f'/{robot}/cmd_vel', 10)
 
             # global stop service
-            ##self.global_stop_client[robot] = self.create_client(bool, f'/{robot}/global_stop')
+            self.global_stop_client[robot] = self.create_client(SetBool, f'/{robot}/global_stop')
 
 	    # initialize dictionary for state and goal information
         self.central_plan = {}
@@ -139,11 +141,16 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         pp = PriorityAgentPlanner(self.env, priority_method="longest" ,max_iter = 1_000_000)
         pbs = PBSPlanner(self.env, max_iter = 1_000_000)
 
+
         all_plans = []
         try:
-            all_plans = pp.create_plan(self.env)
+            all_plans = pbs.create_plan(self.env)
         except nx.NetworkXNoPath:
-            self.get_logger().info("################# Error ##################")
+            self.get_logger().info("Error : no plan with compatible paths was found")
+            self.get_logger().info(f"current positions of robots :")
+            for robot in self.robot_names:
+                self.get_logger().info(f"robot {robot} : {str(self.central_plan[robot]['state'])}")
+
             exit()
             
         # match plans to robots
@@ -152,46 +159,53 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])-1] == self.central_plan[robot]['goal']):
                     self.central_plan[robot]['plan'] = all_plans.plans[i]
                     self.central_plan[robot]['origin_plan'] = copy.deepcopy(all_plans.plans[i])
-                    
-
-    def global_stop(self):
-        # sending the current state as a plan to each robot 
-        self.stop_flag = True
-        self.timer_start = time.time()
-
-        for robot in self.robot_names:
-            plan = [self.central_plan[robot]['state']]
-            msg = Int32MultiArray()
-            msg.data = plan
-            self.publishers_[robot].publish(msg)
-
-            stop_msg = Twist()
-            stop_msg.linear.x = 0.0
-            stop_msg.angular.z = 0.0
-            self.velocity_publishers_[robot].publish(stop_msg)
-
-        self.get_logger().info(f'global stop : active')
 
 
     def activate_global_stop(self):
         self.stop_flag = True
 
+        future_response = {}
         for robot in self.robot_names:
-            msg = std_srvs.SetBool
-            msg.request = True
-            self.global_stop_client[robot].call(msg)
+            request = SetBool.Request()
+            request.data = True
+            try:
+                future_response[robot] = self.global_stop_client[robot].call_async(request)
+                future_response[robot].add_done_callback(self.handle_stop_response)
+            except Exception as e:
+                self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
+
 
         self.get_logger().info(f'global stop : activated')
 
     def deactivate_global_stop(self):
         self.stop_flag = False
 
+
         for robot in self.robot_names:
-            msg = std_srvs.SetBool
-            msg.request = False
-            self.global_stop_client[robot].call(msg)
+            request = SetBool.Request()
+            request.data = False
+            try:
+                future = self.global_stop_client[robot].call_async(request)
+                future.add_done_callback(self.handle_stop_response)
+            except Exception as e:
+                self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
+
 
         self.get_logger().info(f'global stop : deactivated')
+
+
+    def handle_stop_response(self, future):
+        robot_id = "Z"
+        
+        try:
+            response = future.result()
+
+            if response.success:
+                self.get_logger().info(f"service call sucessful for robot {robot_id}")
+            else :
+                self.get_logger().warn(f"service call not sucessful for robot {robot_id}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to handle the stop response for robot {robot_id} : {str(e)}")
 
 
     def distribute_plans(self):
@@ -210,12 +224,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         if (self.stop_flag):
             #self.get_logger().info(f'global stop : not active')
 
-            ##self.deactivate_global_stop()
-
             self.generate_plan_for_robots()
 
-            self.stop_flag = False
-
+            self.deactivate_global_stop()
 
 
             for robot in self.robot_names:
@@ -235,11 +246,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal  Runde 9\n")
+                self.get_logger().info("\n\n replaned due to new goal  Runde 10\n")
                 #self.generate_plan_for_robots()
-                self.global_stop()
                 
-                ##self.activate_global_stop()
+                self.activate_global_stop()
 
             
             self.got_new_goal = False
@@ -298,18 +308,15 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 if (len(unique_robots) > 1) :
                     self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
                     #self.generate_plan_for_robots()
-                    ##self.activate_global_stop()
-                    self.global_stop()
+                    self.activate_global_stop()
                 elif (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
                     #self.generate_plan_for_robots()
-                    ##self.activate_global_stop()
-                    self.global_stop()
+                    self.activate_global_stop()
                 elif (wrong_localization) :
                     self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
                     #self.generate_plan_for_robots()
-                    ##self.activate_global_stop()
-                    self.global_stop()
+                    self.activate_global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")
 

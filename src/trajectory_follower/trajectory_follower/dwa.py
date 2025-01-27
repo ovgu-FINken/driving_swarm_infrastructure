@@ -12,7 +12,7 @@ from geometry_msgs.msg import Twist, Pose2D, PoseStamped, Quaternion
 from geometry_msgs.msg import Point as PointMsg
 from nav_msgs.msg import Path
 from driving_swarm_messages.srv import UpdateTrajectory
-from std_srvs.srv import Empty
+from std_srvs.srv import Empty, SetBool
 from driving_swarm_utils.node import DrivingSwarmNode
 from termcolor import colored
 from shapely import Polygon, Point, LineString, union_all
@@ -20,6 +20,7 @@ from sensor_msgs.msg import LaserScan
 from visualization_msgs.msg import MarkerArray, Marker
 from rclpy.duration import Duration
 from driving_swarm_utils.utils import get_xy_from_scan, detect_tb_from_ranges
+
 
 
 class TrajectoryFollower(DrivingSwarmNode):
@@ -91,19 +92,22 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.create_timer(1.0, self.slow_timer_cb)
 
         self.stop_flag = False
-        """
+        
         self.create_service(
-            bool,
+            SetBool,
             'global_stop',
             self.set_stop_flag_cb
         )
         
 
-    def set_stop_flag_cb(self, msg):
-        self.stop_flag = msg.data
-        response.accepted
+    def set_stop_flag_cb(self, request, response):
+        self.stop_flag = request.data
+        response = SetBool.Response()
+        response.success = True
+        response.message = "Stop flag updated"
+        #self.get_logger().info(f"\n\n got something from the central planner (value of bool = {request.data})\n\n")
         return response
-        """
+        
     def update_trajectory_cb(self, request, response):
         # todo: check if trajectories submitted are valid
         # self.get_logger().info(colored('updating trajectory', 'blue')+f': {request.trajectory}')
