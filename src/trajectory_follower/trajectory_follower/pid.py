@@ -77,19 +77,22 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.create_timer(0.1, self.timer_cb)
 
         self.stop_flag = False
-        """
+        
         self.create_service(
-            bool,
+            SetBool,
             'global_stop',
             self.set_stop_flag_cb
         )
         
 
-    def set_stop_flag_cb(self, msg):
-        self.stop_flag = msg.data
-        response.accepted
+    def set_stop_flag_cb(self, request, response):
+        self.stop_flag = request.data
+        response = SetBool.Response()
+        response.success = True
+        response.message = "Stop flag updated"
+        #self.get_logger().info(f"\n\n got something from the central planner (value of bool = {request.data})\n\n")
         return response
-        """
+        
     def update_trajectory_cb(self, request, response):
         # todo: check if trajectories submitted are valid
         # self.get_logger().info(colored('updating trajectory', 'blue')+f': {request.trajectory}')

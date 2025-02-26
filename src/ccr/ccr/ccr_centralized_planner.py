@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist
 import yaml
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
-from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, compute_all_k_conflicts
+from polygonal_roadmaps.planning import CBSPlanner, Plans, PriorityAgentPlanner, compute_all_k_conflicts, has_k1_collision
 from polygonal_roadmaps.planning import PBSPlanner
 import networkx as nx
 import time
@@ -85,9 +85,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.central_plan[robot]['origin_plan'] = []
 
         self.stop_flag = False
-        self.timer_start = time.time() - 100
+        self.timer_start = time.time() 
         
-        
+        self.first_plan = True
 
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.distribute_plans)
@@ -97,7 +97,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         #self.use_optimization = False
 
         self.get_logger().info(f'------------------')
-        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n\n')
+        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 11\n')
         self.get_logger().info(f'------------------')
         
 
@@ -144,7 +144,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_plans = []
         try:
-            all_plans = pbs.create_plan(self.env)
+            all_plans = pp.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("Error : no plan with compatible paths was found")
             self.get_logger().info(f"current positions of robots :")
@@ -163,7 +163,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def activate_global_stop(self):
         self.stop_flag = True
-
+        
         future_response = {}
         for robot in self.robot_names:
             request = SetBool.Request()
@@ -173,13 +173,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 future_response[robot].add_done_callback(self.handle_stop_response)
             except Exception as e:
                 self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
-
+        
 
         self.get_logger().info(f'global stop : activated')
 
     def deactivate_global_stop(self):
         self.stop_flag = False
-
 
         for robot in self.robot_names:
             request = SetBool.Request()
@@ -189,7 +188,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 future.add_done_callback(self.handle_stop_response)
             except Exception as e:
                 self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
-
 
         self.get_logger().info(f'global stop : deactivated')
 
@@ -220,9 +218,25 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             if (self.central_plan[robot]['state']== -1 or self.central_plan[robot]['goal']== -1) :
                 return
     
+        if (self.first_plan):
+            self.generate_plan_for_robots()
+
+            self.first_plan = False
+
+            for robot in self.robot_names:
+                plan = self.central_plan[robot]['plan']
+                msg = Int32MultiArray()
+                msg.data = plan
+                self.publishers_[robot].publish(msg)
+                self.get_logger().info(f'Sent plan {plan} to {robot}')
+            self.get_logger().info(f'used this for the first time to plan')
+
+            self.got_new_goal = False
+            return
+
 
         if (self.stop_flag):
-            #self.get_logger().info(f'global stop : not active')
+            self.get_logger().info(f'global stop : not active')
 
             self.generate_plan_for_robots()
 
@@ -246,8 +260,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             if (self.got_new_goal) :
                 already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal  Runde 10\n")
-                #self.generate_plan_for_robots()
+                self.get_logger().info("\n\n replaned due to new goal \n")
+                self.generate_plan_for_robots()
                 
                 self.activate_global_stop()
 
@@ -301,21 +315,21 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     if (len(unique_robots) > 1) :
                         break
                             
-                
+                k1_conf = has_k1_collision([self.central_plan[i]['plan'] for i in self.robot_names])
 
                 total_time_diff = max_timestep - min_timestep
 
-                if (len(unique_robots) > 1) :
+                if (k1_conf) :
                     self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
-                    #self.generate_plan_for_robots()
+                    self.generate_plan_for_robots()
                     self.activate_global_stop()
                 elif (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
-                    #self.generate_plan_for_robots()
+                    self.generate_plan_for_robots()
                     self.activate_global_stop()
                 elif (wrong_localization) :
                     self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
-                    #self.generate_plan_for_robots()
+                    self.generate_plan_for_robots()
                     self.activate_global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")
@@ -326,7 +340,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         
         if (self.stop_flag):
             return
-
+        
         for robot in self.robot_names:
             plan = self.central_plan[robot]['plan']
             msg = Int32MultiArray()
