@@ -36,7 +36,17 @@ def short_angle_range(phi1: float, phi2: float, r_step:float=0.2):
     if phi1 == phi2:
         return [phi1]
     return np.arange(phi1, phi2, np.sign(angle_dist(phi2, phi1)) * r_step)
-    
+
+
+def waypoints_to_path_straight(waypoints, step=0.1):
+    path = []
+    for wp1, wp2 in zip(waypoints[:-1], waypoints[1:]):
+        x = np.arange(wp1[0], wp2[0], step)
+        y = np.arange(wp1[1], wp2[1], step)
+        # angle between wp1 and wp2:
+        angle = np.arctan2(wp2[1] - wp1[1], wp2[0] - wp1[0])
+        path += [wp1] + [(x[i], y[i], angle) for i in range(len(x))] + [wp2]
+    return path
 
 def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS, FIX_ANGLES=False, spline_degree=3):
     """Create a of poses from the given waypoints, adhering to the given vehicle model.
@@ -88,7 +98,10 @@ def waypoints_to_path(waypoints, r=1, step=0.1, r_step=0.2, model=Vehicle.DUBINS
             path = path + list((x, y, phi) for x, y, phi in zip(xs, ys, phis))
             
             
-        elif model == Vehicle.RTR or model == Vehicle.STRAIGHT:
+        elif model == Vehicle.STRAIGHT:
+            path = waypoints_to_path_straight(waypoints, step=step)
+
+        elif model == Vehicle.RTR:
             # rotate (1)
             dist = np.linalg.norm(np.array(wp1[0:2]) - np.array(wp2[0:2]))
             if dist < step:
