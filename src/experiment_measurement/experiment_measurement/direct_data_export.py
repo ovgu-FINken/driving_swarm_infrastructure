@@ -160,7 +160,7 @@ class DirectDataExport(DrivingSwarmNode):
 
     def save_data(self):
         df = pd.concat(self.data, ignore_index=True)
-        df.to_csv(self.data_file)
+        df.to_csv(self.data_file, index=False)
         self.get_logger().info(f"saving data to {self.data_file}")
         self.get_logger().info(f"the data:\n{df.head(20)}")
         
