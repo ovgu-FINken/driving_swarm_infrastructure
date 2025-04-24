@@ -73,7 +73,7 @@ def data_assignments(dfs, db3_files, pos_file=None):
     
     for ex_id, _ in enumerate(tqdm.tqdm(dfs)):
         if 'current_node' not in dfs[ex_id].columns:
-            logging.warn(f'no cell found in {db3_files[ex_id]}')
+            logging.warning(f'no cell found in {db3_files[ex_id]}')
             continue
 
         # find the fitting directory name to give a good name to the experiment
@@ -141,6 +141,9 @@ if __name__ == "__main__":
     logging.info(f'found {len(dfs)} dfs' )
     dfs = data_assignments(dfs, db3, pos_file=args.waypoints_file)
     df = pd.concat(dfs)
+    if "robot_id" not in df.columns:
+        df['robot_id'] = ""
+        logging.warning(f"no robot id found for this experiment\nexperiment: {args.directory}")
     df.robot_id = df.robot_id.astype("category")
     df.pair_id = df.pair_id.astype("category")
     df.experiment = df.experiment.astype("category")

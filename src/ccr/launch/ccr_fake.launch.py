@@ -56,6 +56,18 @@ def controller_spawning(context, *args, robots_file=None, poses_file=None, **kwa
     )
     controllers.append(fake_controller)
     
+    controllers.append(Node(
+           package='experiment_measurement',
+           executable='direct_data_export',
+           parameters=[{
+              'use_sim_time': use_sim_time,
+              'robot_names': robots[:n_robots],
+              'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export_no_position.yaml'),
+              'data_file': LaunchConfiguration('data_file').perform(context),
+           }, grid_params, local_planner_params, global_planner_params],
+           output='both',
+    ))
+    
     exit_event_handler = RegisterEventHandler(event_handler=OnProcessExit(
             target_action=fake_controller,
             on_exit=EmitEvent(event=Shutdown(reason="command node exited"))
@@ -91,6 +103,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(DeclareLaunchArgument('run_timeout', default_value=EnvironmentVariable('RUN_TIMEOUT', default_value="0.0")))
     ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
+    ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     args = {
          'behaviour': 'false',      
          'world': 'icra2024.world',

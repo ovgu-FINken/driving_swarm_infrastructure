@@ -22,6 +22,7 @@ class DrivingSwarmNode(Node):
         if self.robots[0] == 'invalid_name':
             self.get_logger().warn(colored('no robot names specified!', 'red'))
             self.get_logger().warn('please specify a list of robot names via the parameter "robot_names"')
+        return self.robots
             
     def get_frames(self):
         self.get_own_frame()
@@ -76,8 +77,10 @@ class DrivingSwarmNode(Node):
             return None
         return pose
         
-    def get_tf_pose(self):
-        trans = self.lookup_tf(self.reference_frame, self.own_frame)
+    def get_tf_pose(self, frame=None):
+        if frame is None:
+            frame = self.own_frame
+        trans = self.lookup_tf(self.reference_frame, frame)
         if trans is None:
             return None
         tt = trans.translation
@@ -163,5 +166,11 @@ def main_fn(name, NodeClass):
         node = NodeClass(name)
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info(f'got keyboard interrupt, shutting down')
+    except Exception as e:
+        node.get_logger().error(e)
+    finally:
+        if rclpy.ok():
+            node.destroy_node()
+            rclpy.shutdown()
 

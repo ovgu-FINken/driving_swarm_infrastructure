@@ -43,6 +43,17 @@ def controller_spawning(context, *args, **kwargs):
            }, grid_params, local_planner_params, global_planner_params],
            output='both',
     ))
+    controllers.append(Node(
+           package='experiment_measurement',
+           executable='direct_data_export',
+           parameters=[{
+              'use_sim_time': use_sim_time,
+              'robot_names': robots[:n_robots],
+              'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export.yaml'),
+              'data_file': LaunchConfiguration('data_file').perform(context),
+           }, grid_params, local_planner_params, global_planner_params],
+           output='both',
+    ))
     
     for robot in robots[:n_robots]:
         controllers.append(Node(
@@ -102,6 +113,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     ld.add_action(DeclareLaunchArgument('planner_params_file', default_value=EnvironmentVariable('CCR_PLANNER_PARAMS', default_value='planner_aco.yaml')))
+    ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
         launch_arguments=args.items())

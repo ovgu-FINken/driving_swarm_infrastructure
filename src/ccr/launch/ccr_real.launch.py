@@ -41,6 +41,17 @@ def controller_spawning(context, *args, **kwargs):
            }, grid_params, local_planner_params, global_planner_params],
            output='both',
     ))
+
+    controllers.append(Node(
+           package='experiment_measurement',
+           executable='direct_data_export',
+           parameters=[{
+              'robot_names': robots[:n_robots],
+              'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export.yaml'),
+              'data_file': LaunchConfiguration('data_file').perform(context),
+           }, grid_params, local_planner_params, global_planner_params],
+           output='both',
+    ))
     
     for robot in robots[:n_robots]:
         controllers.append(Node(
@@ -95,6 +106,7 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
+    ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
     return ld

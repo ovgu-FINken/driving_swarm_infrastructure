@@ -116,7 +116,7 @@ class CCRFakeExecution(DrivingSwarmNode):
                 if r == robot:
                     continue
                 if self.states[r] == plan[1]:
-                    self.get_logger().warn(colored('red', 'collision: ') + f'{robot} and {r} collide at {plan[1]}')
+                    self.get_logger().warn(colored('collision: ', 'red') + f'{robot} and {r} collide at {plan[1]}')
 
             self.get_logger().info(f'{robot}: {self.states[robot]} -> {plan[1]}')
             self.states[robot] = plan[1]

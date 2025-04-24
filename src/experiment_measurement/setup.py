@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'rosbag2df = experiment_measurement.rosbag2df:main',
+            'direct_data_export = experiment_measurement.direct_data_export:main',
         ],
     },
 )
