@@ -97,7 +97,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         #self.use_optimization = False
 
         self.get_logger().info(f'------------------')
-        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 11\n')
+        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 12\n')
         self.get_logger().info(f'------------------')
         
 
@@ -106,11 +106,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def create_state_callback(self, robot_name):
         def callback(msg):
+            #self.get_logger().warn(f'\nhey we got some info\n')
             # Handle state update from robot
             self.get_logger().info(f'Received state {msg.data} from {robot_name}')
             # Example of updating internal plan state
             self.central_plan[robot_name]['state'] = msg.data
-            self.env
+            #self.env
         return callback
 
     def create_goal_callback(self, robot_name):
@@ -206,12 +207,24 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().error(f"Failed to handle the stop response for robot {robot_id} : {str(e)}")
 
 
+    def send_plans_to_robots(self):
+        
+        self.get_logger().info(f"\n\n an updated plan got sent to the robots \n")
+
+        for robot in self.robot_names:
+            plan = self.central_plan[robot]['plan']
+            msg = Int32MultiArray()
+            msg.data = plan
+            self.publishers_[robot].publish(msg)
+            self.get_logger().info(f'Sent plan {plan} to {robot}')
+
+
     def distribute_plans(self):
 
         # Example logic to generate and distribute plans to all robots
         
-        if time.time() - self.timer_start <= 1:
-            return
+        #if time.time() - self.timer_start <= 1:
+          #  return
 
         # check if all robots have a state and goal
         for robot in self.robot_names :
@@ -240,9 +253,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             self.generate_plan_for_robots()
 
-            self.deactivate_global_stop()
-
-
             for robot in self.robot_names:
                 plan = self.central_plan[robot]['plan']
                 msg = Int32MultiArray()
@@ -250,7 +260,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 self.publishers_[robot].publish(msg)
                 self.get_logger().info(f'Sent plan {plan} to {robot}')
 
-            
+            self.deactivate_global_stop()
+
             return
 
 
@@ -263,7 +274,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 self.get_logger().info("\n\n replaned due to new goal \n")
                 self.generate_plan_for_robots()
                 
-                self.activate_global_stop()
+                #self.activate_global_stop()
 
             
             self.got_new_goal = False
@@ -281,6 +292,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 for robot in self.robot_names :
                     
                     # robot moved to second step of plan
+                    self.get_logger().info(f"comparing data :{self.central_plan[robot]['plan'][1]} and {self.central_plan[robot]['state']} ")
                     if (self.central_plan[robot]['plan'][1] == self.central_plan[robot]['state']) :
                         self.central_plan[robot]['plan'].pop(0)
                     
@@ -291,6 +303,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                         break
                     
 
+                    
+
+                    """                 
                     a = len(self.central_plan[robot]['origin_plan'])
                     b =  len(self.central_plan[robot]['plan'])
                     temp_timestep = a - b
@@ -333,20 +348,17 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     self.activate_global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")
+                    """
 
 
         else :
             self.generate_plan_for_robots()
         
-        if (self.stop_flag):
-            return
+        #if (self.stop_flag):
+        #    return
         
-        for robot in self.robot_names:
-            plan = self.central_plan[robot]['plan']
-            msg = Int32MultiArray()
-            msg.data = plan
-            self.publishers_[robot].publish(msg)
-            self.get_logger().info(f'Sent plan {plan} to {robot}')
+        self.send_plans_to_robots()
+        
 
 
 
