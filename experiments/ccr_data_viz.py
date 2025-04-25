@@ -36,6 +36,6 @@ df_ttg = create_df_time(df)
 st.write("data for time to goal (ttg)")
 st.dataframe(df_ttg)
 
-fig = px.box(df_ttg, y="ttg", x="algorithm", color="algorithm", facet_row="mode")
+fig = px.box(df_ttg, y="ttg", x="algorithm", color="algorithm", facet_row="mode", facet_col="n")
 fig.update_yaxes(matches=None)
 st.plotly_chart(fig)

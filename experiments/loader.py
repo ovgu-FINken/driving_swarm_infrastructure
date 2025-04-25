@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
+import numbers
 import yaml
 import pandas as pd
 from glob import glob
 import os
+import uuid
 
 def read_directory(directory: str):
     # read *csv.gz and params.yaml
@@ -11,13 +13,18 @@ def read_directory(directory: str):
     with open(str(directory) + "/params.yaml", 'r') as f:
         params = yaml.load(f, Loader=yaml.SafeLoader)
     df = pd.read_csv(csv_files[0])
-    for key, value in params.items():
-        # if we have a nested dict, we use dot notation
-        if type(value) == dict:
-            for k, v in value.items():
-                df[f"{key}.{k}"] = v
+    for k, v in params.items():
+        if isinstance(v, numbers.Number):
+            df[k] = v
+        if isinstance(v, dict):
+            s = []
+            for kk, vv in v.items():
+                df[f'{k}.{kk}'] = vv
+                s.append(f"{kk}={vv}")
+            df[k] = ",".join(s)
         else:
-            df[key] = value
+            df[k] = str(v)
+    df["run_uuid"] = str(uuid.uuid4())
     return df
 
 def read_all_subdirectories(directory: str):
