@@ -129,7 +129,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
     
 
 
-
     def generate_plan_for_robots(self):
 
 
@@ -209,7 +208,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def send_plans_to_robots(self):
         
-        self.get_logger().info(f"\n\n an updated plan got sent to the robots \n")
+        #self.get_logger().info(f"\n\n an updated plan got sent to the robots \n")
 
         for robot in self.robot_names:
             plan = self.central_plan[robot]['plan']
@@ -253,12 +252,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             self.generate_plan_for_robots()
 
-            for robot in self.robot_names:
-                plan = self.central_plan[robot]['plan']
-                msg = Int32MultiArray()
-                msg.data = plan
-                self.publishers_[robot].publish(msg)
-                self.get_logger().info(f'Sent plan {plan} to {robot}')
+            self.send_plans_to_robots()
 
             self.deactivate_global_stop()
 
@@ -301,16 +295,11 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                         self.get_logger().info("plan progressed far more than expected (current state not first or second step in plan)")
                         wrong_localization = True
                         break
-                    
 
-                    
-
-                    """                 
+                                     
                     a = len(self.central_plan[robot]['origin_plan'])
-                    b =  len(self.central_plan[robot]['plan'])
+                    b = len(self.central_plan[robot]['plan'])
                     temp_timestep = a - b
-
-
 
 
                     # is timestep new maximum?
@@ -321,7 +310,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     if (temp_timestep < min_timestep or min_timestep == -1) :
                         min_timestep = temp_timestep
 
-                
+                """
                 all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
 
                 unique_robots = []
@@ -329,33 +318,38 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                     unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
                     if (len(unique_robots) > 1) :
                         break
-                            
+                           
                 k1_conf = has_k1_collision([self.central_plan[i]['plan'] for i in self.robot_names])
 
-                total_time_diff = max_timestep - min_timestep
 
                 if (k1_conf) :
                     self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
                     self.activate_global_stop()
-                elif (total_time_diff > 1) :
+                
+                """
+
+                total_time_diff = max_timestep - min_timestep
+
+                if (total_time_diff > 1) :
                     self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
                     self.activate_global_stop()
+                
                 elif (wrong_localization) :
                     self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
-                    self.generate_plan_for_robots()
+                    #self.generate_plan_for_robots()
                     self.activate_global_stop()
                 else : 
                     self.get_logger().info("\n\n did not replan \n")
-                    """
+                
 
 
         else :
             self.generate_plan_for_robots()
         
-        #if (self.stop_flag):
-        #    return
+        if (self.stop_flag):
+            return
         
         self.send_plans_to_robots()
         
