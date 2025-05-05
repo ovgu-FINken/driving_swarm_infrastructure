@@ -71,7 +71,6 @@ class Spawner(DrivingSwarmNode):
             # see https://github.com/ovgu-FINken/driving_swarm_infrastructure/issues/40
             if 'libgazebo_ros_diff_drive.so' in plugin.attrib.values():
                 break
-
         ros_params = plugin.find('ros')
         ros_tf_remap = ET.SubElement(ros_params, 'remapping')
         ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
@@ -79,8 +78,12 @@ class Spawner(DrivingSwarmNode):
         # Set data for request
         request = SpawnEntity.Request()
         request.name = args.robot_name
+        self.get_logger().info(f"name: {request.name}")
         request.xml = ET.tostring(root, encoding='unicode')
+        self.get_logger().info(f"xml: {request.xml}")
         request.robot_namespace = args.robot_namespace
+        self.get_logger().info(f"robot_namespace: {request.robot_namespace}")
+        self.get_logger().info(f"reference_frame: {request.reference_frame}")
         request.initial_pose.position.x = args.x
         request.initial_pose.position.y = args.y
         request.initial_pose.position.z = args.z

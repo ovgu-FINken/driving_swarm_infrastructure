@@ -77,10 +77,12 @@ def generate_launch_description():
                 }.items()
             )
     
+    use_sim_time = TextSubstitution(text='True')
     spawner = launch_ros.actions.Node(
             package='driving_swarm_bringup',
             executable='nav2_gazebo_spawner',
             output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
             arguments=[
                 '--robot_name', LaunchConfiguration('robot_name'),
                 '--robot_namespace', LaunchConfiguration('robot_name'),
@@ -104,10 +106,13 @@ def generate_launch_description():
             )
 
     namespace = LaunchConfiguration('robot_name')
-    use_sim_time = TextSubstitution(text='True')
     autostart = 'True'
     params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
-    urdf = os.path.join(get_package_share_directory('turtlebot3_description'), 'urdf', 'turtlebot3_burger.urdf')
+    urdf = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'urdf', 'turtlebot3_burger.urdf')
+    with open(urdf, 'r') as f:
+        robot_description = f.read()
+
+    frame_prefix = LaunchConfiguration('frame_prefix', default='')
 
 
     bringup_cmd_group = GroupAction([
@@ -119,10 +124,14 @@ def generate_launch_description():
             name='robot_state_publisher',
             #namespace=namespace,
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=[urdf],
+            parameters=[{'use_sim_time': use_sim_time,
+                         'frame_prefix': PythonExpression(['"', frame_prefix, '/"']),
+                         'robot_description': robot_description
+                         }],
+            #arguments=[urdf],
             remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
         ),
+
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch', 'slam_launch.py')),
