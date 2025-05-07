@@ -67,3 +67,5 @@ build-*/
 .vscode
 rosbag**
 **.sif
+*.csv
+*.csv.gz
