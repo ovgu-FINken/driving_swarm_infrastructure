@@ -7,8 +7,8 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Int32
 
 class ReactiveController(DrivingSwarmNode):
-    def __init__(self):
-        super().__init__('reactive_controller')
+    def __init__(self, name):
+        super().__init__(name)
         self.forward_distance = 0.0
         self.sign = 1.0
         self.clear = False
@@ -20,6 +20,7 @@ class ReactiveController(DrivingSwarmNode):
         
         # setup and wait for tf
         self.setup_tf()
+        self.get_frames()
         self.wait_for_tf()
         
         # once tf is ready, the robot is ready to start

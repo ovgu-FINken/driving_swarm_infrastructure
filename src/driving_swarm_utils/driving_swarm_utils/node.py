@@ -162,6 +162,7 @@ class DrivingSwarmNode(Node):
 
 def main_fn(name, NodeClass):
     rclpy.init()
+    node = None
     try:
         node = NodeClass(name)
         rclpy.spin(node)
