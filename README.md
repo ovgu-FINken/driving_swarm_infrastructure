@@ -4,13 +4,13 @@
 
 You have two options to install the ros package. If you have not set up ros2 humble, and you are not familiar with ros, we recommend the automatic installation using ansible. If you are already familiar with the ros2 ecosystem, we recommend to install the package manually.
 
-- For automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible)
+- For automatic installation have a look at the [Ansible](https://github.com/ovgu-FINken/driving_swarm_ansible) (recommended if you install driving swarm for real robots)
 - For the manual installation see the instructinos below
 
 
 ## Using Driving Swarm
 
-To use the DrivingSwarm framework, you best start with running the launch-file `ros2 launch driving_swarm_bringup multi_robot.launch.py`.
+To use the DrivingSwarm framework, lets take a look at the launch-file `ros2 launch driving_swarm_bringup multi_robot.launch.py`.
 The launch file will start
 - The gazebo simulation (you can use `simulator:=gzserver` to disable the visualization)
 - `single_robot.launch.py` for each robot, this launchfile will in turn launch serveral nodes for each robot
