@@ -26,7 +26,37 @@ If you want to define your own behavior, you can include the main launchfile and
 - `use_rviz:=False` will disable rviz
 - `use_rosbag:=True` will start a rosbag recording, which can be used in data-analysis
 
-A simple example workspace using the DrivingSwarm framework can be found in the tutorials for our lecture [Introduction to Robotics](https://github.com/ovgu-FINken/introduction_to_robotics_tutorial/tree/main/src/reactive_behaviour). Each package in this workspace contains simple implementations for behaviors and a launch-file, which launches the behvior and the infrastructure neccessary for running an experiment with simulated and real robots.
+## Examples
+
+The package `driving_swarm_behaviour` contains nodes and launch files to start a simple reactive behaviour.
+
+```
+ros2 launch driving_swarm_behaviour reactive.launch.py n_robots:=2 data_file:=data.csv.gz run_timeout:=300.0 init_timeout:=60.0
+```
+What does this mean:
+- `ros2 launch driving_swarm_behaviour reactive.launch.py` starts the [launch-file for reactive behaviour](https://github.com/ovgu-FINken/driving_swarm_infrastructure/blob/humble/src/driving_swarm_behaviour/launch/reactive.launch.py)
+- `n_robots:=2` specifies the number of robots, which can also be set via env-variable `export N_ROBOTS=2`
+- `data_file:=data.csv.gz` specifies that run data should be saved with the filename `data.csv.gz` which can be read via pandas `pd.read_csv`
+- `run_timeout:=300.0` specifies that a simulation experiment (or real experiment) takes 300 seconds
+- `init_timeout:=300.0` specifies that after 300 seconds initialization should be complete, otherwise the experiment is aborted
+- `simulator:=gzserver` or `gazebo`, specifies if gazebo is run in headless mode
+For driving swarm usually the launch-arguments have a default value. If nothing is specified, the default value will be used. Otherwise the value can be set via environment variables or launch arguments, where the arguments take precedence over environment variables.
+
+What happens once you launch:
+- The launch file will start all associated ros-nodes:
+  - gazebo simulator, robot state publisher, etc. (i.e., the simulated robots)
+  - rviz for each robot (`use_rviz:=false` to disable)
+  - the amcl-localization from the nav2 packages
+  - nodes that translate tf messages from the local tf topic of each robot (`/robot/tf`, `/robot/tf_static`) to a global tf topic (`/tf`, `/tf_static`)
+  - a command node, which sends commands `go` and `stop` to the topic `/command`
+  - a behaviour node for each robot
+  - a node that records and saves experiment data in 1s time resolution
+
+
+
+
+
+A simple example workspace using the DrivingSwarm framework can be found in the tutorials for our lecture [Introduction to Robotics](https://github.com/ovgu-FINken/introduction_to_robotics_tutorial/tree/main/src/reactive_behaviour).Each package in this workspace contains simple implementations for behaviors and a launch-file, which launches the behvior and the infrastructure neccessary for running an experiment with simulated and real robots.
 See the [wiki](https://github.com/ovgu-FINken/driving_swarm_infrastructure/wiki) for further documentation.
 
 
