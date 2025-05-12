@@ -5,12 +5,27 @@ from std_msgs.msg import Int32, Int32MultiArray
 from std_msgs.msg import ColorRGBA, Int32, Int32MultiArray, String, Float32MultiArray
 import networkx as nx
 import numpy as np
+import numpy.typing as npt
 import functools
 from termcolor import colored
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
 
+
+def decision_probability(values: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]: 
+    if np.sum(values) == 0:
+        return np.zeros(len(values))
+    values = values**4
+    return values / np.sum(values)
+
+def random_decision(probabilities: npt.NDArray[np.float64]) -> int:
+    """Compute a decsion based on the decision probability."""
+    return np.random.choice(len(probabilities), p=probabilities)
+
+def greedy_decision(probabilities: npt.NDArray[np.float64]) -> int:
+    """Compute a decision based on the greedy policy."""
+    return int(np.argmax(probabilities))
 
 class CCRGlobalPlannerRL(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
@@ -85,12 +100,11 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.nodelist = tuple( i for i,_ in enumerate(self.g.nodes()) )
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
+        self.other_states = {}
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
         self.occupancy_pub = self.create_publisher(Float32MultiArray, "nav/occupancy", 10)
-        #self.v_pub = self.create_publisher(Float32MultiArray, "nav/v", 10)
-        self.occupancy = {}
-        self.v = {n: float('inf') for n in self.nodelist}
-        self.other_states = {}
+        self.v = np.array([float('inf')] * len(self.nodelist))
+        self.o = np.zeros((len(self.nodelist), self.planning_problem_parameters.conflict_horizon))
 
         for robot in [n for n in self.robot_names if n != self.robot_name]:
             self.create_subscription(
@@ -103,11 +117,11 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
                 functools.partial(self.occupancy_cb, robot),
                 10
             )
-            self.create_subscription(
-                Float32MultiArray, f"/{robot}/nav/v",
-                functools.partial(self.v_cb, robot),
-                10
-            )
+            #self.create_subscription(
+            #    Float32MultiArray, f"/{robot}/nav/v",
+            #    functools.partial(self.v_cb, robot),
+            #    10
+            #)
             
             self.get_logger().info(f"subscribing /{robot}/nav/plan")
             
@@ -122,14 +136,17 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return
         if self.goal is None:
             return
-        pass
+        #self.publish_state_values(ns=f"{self.robot_name}_v")
+        self.update_occupancy()
+        self.log_plan_occupancy()
+        self.publish_occupancy_values(ns=f"{self.robot_name}_o")
         
     def fast_timer_cb(self):
         if self.state is None:
             return
         if self.goal is None:
             return
-        self.update_plan()
+        self.plan = self.update_plan()
         self.publish_plan(change_only=True)
 
     def goal_cb(self, msg):
@@ -145,19 +162,63 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.get_logger().info(f"updating state values")
         for node in self.nodelist:
             try:
-                self.v[node] = nx.shortest_path_length(self.g, node, self.goal, weight=self.env.planning_problem_parameters.weight_name)
+                dist = nx.shortest_path_length(self.g, node, self.goal, weight=self.env.planning_problem_parameters.weight_name)
+                self.v[node] = 1.0 / (dist + 1.0)
             except nx.NetworkXNoPath:
-                self.v[node] = float('inf')
+                self.v[node] = 0.0
         self.get_logger().info(f"state values done for {len(self.nodelist)} nodes")
-            
+        
+        
+    def update_occupancy(self):
+        """compute the occupancy probability for each node, and time step
+        t=0 is the current time step, t=1 is the next time step, etc.
+        """
+        s = np.zeros(len(self.nodelist))
+        s[self.state] = 1.0
+        T = self.get_transition_matrix()
+        for t in range(self.planning_problem_parameters.conflict_horizon):
+            self.o[:, t] = s@np.linalg.matrix_power(T, t)
+        return self.o
 
     def state_cb(self, msg):
         if msg.data == self.state:
             return
         self.get_logger().info(f"state changed: {self.state} -> {msg.data}")
         self.state = msg.data
-        pass
         
+    def get_trans_prob(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
+        """get the transition probability for each state at time t
+        if t is None, return the transition probability, without considering other agents (which is the only information modified by time t)
+        """
+        if self.state is None:
+            return np.zeros(len(self.nodelist))
+        if self.goal is None:
+            return np.zeros(len(self.nodelist))
+        if state == self.goal:
+            ret = np.zeros(len(self.nodelist))
+            ret[state] = 1.0
+            return ret
+        # get the neighbors of the current state
+        neighbors = list(self.g.neighbors(state))
+        values = np.zeros(len(self.nodelist))
+        for n in neighbors:
+            values[n] =  self.v[n]
+        probs = decision_probability(values)
+        return probs
+
+    def get_transition_matrix(self):
+        """ get the n*n transition matrix.
+        each entry is the probability of going from state i to state j
+        a transition is possible if there is an edge between i and j
+        the transition probability is based on the state values
+        """
+        self.t = np.zeros((len(self.nodelist), len(self.nodelist)))
+        for i, node in enumerate(self.nodelist):
+            # get the neighbors of the current state
+                self.t[i,:] = self.get_trans_prob(i, None)
+        self.get_logger().info(f"transition matrix: {self.t}")
+        return self.t
+            
     def update_plan(self) -> list[int]:
         if self.state is None:
             return
@@ -165,10 +226,17 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return
         if self.state == self.goal:
             return
-        neighbours = list(self.g.neighbors(self.state))
-        best = min(neighbours, key=lambda x: self.v[x])
-        self.plan = [self.state, best]
-        return self.plan 
+        state = self.state
+        plan = [state]
+        for t in range(self.planning_problem_parameters.conflict_horizon):
+            if state == self.goal:
+                break
+            probs = self.get_trans_prob(state, t)
+            state = greedy_decision(probs)
+            # get the best neighbor
+            plan.append(state)
+            
+        return plan
 
     def plan_is_feasible(self) -> bool:
         if not self.plan:
@@ -179,27 +247,41 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
                 self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
                 self.get_logger().warn(f"path: self.plan")
                 return False
-        
-        
-        return True
-
-    def publish_plan(self, change_only=True):
-
-        if change_only and self._published_plan == self.plan:
-            return
-        
-        if not self.plan_is_feasible():
-            return
 
         # dont go where another robot is at the moment.
         if len(self.plan) > 1:
             if self.plan[1] in self.other_states.values():
                 self.plan = [self.state]
+        
+        
+        return True
+
+    def publish_plan(self, change_only=True):
+        if not self.plan_is_feasible():
+            msg = Int32MultiArray()
+            msg.data = [self.state]
+            self.plan_pub.publish(msg)
+            self._published_plan = [self.state]
+            return 
+        
+        if change_only and self._published_plan[:4] == self.plan[:4]:
+            return
+
 
         msg = Int32MultiArray()
         msg.data = self.plan
         self.plan_pub.publish(msg)
         self._published_plan = self.plan
+    
+    def log_plan_occupancy(self):
+        str = "robot plan occupancy: "
+        for i, node in enumerate(self.plan):
+            if i < len(self.o[node]):
+                str += f"(s={node}, t={i}, "
+                str += f"o={self.o[node][i]}), "
+            else:
+                break
+        self.get_logger().info(str)
 
     def robot_cb(self, robot, msg):
         if robot == self.robot_name:
@@ -213,16 +295,12 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         pass
 
     def publish_state_values(self, ns="v", id=1):
-        values = {}
-        for u in self.env.g.nodes():
-            values[u] = np.sum(self.ccr_agent.get_q_matrix()[u,:])
-                
         node_msg = MarkerArray()
-        for key, val in values.items():
-            point = self.env.g.nodes()[key]['geometry'].center
+        for node, val in zip(self.nodelist, self.v):
+            point = self.env.g.nodes()[node]['geometry'].center
             marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
             marker.header.frame_id = 'map'
-            scale = (val + 0.0001) / (max(values.values())+0.0001)
+            scale = (val + 0.0001) / (max(self.v)+0.0001)
             scale = 0.1 * scale # np.log(scale+1.0)
             if scale < 0:
                 scale = 0.0
@@ -234,7 +312,25 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             node_msg.markers.append(marker)
             id += 1 
         self.cell_pub.publish(node_msg)
-
+        
+    def publish_occupancy_values(self, ns="o", id=1):
+        node_msg = MarkerArray()
+        for node, val in zip(self.nodelist, self.o):
+            scale = 1 * sum(val)
+            if scale <= 0:
+                continue # dont add markers for empty cells
+            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
+            point = self.env.g.nodes()[node]['geometry'].center
+            marker.header.frame_id = 'map'
+            marker.scale.x = scale
+            marker.scale.y = scale
+            marker.scale.z = scale
+            marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
+            marker.color = self.get_robot_color()
+            node_msg.markers.append(marker)
+            id += 1 
+        self.cell_pub.publish(node_msg)
+        
     def get_robot_color(self):
         if len(self.robot_names) == 1:
             return ColorRGBA(r=0.0, g=1.0, b=0.0, a=.2)
