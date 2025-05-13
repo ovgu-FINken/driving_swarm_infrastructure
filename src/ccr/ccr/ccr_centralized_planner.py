@@ -77,6 +77,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
 	    # initialize dictionary for state and goal information
         self.central_plan = {}
+        self.waiting_list = {robot_name : [] for robot_name in self.robot_names}
+        self.is_waiting = {robot_name : False for robot_name in self.robot_names}
         for robot in self.robot_names:
             self.central_plan[robot] = {}
             self.central_plan[robot]['state'] = -1
@@ -90,19 +92,16 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.first_plan = True
 
         # Set up timer to distribute plans periodically
-        self.timer = self.create_timer(1.0, self.distribute_plans)
+        self.timer = self.create_timer(1.0, self.update_plans)
         
-
         self.use_optimization = True
         #self.use_optimization = False
 
         self.get_logger().info(f'------------------')
-        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 12\n')
+        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 13\n')
         self.get_logger().info(f'------------------')
         
-
-
-        
+    
 
     def create_state_callback(self, robot_name):
         def callback(msg):
@@ -112,6 +111,11 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             # Example of updating internal plan state
             self.central_plan[robot_name]['state'] = msg.data
             #self.env
+
+            # should the robot stop and wait for other robots?
+            if not(self.is_waiting[robot_name]):
+                self.send_single_wait_command(robot_name)
+
         return callback
 
     def create_goal_callback(self, robot_name):
@@ -125,14 +129,18 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             self.got_new_goal = True
 
+            self.get_logger().info("\n\n replaned due to new goal \n")
+            #self.generate_plan_for_robots()
+            
+            self.activate_global_stop()
+
+            self.got_new_goal = False
+
         return callback
     
 
 
     def generate_plan_for_robots(self):
-
-
-        # TODO : calculate plan and add them to the central_plan dictionary
 
         self.env.state= [self.central_plan[robot]['state']  for robot in self.robot_names]
         self.env.goal = [self.central_plan[robot]['goal']  for robot in self.robot_names]
@@ -152,13 +160,33 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 self.get_logger().info(f"robot {robot} : {str(self.central_plan[robot]['state'])}")
 
             exit()
+
+        #all_plans.plans[0].insert(1,all_plans.plans[0][1])
             
         # match plans to robots
         for robot in self.robot_names :
             for i in range(len(all_plans.plans)) :
                 if (all_plans.plans[i][0] == self.central_plan[robot]['state'] and all_plans.plans[i][len(all_plans[i])-1] == self.central_plan[robot]['goal']):
+                
                     self.central_plan[robot]['plan'] = all_plans.plans[i]
                     self.central_plan[robot]['origin_plan'] = copy.deepcopy(all_plans.plans[i])
+
+
+        self.identify_waiting_times()
+
+
+    def identify_waiting_times(self):
+
+        for robot in self.robot_names :
+            i = 1
+            while i < len(self.central_plan[robot]['plan']):
+                if (self.central_plan[robot]['plan'][i] == self.central_plan[robot]['plan'][i-1]):
+                    for j in range(i, len(self.central_plan[robot]['plan'])):
+                        if (self.central_plan[robot]['plan'][j] != self.central_plan[robot]['plan'][j-1]):
+                            self.waiting_list[robot].append((i-1,j-1))
+                            i = j
+                            break
+                i += 1
 
 
     def activate_global_stop(self):
@@ -180,17 +208,17 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
     def deactivate_global_stop(self):
         self.stop_flag = False
 
+        future_response = {}
         for robot in self.robot_names:
             request = SetBool.Request()
             request.data = False
             try:
-                future = self.global_stop_client[robot].call_async(request)
-                future.add_done_callback(self.handle_stop_response)
+                future_response[robot] = self.global_stop_client[robot].call_async(request)
+                future_response[robot].add_done_callback(self.handle_stop_response)
             except Exception as e:
                 self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
 
         self.get_logger().info(f'global stop : deactivated')
-
 
     def handle_stop_response(self, future):
         robot_id = "Z"
@@ -218,12 +246,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().info(f'Sent plan {plan} to {robot}')
 
 
-    def distribute_plans(self):
-
-        # Example logic to generate and distribute plans to all robots
-        
-        #if time.time() - self.timer_start <= 1:
-          #  return
+    def update_plans(self):
 
         # check if all robots have a state and goal
         for robot in self.robot_names :
@@ -235,12 +258,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             self.first_plan = False
 
-            for robot in self.robot_names:
-                plan = self.central_plan[robot]['plan']
-                msg = Int32MultiArray()
-                msg.data = plan
-                self.publishers_[robot].publish(msg)
-                self.get_logger().info(f'Sent plan {plan} to {robot}')
+            self.send_plans_to_robots()
+
             self.get_logger().info(f'used this for the first time to plan')
 
             self.got_new_goal = False
@@ -259,102 +278,139 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             return
 
 
-        if (self.use_optimization) :
+        # replan due to new goal
+        if (self.got_new_goal) :
 
-            already_replaned = False
-
-            if (self.got_new_goal) :
-                already_replaned = True
-                self.get_logger().info("\n\n replaned due to new goal \n")
-                self.generate_plan_for_robots()
-                
-                #self.activate_global_stop()
-
+            '''self.get_logger().info("\n\n replaned due to new goal \n")
+            #self.generate_plan_for_robots()
             
-            self.got_new_goal = False
+            self.activate_global_stop()
+
+            self.got_new_goal = False'''
+            return
+
+        self.reasons_to_replan()
 
 
-            if not(already_replaned) :
-
-                min_timestep = -1
-                max_timestep = -1
-
-                wrong_localization = False
-
-                # shorten paths if state progressed since last call
-                # also calculate max time difference 
-                for robot in self.robot_names :
-                    
-                    # robot moved to second step of plan
-                    self.get_logger().info(f"comparing data :{self.central_plan[robot]['plan'][1]} and {self.central_plan[robot]['state']} ")
-                    if (self.central_plan[robot]['plan'][1] == self.central_plan[robot]['state']) :
-                        self.central_plan[robot]['plan'].pop(0)
-                    
-                    # robot moved, but outside of considered range 
-                    elif (self.central_plan[robot]['plan'][0] != self.central_plan[robot]['state']) :
-                        self.get_logger().info("plan progressed far more than expected (current state not first or second step in plan)")
-                        wrong_localization = True
-                        break
-
-                                     
-                    a = len(self.central_plan[robot]['origin_plan'])
-                    b = len(self.central_plan[robot]['plan'])
-                    temp_timestep = a - b
-
-
-                    # is timestep new maximum?
-                    if (temp_timestep > max_timestep or max_timestep == -1) :
-                        max_timestep = temp_timestep 
-
-                    # is timestep new minimum?
-                    if (temp_timestep < min_timestep or min_timestep == -1) :
-                        min_timestep = temp_timestep
-
-                """
-                all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
-
-                unique_robots = []
-                for i in range(len(all_conflicts)):
-                    unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
-                    if (len(unique_robots) > 1) :
-                        break
-                           
-                k1_conf = has_k1_collision([self.central_plan[i]['plan'] for i in self.robot_names])
-
-
-                if (k1_conf) :
-                    self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
-                    #self.generate_plan_for_robots()
-                    self.activate_global_stop()
-                
-                """
-
-                total_time_diff = max_timestep - min_timestep
-
-                if (total_time_diff > 1) :
-                    self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
-                    #self.generate_plan_for_robots()
-                    self.activate_global_stop()
-                
-                elif (wrong_localization) :
-                    self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
-                    #self.generate_plan_for_robots()
-                    self.activate_global_stop()
-                else : 
-                    self.get_logger().info("\n\n did not replan \n")
-                
-
-
-        else :
-            self.generate_plan_for_robots()
-        
         if (self.stop_flag):
             return
         
-        self.send_plans_to_robots()
+
         
 
+        self.send_plans_to_robots()
 
+
+    def reasons_to_replan(self):
+
+        min_timestep = -1
+        max_timestep = -1
+
+        wrong_localization = False
+
+        # shorten paths if state progressed since last call
+        # also calculate max time difference 
+        total_time_diff = 0
+        for robot in self.robot_names :
+            
+            # robot moved to second step of plan
+            #self.get_logger().info(f"comparing data :{self.central_plan[robot]['plan'][1]} and {self.central_plan[robot]['state']} ")
+            if (self.central_plan[robot]['plan'][1] == self.central_plan[robot]['state']) :
+                self.central_plan[robot]['plan'].pop(0)
+            
+            # robot moved, but outside of considered range 
+            elif (self.central_plan[robot]['plan'][0] != self.central_plan[robot]['state']) :
+                self.get_logger().info("plan progressed far more than expected (current state not first or second step in plan)")
+                wrong_localization = True
+                break
+
+                                
+            a = len(self.central_plan[robot]['origin_plan'])
+            b = len(self.central_plan[robot]['plan'])
+            temp_timestep = a - b
+
+            if not(self.is_waiting[robot]):
+
+                # is timestep new maximum?
+                if (temp_timestep > max_timestep or max_timestep == -1) :
+                    max_timestep = temp_timestep 
+
+                # is timestep new minimum?
+                if (temp_timestep < min_timestep or min_timestep == -1) :
+                    min_timestep = temp_timestep
+
+                total_time_diff = max_timestep - min_timestep
+
+        """
+        all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
+
+        unique_robots = []
+        for i in range(len(all_conflicts)):
+            unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
+            if (len(unique_robots) > 1) :
+                break
+                    
+        k1_conf = has_k1_collision([self.central_plan[i]['plan'] for i in self.robot_names])
+
+
+        if (k1_conf) :
+            self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
+            #self.generate_plan_for_robots()
+            self.activate_global_stop()
+        
+        """
+
+        if (total_time_diff > 1) :
+            self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
+            #self.generate_plan_for_robots()
+            self.activate_global_stop()
+        
+        elif (wrong_localization) :
+            self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
+            #self.generate_plan_for_robots()
+            self.activate_global_stop()
+
+        else : 
+            self.get_logger().info("\n\n did not replan \n")
+            self.send_single_go_command(min_timestep)
+
+
+    def send_single_go_command(self, min_timestep):
+        for robot in self.robot_names :
+            if not(self.is_waiting[robot]):
+                continue
+            
+            if (min_timestep >= self.waiting_list[robot][0][1]):
+                self.is_waiting[robot] = False
+
+                future_response = {}
+                request = SetBool.Request()
+                request.data = False
+                try:
+                    future_response[robot] = self.global_stop_client[robot].call_async(request)
+                    future_response[robot].add_done_callback(self.handle_stop_response)
+                except Exception as e:
+                    self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
+                
+
+
+    def send_single_wait_command(self,robot):
+        if (len(self.waiting_list[robot])>0):
+            a = len(self.central_plan[robot]['origin_plan'])
+            b = len(self.central_plan[robot]['plan'])
+            timestep = a - b
+
+            if (timestep == self.waiting_list[robot][0][0]):
+                self.is_waiting[robot] = True
+
+                future_response = {}
+                request = SetBool.Request()
+                request.data = True
+                try:
+                    future_response[robot] = self.global_stop_client[robot].call_async(request)
+                    future_response[robot].add_done_callback(self.handle_stop_response)
+                except Exception as e:
+                    self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
 
 def main():
     main_fn('ccr_centralized_planner', CCRCentralizedPlanner)
