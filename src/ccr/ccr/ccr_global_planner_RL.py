@@ -96,6 +96,9 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             self.planner_params = yaml.safe_load(stream)
 
         self.get_logger().info(f"planner params: {self.planner_params}")
+        self.offset = self.planner_params['offset']
+        self.tau = self.planner_params['tau']
+        self.discount_factor = self.planner_params['discount_factor']
         self.nodelist = tuple( i for i,_ in enumerate(self.g.nodes()) )
         self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
@@ -186,19 +189,22 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.get_logger().info(f"state changed: {self.state} -> {msg.data}")
         self.state = msg.data
         
-    def get_transition_value(self, from_state: int, to_state: int,t: None|int, offset:float = 4, tau:float = 4) -> float:
+    def get_transition_value(self, from_state: int, to_state: int,t: None|int) -> float:
             if (from_state, to_state) not in self.g.edges():
                 return 0.0
+            elif from_state == self.goal:
+                # waiting at the goal is good, when we use discounted returns this adds up
+                r = 0.5*self.planning_problem_parameters.wait_action_cost
             elif from_state == to_state:
-                r = -1.0
+                r = -self.planning_problem_parameters.wait_action_cost
             else:
                 r = self.node_distances[from_state] - self.node_distances[to_state]
             p_free = 1.0
             if t is not None:
                 p_free = self.get_node_free_probabilities(t)[to_state]
-            return (r + offset * p_free)**tau
+            return (r + self.offset * p_free)**self.tau
         
-    def get_transition_probabilities(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
+    def transition_values(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
         """get the transition probability for each state at time t
         if t is None, return the transition probability, without considering other agents (which is the only information modified by time t)
         """
@@ -214,7 +220,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         values = np.zeros(len(self.nodelist))
         for n in neighbors:
             values[n] = self.get_transition_value(state, n, t)
-        return probabilities_from_values(values)
+        return values
 
     def get_node_free_probabilities(self, t: int) -> npt.NDArray[np.float64]:
         """ get the probability of being free for each node and time step
@@ -229,7 +235,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         # free now contains the probability of being free for each node and time step
         return free[:, t]
     
-    def get_transition_matrix(self, t: int):
+    def transition_matrix(self, t: int):
         """ get the n*n transition matrix.
         each entry is the probability of going from state i to state j
         a transition is possible if there is an edge between i and j
@@ -238,23 +244,41 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         """
         T = np.zeros((len(self.nodelist), len(self.nodelist)))
         for i in range(len(self.nodelist)):
-            T[i] = self.get_transition_probabilities(i, t)
+            T[i] = probabilities_from_values(self.transition_values(i, t))
         return T
     
-    def get_expected_value(self, state: int, t: int) -> float:
+    def get_expected_value(self, state: int, t: int, discount:float = 1.0) -> float:
         """ apply the tranisition policy to the state and get the expected value after the planning horizon"""
         s0 = np.zeros(len(self.nodelist))
         s0[state] = 1.0
-        s1 = self.simulate_policy(s0, t)[-1]
-        distances = np.dot(s1, self.node_distances)
-        return distances
+        episode = self.simulate_policy(s0, t)
+        distances = np.dot(episode[-1], self.node_distances)
+        collisions = sum(np.dot(s, 1 - self.get_node_free_probabilities(t)**discount) for s in episode)
+        reward = -distances + len(episode) * 4 * (1 - collisions)
+        return reward 
     
-    def simulate_policy(self, state: npt.NDArray[np.float64], t: int) -> list[npt.NDArray[np.float64]]:
+    def discounted_returns(self, state: int, t0: int) -> float:
+        """ apply the tranisition policy to the state and get the expected value after the planning horizon"""
+        s = np.zeros(len(self.nodelist))
+        s[state] = 1.0
+        expected_return = 0.0
+        for t in range(t0, self.planning_problem_parameters.conflict_horizon-1):
+            T = self.transition_matrix(t)
+            for i, p in enumerate(s):
+                if p == 0:
+                    continue
+                s_now = np.zeros_like(s)
+                s_now[i] = p
+                s_next = s_now @ T
+                expected_return += np.dot(self.transition_values(i, t+1), s_next) * self.discount_factor**(t)
+            s = s @ T
+        return expected_return
+    
+    def simulate_policy(self, state: npt.NDArray[np.float64], t0: int) -> list[npt.NDArray[np.float64]]:
         """ compute the expected state-vector after applying the policy from a given state vector (s,t)"""
-        # todo: return list of this and deduplicate code
         episode = [state]
-        for i in range(t, self.planning_problem_parameters.conflict_horizon):
-            state = state @ (self.get_transition_matrix(i))
+        for t in range(t0, self.planning_problem_parameters.conflict_horizon-1):
+            state = state @ (self.transition_matrix(t+1))
             # normalize the state (dynamic tranisition matrix is not normalized)
             if np.sum(state) == 0:
                 state = episode[-1]
@@ -263,8 +287,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             episode.append(state)
         return episode
     
-    def update_plan(self) -> list[int]:
-        method = "greedy"
+    def update_plan(self, method:str = "greedy") -> list[int]|None:
         if self.state is None:
             return
         if self.goal is None:
@@ -277,24 +300,27 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             if state == self.goal:
                 break
             if method == "greedy":
-                probs = self.get_transition_probabilities(state, t+1)
-                state = greedy_decision(probs)
-                # get the best neighbor
+                values = self.transition_values(state, t+1)
+                state = greedy_decision(values)
             elif method == "random":
-                probs = self.get_transition_probabilities(state, t+1)
-                state = random_decision(probs)
-                # get the best neighbor
+                values = self.transition_values(state, t+1)
+                state = random_decision(probabilities_from_values(values))
             elif method == "EM" or method == "EM1":
                 neighbors = list(self.g.neighbors(state))
                 neighbor_values = {}
                 for n in neighbors:
-                    neighbor_values[n] = self.node_distances[state] - self.get_expected_value(n, t+1)
+                    neighbor_values[n] = self.get_expected_value(n, t+1)
                     if n == state:
                         neighbor_values[n] -= self.planning_problem_parameters.wait_action_cost
-                    neighbor_values[n] *= self.get_transition_matrix(t)[state, n]
                 state = max(neighbor_values, key=neighbor_values.get)
                 if method == "EM1":
                     method = "greedy"
+            elif method == "discounted_returns":
+                neighbors = list(self.g.neighbors(state))
+                neighbor_values = {}
+                for n in neighbors:
+                    neighbor_values[n] = self.discounted_returns(n, t+1) + self.get_transition_value(state, n, t) 
+                state = max(neighbor_values, key=neighbor_values.get)
             else:
                 self.get_logger().warn(f"unknown method {method}")
                 return []
@@ -363,7 +389,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return 
         arr = np.array(msg.data).reshape(self.o.shape)
         arr_shifted = np.zeros_like(arr)
-        arr_shifted[:, :-1] = arr[:, 1:]
+        arr_shifted[:, 1:] = arr[:, :-1]
         self.other_occupancy[robot] = 1.0 - (1.0 - arr) * (1.0 - arr_shifted) 
 
     def publish_state_values(self, ns="v", id=1):
