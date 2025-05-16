@@ -116,8 +116,8 @@ If you use this package in your own academic research, please cite the following
 [1] S. Mai, N. Traichel, and S. Mostaghim, “Driving Swarm: A Swarm Robotics Framework for Intelligent Navigation in a Self-organized World,” in 2022 IEEE International Conference on Robotics and Automation (ICRA), Philadelphia, PA, USA: IEEE, 2022, pp. 4958–4964. doi: 10.1109/ICRA46639.2022.9811852.
 ```
 @inproceedings{Mai2022DrivingSwarm,
-  title = {Driving {{Swarm}}: {{A Swarm Robotics Framework}} for {{Intelligent Navigation}} in a {{Self-organized World}}},
-  booktitle = {2022 {{IEEE International Conference}} on {{Robotics}} and {{Automation}} ({{ICRA}})},
+  title = {Driving Swarm: A Swarm Robotics Framework for Intelligent Navigation in a Self-organized World},
+  booktitle = {2022 IEEE International Conference on Robotic and Automation (ICRA)},
   author = {Mai, Sebastian and Traichel, Nele and Mostaghim, Sanaz},
   year = {2022},
   pages = {4958--4964},
