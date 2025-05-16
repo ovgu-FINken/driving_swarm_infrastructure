@@ -75,9 +75,11 @@ class DrivingSwarmNode(Node):
             self.get_logger().warn(f"Exception in tf transformations\n{e}")
             return None
         return pose
-        
-    def get_tf_pose(self):
-        trans = self.lookup_tf(self.reference_frame, self.own_frame)
+         
+    def get_tf_pose(self, frame=None):
+        if frame is None:
+            frame = self.own_frame
+        trans = self.lookup_tf(self.reference_frame, frame)
         if trans is None:
             return None
         tt = trans.translation

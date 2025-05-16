@@ -1,0 +1,9 @@
+tf: false
+cmd_vel: false
+global_topics:
+  command: String
+robot_topics:
+  status: String
+  nav/cell: Int32
+  nav/goal: Int32
+  nav/goal_completed: Int32
