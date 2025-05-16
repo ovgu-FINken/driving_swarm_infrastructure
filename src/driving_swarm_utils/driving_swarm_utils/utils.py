@@ -62,7 +62,7 @@ def detect_tb_from_ranges(ranges,
         tb_center_points.append(cluster_center)
     return tb_center_points
 
-def get_xy_from_scan(self, i, r, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
+def get_xy_from_scan(i, r, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0):
     angle = angle_min + i * angle_increment + pt
     x = r * np.cos(angle) + px
     y = r * np.sin(angle) + py
