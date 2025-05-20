@@ -1,15 +1,13 @@
 algorithms:
-#  global_planner_baseline:
-#    priorities: [same]#, index]
-  global_planner_aco:
-    planner_params_file: [planner_diffq.yaml]
-# global_planner:
-#   quality_metric: ['criticality', 'flow']
+  global_planner_RL:
+    planner_params_file: [planner_RL.yaml, planner_RL_greedy.yaml]
 modes:
   - fake
   - sim
-n_robots: 2
+n_robots: 3
 n_runs: 3
 run_timeout: 900
 init_timeout: 300
-waypoints_file: "icra2024_waypoints.yaml"
+waypoints_file: "icra2024_waypoints1m.yaml"
+poses_file: "icra2024_poses1m.yaml"
+params_file: "ccr_1m.yaml"

@@ -33,4 +33,8 @@ def read_all_subdirectories(directory: str):
         if not os.path.isdir(subdirectory):
             continue
         dfs.append(read_directory(subdirectory))
-    return pd.concat(dfs, ignore_index=True)
+    
+    df = pd.concat(dfs, ignore_index=True)
+    df.n = df.n.astype(int)
+    df.run_uuid = df.run_uuid.astype(str)
+    return df

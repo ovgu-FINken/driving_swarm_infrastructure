@@ -53,7 +53,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
         self.declare_parameter('horizon', 5)
-        self.declare_parameter('inertia', 0.1)
+        self.declare_parameter('inertia', 0.0)
         self.declare_parameter('wait_cost', 1.01)
         self._published_plan = []
         self.state = None
@@ -87,6 +87,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
             wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
         )
+        self.inertia = self.get_parameter('inertia').get_parameter_value().double_value
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
@@ -139,8 +140,6 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return
         if self.goal is None:
             return
-        #self.publish_state_values(ns=f"{self.robot_name}_v")
-        #self.log_plan_occupancy()
         self.publish_occupancy_values(ns=f"{self.robot_name}_o")
         
     def fast_timer_cb(self):
@@ -202,7 +201,12 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             p_free = 1.0
             if t is not None:
                 p_free = self.get_node_free_probabilities(t)[to_state]
-            return (r + self.offset * p_free)**self.tau
+            state_occupancy = 1.0
+            m = self.inertia
+            if t is not None:
+                state_occupancy = self.o[to_state, t]
+            
+            return (r + self.offset * p_free + m * state_occupancy)**self.tau
         
     def transition_values(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
         """get the transition probability for each state at time t
