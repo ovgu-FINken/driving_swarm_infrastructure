@@ -94,11 +94,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.update_plans)
         
-        self.use_optimization = True
-        #self.use_optimization = False
+
 
         self.get_logger().info(f'------------------')
-        self.get_logger().info(f'\n\n   using optimization : {self.use_optimization}\n Runde 13\n')
+        self.get_logger().info(f'\n\n Runde 14\n')
         self.get_logger().info(f'------------------')
         
     
@@ -152,7 +151,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_plans = []
         try:
-            all_plans = pp.create_plan(self.env)
+            all_plans = cbs.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("Error : no plan with compatible paths was found")
             self.get_logger().info(f"current positions of robots :")
@@ -220,18 +219,23 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         self.get_logger().info(f'global stop : deactivated')
 
-    def handle_stop_response(self, future):
-        robot_id = "Z"
-        
+    def handle_stop_response(self,future):
+        robot_id = ""
+        additional = ""
+        if (robot_id==""):
+            additional = "a random "
+
         try:
             response = future.result()
 
             if response.success:
-                self.get_logger().info(f"service call sucessful for robot {robot_id}")
+                self.get_logger().info(f"service call sucessful for {additional}robot {robot_id}")
             else :
-                self.get_logger().warn(f"service call not sucessful for robot {robot_id}")
+                self.get_logger().warn(f"service call not sucessful for {additional} robot {robot_id}")
         except Exception as e:
-            self.get_logger().error(f"Failed to handle the stop response for robot {robot_id} : {str(e)}")
+            self.get_logger().error(f"Failed to handle the stop response for {additional} robot {robot_id} : {str(e)}")
+        
+        self.cur_robot_id = "Z"
 
 
     def send_plans_to_robots(self):
@@ -267,7 +271,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
 
         if (self.stop_flag):
-            self.get_logger().info(f'global stop : not active')
+            #self.get_logger().info(f'global stop : not active')
 
             self.generate_plan_for_robots()
 
@@ -278,23 +282,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             return
 
 
-        # replan due to new goal
-        if (self.got_new_goal) :
-
-            '''self.get_logger().info("\n\n replaned due to new goal \n")
-            #self.generate_plan_for_robots()
-            
-            self.activate_global_stop()
-
-            self.got_new_goal = False'''
-            return
-
         self.reasons_to_replan()
 
 
         if (self.stop_flag):
             return
         
+        self.get_logger().info("\n\n did not replan \n")
 
         
 
@@ -341,24 +335,27 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
                 total_time_diff = max_timestep - min_timestep
 
-        """
+        
         all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
 
         unique_robots = []
+        k1_conf = False
         for i in range(len(all_conflicts)):
             unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
             if (len(unique_robots) > 1) :
+                k1_conf = True
                 break
                     
-        k1_conf = has_k1_collision([self.central_plan[i]['plan'] for i in self.robot_names])
-
+        # TODO :
+        # - ignore k1 conflict if its the repeated reason to replan
+        # - just look at the first n (eg. 4 or 5) entries and not the whole plan
 
         if (k1_conf) :
             self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
         
-        """
+        
 
         if (total_time_diff > 1) :
             self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
@@ -371,7 +368,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.activate_global_stop()
 
         else : 
-            self.get_logger().info("\n\n did not replan \n")
+            #self.get_logger().info("\n\n did not replan \n")
             self.send_single_go_command(min_timestep)
 
 
