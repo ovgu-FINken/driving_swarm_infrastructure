@@ -3,4 +3,5 @@ method: 'greedy'
 offset: 5.0
 tau: 5.0
 inertia: 0.2
+dynamisation_rate: 2
 discount_factor: 0.5
