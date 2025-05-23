@@ -49,7 +49,9 @@ def main():
     parser.add_argument("-algorithms", nargs='+', type=str, default=[])
     parser.add_argument("-modes", nargs='+', type=str, default=[])
     parser.add_argument("-waypoints_file", type=str, default=None)
+    parser.add_argument("-poses_file", type=str, default=None)
     parser.add_argument("-output_dir", type=str, default=f"experiment_{time.strftime('%Y-%m-%d')}")
+    parser.add_argument("-params_file", type=str, default=None)
     parser.add_argument("--check", action="store_true")
     parser.add_argument('--only-max-agents', action='store_true', help='only use the maximum number of agents per experiment (the default behavior is to iterate over all N=1, ... agents)')
     parser.add_argument("--print-ros", action="store_true", help="print ros logging output to stdout")
@@ -83,6 +85,12 @@ def main():
 
     if args.waypoints_file is not None:
         config["waypoints_file"] = args.waypoints_file
+        
+    if args.poses_file is not None:
+        config["poses_file"] = args.poses_file
+        
+    if args.params_file is not None:
+        config["params_file"] = args.params_file
 
 
     config["output_dir"] = args.output_dir
@@ -166,6 +174,8 @@ def main():
             f"ccr_version:={run_cfg['algo'][0]}",
             f"n_robots:={run_cfg['n']}",
             f"waypoints_file:={config['waypoints_file']}",
+            f"poses_file:={config['poses_file']}",
+            f"params:={config['params_file']}",
             f"run_timeout:={config['run_timeout']:.1f}",
             f"init_timeout:={config['init_timeout']:.1f}",
             "use_rviz:=false",

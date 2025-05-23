@@ -53,7 +53,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
         self.declare_parameter('horizon', 5)
-        self.declare_parameter('inertia', 0.1)
+        self.declare_parameter('inertia', 0.0)
         self.declare_parameter('wait_cost', 1.01)
         self._published_plan = []
         self.state = None
@@ -87,6 +87,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
             wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
         )
+        self.inertia = self.get_parameter('inertia').get_parameter_value().double_value
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
@@ -97,6 +98,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
 
         self.get_logger().info(f"planner params: {self.planner_params}")
         self.offset = self.planner_params['offset']
+        self.dynamisation_rate = self.planner_params['dynamisation_rate']
         self.tau = self.planner_params['tau']
         self.discount_factor = self.planner_params['discount_factor']
         self.nodelist = tuple( i for i,_ in enumerate(self.g.nodes()) )
@@ -104,6 +106,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
         self.other_states = {}
         self.other_occupancy = {}
+        self.current_stuckness = 0.0
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
         self.occupancy_pub = self.create_publisher(Float32MultiArray, "nav/occupancy", 10)
         self.node_distances = np.array([float('inf')] * len(self.nodelist))
@@ -125,10 +128,8 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             #    functools.partial(self.v_cb, robot),
             #    10
             #)
-            
             self.get_logger().info(f"subscribing /{robot}/nav/plan")
-            
-        
+
         self.create_timer(1.0, self.timer_cb)
         self.create_timer(0.1, self.fast_timer_cb)
         
@@ -139,10 +140,12 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return
         if self.goal is None:
             return
-        #self.publish_state_values(ns=f"{self.robot_name}_v")
-        #self.log_plan_occupancy()
         self.publish_occupancy_values(ns=f"{self.robot_name}_o")
-        
+        self.current_stuckness = self.stuckness()
+        self.get_logger().info(f"stuckness  : {self.current_stuckness:.2f}")
+        self.get_logger().info(f"dynamic tau: {self.get_dynamic_tau():.2f}")
+        self.get_logger().info(f"expected V : {self.get_expected_value(self.state, 0):.2f}")
+
     def fast_timer_cb(self):
         if self.state is None:
             return
@@ -159,7 +162,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.goal = msg.data
         self.get_logger().info(f"received new goal node {self.goal}")
         self.calc_state_distances()
-    
+
     def calc_state_distances(self):
         # for each state in the graph find the shortest distance to the goal
         # the distance is the expected cost
@@ -202,7 +205,32 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             p_free = 1.0
             if t is not None:
                 p_free = self.get_node_free_probabilities(t)[to_state]
-            return (r + self.offset * p_free)**self.tau
+            state_occupancy = 1.0
+            m = self.inertia
+            if t is not None:
+                state_occupancy = self.o[to_state, t]
+              
+            value = (r + self.offset * p_free + m * state_occupancy)
+            value = max(value, 0.0)
+            transition_value = value**self.get_dynamic_tau()
+            if np.isnan(transition_value):
+                self.get_logger().info(f"transition value is Nan, {r + self.offset * p_free + m * state_occupancy}**{self.get_dynamic_tau()}")
+                return 0.0
+            return transition_value
+        
+    def get_dynamic_tau(self) -> float:
+        """ get the dynamic tau value based on the current stuckness
+        the tau value is used to compute the transition probability
+        """
+        dynamic_tau = self.tau - self.dynamisation_rate * self.current_stuckness
+        if np.isnan(dynamic_tau):
+            return self.tau
+
+        if dynamic_tau < 0.001:
+            dynamic_tau = 0.001
+        elif dynamic_tau > 8.0:
+            dynamic_tau = 8.0
+        return dynamic_tau
         
     def transition_values(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
         """get the transition probability for each state at time t
@@ -247,13 +275,17 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             T[i] = probabilities_from_values(self.transition_values(i, t))
         return T
     
-    def get_expected_value(self, state: int, t: int, discount:float = 1.0) -> float:
+    def get_expected_collisions(self, episode: list[npt.NDArray[np.float64]], t0: int) -> float:
+        collisions = sum(np.dot(s, 1 - self.get_node_free_probabilities(t+t0))*self.discount_factor**(t+t0) for t,s in enumerate(episode))
+        return collisions
+
+    def get_expected_value(self, state: int, t0: int) -> float:
         """ apply the tranisition policy to the state and get the expected value after the planning horizon"""
         s0 = np.zeros(len(self.nodelist))
         s0[state] = 1.0
-        episode = self.simulate_policy(s0, t)
+        episode = self.simulate_policy(s0, t0)
         distances = np.dot(episode[-1], self.node_distances)
-        collisions = sum(np.dot(s, 1 - self.get_node_free_probabilities(t)**discount) for s in episode)
+        collisions = self.get_expected_collisions(episode, t0)
         reward = -distances + len(episode) * 4 * (1 - collisions)
         return reward 
     
@@ -270,7 +302,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
                 s_now = np.zeros_like(s)
                 s_now[i] = p
                 s_next = s_now @ T
-                expected_return += np.dot(self.transition_values(i, t+1), s_next) * self.discount_factor**(t)
+                expected_return += np.dot(self.transition_values(i, t+1), s_next) * self.discount_factor**t
             s = s @ T
         return expected_return
     
@@ -286,6 +318,35 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
                 state = state / np.sum(state)
             episode.append(state)
         return episode
+    
+    def stuckness(self) -> float:
+        """ compute the expected state-vector after applying the policy from a given state vector (s,t)"""
+        if self.state is None:
+            return 1.0
+        if self.goal is None:
+            return 1.0
+        if self.state == self.goal:
+            return 1.0
+        s = np.zeros(len(self.nodelist))
+        s[self.state] = 1.0
+        episode = self.simulate_policy(s, 0)
+        expected_distance_gain = self.node_distances[self.state] - np.dot(episode[-1], self.node_distances)
+        expected_collisions = self.get_expected_collisions(episode, 0)
+        completion_probability = episode[-1][self.goal]
+        
+        self.get_logger().info(f"expected distance gain: {expected_distance_gain:.2f}")
+        self.get_logger().info(f"expected collisions: {expected_collisions:.2f}")
+        self.get_logger().info(f"completion probability: {completion_probability:.2f}")
+
+        # calculate measure for stuckness
+        # we are stuck if there are >= 1 expected collisions OR the expected distance gain is small
+        # we are less stuck, if completion is likely
+
+        stuckness = expected_collisions + (1 + len(episode) - expected_distance_gain) / len(episode) + (1 - completion_probability)
+        if np.isnan(stuckness):
+            raise ValueError("stuckness is NaN")
+        return stuckness
+
     
     def update_plan(self, method:str = "greedy") -> list[int]|None:
         if self.state is None:
@@ -414,28 +475,37 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
     def publish_occupancy_values(self, ns="o", id=1):
         node_msg = MarkerArray()
         for node, val in zip(self.nodelist, self.o[:,1:]):
-            scale = 0.2 * sum(val)
-            if scale <= 0:
-                continue # dont add markers for empty cells
-            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
+            # scale = 0.2 * sum(val)
+            # if scale <= 0:
+            #     continue # dont add markers for empty cells
+            # marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
             point = self.env.g.nodes()[node]['geometry'].center
+            # marker.header.frame_id = 'map'
+            # marker.scale.x = scale
+            # marker.scale.y = scale
+            # marker.scale.z = scale
+            # marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
+            # marker.color = self.get_robot_color()
+            # node_msg.markers.append(marker)
+            # id += 1 
+            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.TEXT_VIEW_FACING)
             marker.header.frame_id = 'map'
-            marker.scale.x = scale
-            marker.scale.y = scale
-            marker.scale.z = scale
-            marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
+            marker.pose.position = Point(x=point.x + self.robot_names.index(self.robot_name)*0.1+0.1, y=point.y, z=0.0)
+            marker.text = str(f"{val[0]*100:.0f},{val[1]*100:.0f},{val[2]*100:.0f},{val[3]*100:.0f}")
+            marker.scale.z = 0.1
             marker.color = self.get_robot_color()
+            #marker.color = ColorRGBA(r=0.0, g=0.0, b=0.0, a=.9)
             node_msg.markers.append(marker)
-            id += 1 
+            id += 1
         self.cell_pub.publish(node_msg)
         
     def get_robot_color(self):
         if len(self.robot_names) == 1:
-            return ColorRGBA(r=0.0, g=1.0, b=0.0, a=.2)
+            return ColorRGBA(r=0.0, g=1.0, b=0.0, a=.5)
         robot_index = self.robot_names.index(self.robot_name)
         r = robot_index / (len(self.robot_names) - 1)
         b = 1.0 - r
-        return ColorRGBA(r=r, g=0.0, b=b, a=.2)
+        return ColorRGBA(r=r, g=0.0, b=b, a=.5)
 
 def main():
     main_fn("ccr_global_planner_RL", CCRGlobalPlannerRL)
