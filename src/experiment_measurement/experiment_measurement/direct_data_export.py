@@ -71,7 +71,7 @@ class DirectDataExport(DrivingSwarmNode):
                 self.get_logger().info(f"subscribing to {topic_name}")
                 for robot in self.robots:
                     self.create_subscription(get_topic_type_from_str(topic_type), f"/{robot}/{topic_name}", partial(self.robot_topic_cb, robot=robot, topic_name=topic_name), 10)
-            self.column_generators[topic_name] = partial(self.robot_topic_column, topic_name=topic_name)
+                self.column_generators[topic_name] = partial(self.robot_topic_column, topic_name=topic_name)
 
         if self.data_export_config["tf"]:
             self.setup_tf()
