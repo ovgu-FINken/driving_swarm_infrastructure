@@ -11,6 +11,8 @@ import networkx as nx
 import time
 from std_srvs.srv import SetBool
 
+import functools
+
 import copy
 
 class CCRCentralizedPlanner(DrivingSwarmNode):
@@ -91,6 +93,11 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         
         self.first_plan = True
 
+        self.k1_length=1
+
+        self.repeated_reasons = []
+        self.stop_repeated_replaning = False
+
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.update_plans)
         
@@ -138,7 +145,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         return callback
     
 
-
     def generate_plan_for_robots(self):
 
         self.env.state= [self.central_plan[robot]['state']  for robot in self.robot_names]
@@ -146,9 +152,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         cbs = CBSPlanner(self.env, max_iter = 1_000_000)
         pp = PriorityAgentPlanner(self.env, priority_method="longest" ,max_iter = 1_000_000)
-        pbs = PBSPlanner(self.env, max_iter = 1_000_000)
+        pbs = PBSPlanner(self.env,"width")
 
 
+        self.get_logger().info("\n\nCALCULATING NEW PLANS\n")
         all_plans = []
         try:
             all_plans = cbs.create_plan(self.env)
@@ -157,6 +164,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().info(f"current positions of robots :")
             for robot in self.robot_names:
                 self.get_logger().info(f"robot {robot} : {str(self.central_plan[robot]['state'])}")
+
+            self.get_logger().info(f"\n\n\n")
+            return
 
             exit()
 
@@ -172,6 +182,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
 
         self.identify_waiting_times()
+
+        self.k1_length = 1
+        self.reset_repeated_reasons()
 
 
     def identify_waiting_times(self):
@@ -195,14 +208,17 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         for robot in self.robot_names:
             request = SetBool.Request()
             request.data = True
+            extra_func = functools.partial(self.handle_stop_response,robot)
             try:
                 future_response[robot] = self.global_stop_client[robot].call_async(request)
-                future_response[robot].add_done_callback(self.handle_stop_response)
+                future_response[robot].add_done_callback(extra_func)
+                #future_response[robot].add_done_callback(self.handle_stop_response)
             except Exception as e:
                 self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
         
 
         self.get_logger().info(f'global stop : activated')
+
 
     def deactivate_global_stop(self):
         self.stop_flag = False
@@ -211,16 +227,20 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         for robot in self.robot_names:
             request = SetBool.Request()
             request.data = False
+            extra_func = functools.partial(self.handle_stop_response,robot)
             try:
                 future_response[robot] = self.global_stop_client[robot].call_async(request)
-                future_response[robot].add_done_callback(self.handle_stop_response)
+                future_response[robot].add_done_callback(extra_func)
+                #future_response[robot].add_done_callback(self.handle_stop_response)
+
             except Exception as e:
                 self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
 
         self.get_logger().info(f'global stop : deactivated')
 
-    def handle_stop_response(self,future):
-        robot_id = ""
+
+    def handle_stop_response(self,robot,future):
+        robot_id = robot
         additional = ""
         if (robot_id==""):
             additional = "a random "
@@ -229,13 +249,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             response = future.result()
 
             if response.success:
-                self.get_logger().info(f"service call sucessful for {additional}robot {robot_id}")
+                self.get_logger().info(f"service call response sucessful for {additional}robot {robot_id}")
             else :
-                self.get_logger().warn(f"service call not sucessful for {additional} robot {robot_id}")
+                self.get_logger().warn(f"service call response not sucessful for {additional} robot {robot_id}")
         except Exception as e:
-            self.get_logger().error(f"Failed to handle the stop response for {additional} robot {robot_id} : {str(e)}")
+            self.get_logger().error(f"Failed to handle the service call response for {additional} robot {robot_id} : {str(e)}")
         
-        self.cur_robot_id = "Z"
 
 
     def send_plans_to_robots(self):
@@ -288,9 +307,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         if (self.stop_flag):
             return
         
-        self.get_logger().info("\n\n did not replan \n")
+        if (self.stop_repeated_replaning):
+            self.get_logger().info("\n\n did not replan due to repeated planing\n")
+        else:
+            self.get_logger().info(f"\n\n did not replan \n")
 
-        
+
+        self.reset_repeated_reasons()
 
         self.send_plans_to_robots()
 
@@ -335,8 +358,22 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
                 total_time_diff = max_timestep - min_timestep
 
+
+        if (self.stop_repeated_replaning):
+            self.send_single_go_command(min_timestep)
+            return
+
+
+        all_conflicts_preprocessed = []
+        for robot in self.robot_names :
+            if len(self.central_plan[robot]['plan']) < 5:
+                all_conflicts_preprocessed.append(self.central_plan[robot]['plan'])
+            else:
+                all_conflicts_preprocessed.append(self.central_plan[robot]['plan'][:4])
+
         
-        all_conflicts = list(compute_all_k_conflicts([self.central_plan[i]['plan'] for i in self.robot_names]))
+        all_conflicts = list(compute_all_k_conflicts(all_conflicts_preprocessed, limit=None, k=self.k1_length))
+
 
         unique_robots = []
         k1_conf = False
@@ -345,27 +382,27 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             if (len(unique_robots) > 1) :
                 k1_conf = True
                 break
-                    
-        # TODO :
-        # - ignore k1 conflict if its the repeated reason to replan
-        # - just look at the first n (eg. 4 or 5) entries and not the whole plan
+                
+
 
         if (k1_conf) :
-            self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
+            self.get_logger().info(f"\n\n replaned due to k-{self.k1_length} conflict in current plan \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
-        
-        
+            self.check_repeated_reasons(0)
 
-        if (total_time_diff > 1) :
+
+        elif (total_time_diff > 1) :
             self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
+            self.check_repeated_reasons(1)
         
         elif (wrong_localization) :
             self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
+            self.check_repeated_reasons(2)
 
         else : 
             #self.get_logger().info("\n\n did not replan \n")
@@ -383,12 +420,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 future_response = {}
                 request = SetBool.Request()
                 request.data = False
+                extra_func = functools.partial(self.handle_stop_response,robot)
                 try:
                     future_response[robot] = self.global_stop_client[robot].call_async(request)
-                    future_response[robot].add_done_callback(self.handle_stop_response)
+                    future_response[robot].add_done_callback(extra_func)
+                    #future_response[robot].add_done_callback(self.handle_stop_response)
                 except Exception as e:
                     self.get_logger().error(f"Failed to send the stop signal via service to Robot {robot} : {str(e)}")
-                
 
 
     def send_single_wait_command(self,robot):
@@ -403,11 +441,24 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 future_response = {}
                 request = SetBool.Request()
                 request.data = True
+                extra_func = functools.partial(self.handle_stop_response,robot)
                 try:
                     future_response[robot] = self.global_stop_client[robot].call_async(request)
-                    future_response[robot].add_done_callback(self.handle_stop_response)
+                    future_response[robot].add_done_callback(extra_func)
+                    #future_response[robot].add_done_callback(self.handle_stop_response)
                 except Exception as e:
                     self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
+
+    def check_repeated_reasons(self,reason):
+        self.repeated_reasons.append(reason)
+        if (self.repeated_reasons.count(reason) > 1):
+            #self.stop_repeated_replaning = True
+            if (reason == 0):
+                self.k1_length=0
+
+    def reset_repeated_reasons(self):
+        self.repeated_reasons = []
+        self.stop_repeated_replaning = False
 
 def main():
     main_fn('ccr_centralized_planner', CCRCentralizedPlanner)
@@ -415,3 +466,7 @@ def main():
 if __name__ == '__main__':
     main()
 
+    # TODO :
+    #  - PBS (depth) does not work; please make it work
+    #  - ignore generate_new_plans when 2 (or more) robots are in the same starting location
+    #      - hopefully they will just drive according to current plan and get out of the same cell
