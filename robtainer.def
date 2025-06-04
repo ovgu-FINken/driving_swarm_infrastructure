@@ -8,7 +8,7 @@ From: osrf/ros:humble-desktop-jammy
 
 %files
   ros/driving_swarm_infrastructure /ros_ws
-
+  
 %environment
   export GDK_BACKEND=x11
 
@@ -32,7 +32,8 @@ From: osrf/ros:humble-desktop-jammy
     gazebo-fortress \
     ros-humble-ackermann-msgs \
     ros-humble-ros-gz \
-    ros-humble-rviz2
+    ros-humble-rviz2 \
+    ros-humble-rmw-zenoh-cpp
 
   # install cmake 3.31
   #CMAKE_VERSION=3.31.0
@@ -49,7 +50,9 @@ From: osrf/ros:humble-desktop-jammy
   echo "source /opt/ros/humble/setup.bash" >> /customrc
 
   pip install numpy==1.23.5
-  pip install scikit-image     
+  pip install scikit-image   
+  pip install trimesh
+  pip install pycollada  
 
   cd /ros_ws
   rosdep init || true
