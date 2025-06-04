@@ -36,14 +36,14 @@ From: osrf/ros:humble-desktop-jammy
     ros-humble-rmw-zenoh-cpp
 
   # install cmake 3.31
-  #CMAKE_VERSION=3.31.0
-  #mkdir -p /opt
-  #cd /opt
-  #wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
-  #tar -xzf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
-  #ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake
-  #ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
-  #rm cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+  CMAKE_VERSION=3.31.0
+  mkdir -p /opt
+  cd /opt
+  wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+  tar -xzf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+  ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake
+  ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
+  rm cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
 
   # custom rcfile
   cp ~/.bashrc /customrc
