@@ -1,0 +1,60 @@
+Bootstrap: docker
+From: osrf/ros:humble-desktop-jammy
+
+%labels
+  Author lasse.slaar@ovgu.de
+  Version v0.1
+  Description "BA Apptainer mit ROS 2 Humble"
+
+%files
+  ros/driving_swarm_infrastructure /ros_ws
+
+%environment
+  export GDK_BACKEND=x11
+
+%post -c /usr/bin/bash
+  mkdir /ros
+  apt-get update && apt-get install -y wget gnupg2
+
+  # OSRF Repo für Gazebo Fortress hinzufügen
+  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+  wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
+  apt-get update && apt-get install -y tmux
+
+  apt-get update && apt-get install -y python3 python3-pip python3-distutils
+
+  apt-get update && apt-get install -y \
+    wget \
+    gnupg2 \
+    nano \
+    neovim \
+    python3-setuptools \
+    gazebo-fortress \
+    ros-humble-ackermann-msgs \
+    ros-humble-ros-gz \
+    ros-humble-rviz2
+
+  # install cmake 3.31
+  #CMAKE_VERSION=3.31.0
+  #mkdir -p /opt
+  #cd /opt
+  #wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+  #tar -xzf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+  #ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake
+  #ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
+  #rm cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
+
+  # custom rcfile
+  cp ~/.bashrc /customrc
+  echo "source /opt/ros/humble/setup.bash" >> /customrc
+
+  pip install numpy==1.23.5
+  pip install scikit-image     
+
+  cd /ros_ws
+  rosdep init || true
+  rosdep update
+  cd /ros_ws
+  rosdep install --from-paths src/ --ignore-src -y        
+%runscript
+  exec /bin/bash --rcfile /customrc
