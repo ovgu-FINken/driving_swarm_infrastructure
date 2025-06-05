@@ -1,7 +1,6 @@
 time_horizon: 6
 method: 'discounted_returns'
 offset: 4.0
-tau: 5.0
+tau: 6.0
 inertia: 0.2
-dynamisation_rate: 0.0
-discount_factor: 0.5
+discount_factor: 0.8

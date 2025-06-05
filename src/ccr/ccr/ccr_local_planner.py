@@ -42,7 +42,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.declare_parameter('robot_names', ['invalid_name'])
         self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
         
-        
+         
         wx = (self.get_parameter('x_min').get_parameter_value().double_value, self.get_parameter('x_max').get_parameter_value().double_value)
         wy = (self.get_parameter('y_min').get_parameter_value().double_value, self.get_parameter('y_max').get_parameter_value().double_value)
         self.declare_parameter('grid_type', 'square')
