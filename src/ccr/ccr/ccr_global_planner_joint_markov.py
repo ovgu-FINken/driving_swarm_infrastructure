@@ -1,4 +1,5 @@
 import yaml
+from ccr.utils import random_decision, greedy_decision, probabilities_from_values
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from polygonal_roadmaps import geometry, environment, planning
 from std_msgs.msg import Int32, Int32MultiArray
@@ -11,22 +12,6 @@ from termcolor import colored
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
-
-
-def probabilities_from_values(values: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]: 
-    if np.sum(values) == 0:
-        return np.zeros(len(values))
-    return values / np.sum(values)
-
-
-def random_decision(probabilities: npt.NDArray[np.float64]) -> int:
-    """Compute a decsion based on the decision probability."""
-    return np.random.choice(len(probabilities), p=probabilities)
-
-
-def greedy_decision(probabilities: npt.NDArray[np.float64]) -> int:
-    """Compute a decision based on the greedy policy."""
-    return int(np.argmax(probabilities))
 
 
 class CCRGlobalPlannerRL(DrivingSwarmNode):
@@ -101,6 +86,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
 
         self.get_logger().info(f"planner params: {self.planner_params}")
         self.offset = self.planner_params['offset']
+        self.dynamisation_rate = self.planner_params['dynamisation_rate']
         self.tau = self.planner_params['tau']
         self.discount_factor = self.planner_params['discount_factor']
         self.nodelist = tuple(i for i, _ in enumerate(self.g.nodes()))
@@ -142,6 +128,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         if self.goal is None:
             return
         self.publish_occupancy_values(ns=f"{self.robot_name}_o")
+        self.get_logger().info(f"dynamic tau: {self.get_dynamic_tau():.2f}")
         self.get_logger().info(f"expected V : {self.get_expected_value(self.state, 0):.2f}")
 
     def fast_timer_cb(self):
@@ -191,29 +178,8 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.state = msg.data
 
     def get_transition_value(self, from_state: int, to_state: int,t: None|int) -> float:
-            if (from_state, to_state) not in self.g.edges():
-                return 0.0
-            elif from_state == self.goal:
-                # waiting at the goal is good, when we use discounted returns this adds up
-                r = 0.5*self.planning_problem_parameters.wait_action_cost
-            elif from_state == to_state:
-                r = -self.planning_problem_parameters.wait_action_cost
-            else:
-                r = self.node_distances[from_state] - self.node_distances[to_state]
-            p_free = 1.0
-            if t is not None:
-                p_free = self.get_node_free_probabilities(t)[to_state]
-            state_occupancy = 1.0
-            m = self.inertia
-            if t is not None:
-                state_occupancy = self.o[to_state, t]
-            value = (r + self.offset * p_free + m * state_occupancy)
-            value = max(value, 0.0)
-            transition_value = value**self.tau
-            if np.isnan(transition_value):
-                self.get_logger().info(f"transition value is Nan, {r + self.offset * p_free + m * state_occupancy}**{self.tau}")
-                return 0.0
-            return transition_value
+        transition_value = 0
+        return transition_value
 
     def transition_values(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
         """get the transition probability for each state at time t
@@ -234,19 +200,6 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             values[n] = self.get_transition_value(state, n, t)
         return values
 
-    def get_node_free_probabilities(self, t: int) -> npt.NDArray[np.float64]:
-        """ get the probability of being free for each node and time step
-        the probability is based on the occupancy of state $s$ at time $t$
-        If the occupancy is 0, the transition probability is 1
-        """
-        free = np.ones_like(self.o)
-        for robot, occ_robot in self.other_occupancy.items():
-            if robot == self.robot_name:
-                continue
-            free *= 1 - occ_robot
-        # free now contains the probability of being free for each node and time step
-        return free[:, t]
-    
     def transition_matrix(self, t: int):
         """ get the n*n transition matrix.
         each entry is the probability of going from state i to state j
@@ -259,48 +212,19 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             T[i] = probabilities_from_values(self.transition_values(i, t))
         return T
     
-    def get_expected_collisions(self, episode: list[npt.NDArray[np.float64]], t0: int) -> float:
-        collisions = sum(np.dot(s, 1 - self.get_node_free_probabilities(t+t0))*self.discount_factor**(t+t0) for t,s in enumerate(episode))
-        return collisions
-
-    def get_expected_value(self, state: int, t0: int) -> float:
-        """ apply the tranisition policy to the state and get the expected value after the planning horizon"""
-        s0 = np.zeros(len(self.nodelist))
-        s0[state] = 1.0
-        episode = self.simulate_policy(s0, t0)
-        distances = np.dot(episode[-1], self.node_distances)
-        collisions = self.get_expected_collisions(episode, t0)
-        reward = -distances + len(episode) * 4 * (1 - collisions)
-        return reward 
-    
-    def discounted_returns(self, state: int, t0: int) -> float:
-        """ apply the tranisition policy to the state and get the expected value after the planning horizon"""
-        s = np.zeros(len(self.nodelist))
-        s[state] = 1.0
-        expected_return = 0.0
-        for t in range(t0, self.planning_problem_parameters.conflict_horizon-1):
-            T = self.transition_matrix(t)
-            for i, p in enumerate(s):
-                if p == 0:
-                    continue
-                s_now = np.zeros_like(s)
-                s_now[i] = p
-                s_next = s_now @ T
-                expected_return += np.dot(self.transition_values(i, t+1), s_next) * self.discount_factor**t
-            s = s @ T
-        return expected_return
-    
     def simulate_policy(self, state: npt.NDArray[np.float64], t0: int) -> list[npt.NDArray[np.float64]]:
         """ compute the expected state-vector after applying the policy from a given state vector (s,t)"""
         episode = [state]
         for t in range(t0, self.planning_problem_parameters.conflict_horizon-1):
             state = state @ (self.transition_matrix(t+1))
+            # normalize the state (dynamic tranisition matrix is not normalized)
             if np.sum(state) == 0:
                 state = episode[-1]
             else:
                 state = state / np.sum(state)
             episode.append(state)
         return episode
+    
     
     def update_plan(self, method:str = "greedy") -> list[int]|None:
         if self.state is None:
@@ -340,7 +264,6 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
                 self.get_logger().warn(f"unknown method {method}")
                 return []
             plan.append(state)
-            
         return plan
 
     def plan_is_feasible(self) -> bool:
@@ -357,7 +280,6 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         if len(self.plan) > 1:
             if self.plan[1] in self.other_states.values():
                 self.plan = [self.state]
-        
         return True
 
     def publish_plan(self, change_only=True):
@@ -367,7 +289,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             self.plan_pub.publish(msg)
             self._published_plan = [self.state]
             return 
-        
+
         if change_only and self._published_plan[:4] == self.plan[:4]:
             return
 
@@ -375,7 +297,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         msg.data = self.plan
         self.plan_pub.publish(msg)
         self._published_plan = self.plan
-    
+
     def log_plan_occupancy(self):
         if self.plan is None:
             return
@@ -398,7 +320,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return 
         plan = list(msg.data)
         self.other_states[robot] = plan[0]
-        
+
     def occupancy_cb(self, robot, msg):
         if robot == self.robot_name:
             return 
@@ -425,7 +347,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             node_msg.markers.append(marker)
             id += 1 
         self.cell_pub.publish(node_msg)
-        
+
     def publish_occupancy_values(self, ns="o", id=1):
         node_msg = MarkerArray()
         for node, val in zip(self.nodelist, self.o[:,1:]):
