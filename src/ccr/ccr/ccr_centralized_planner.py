@@ -81,6 +81,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.central_plan = {}
         self.waiting_list = {robot_name : [] for robot_name in self.robot_names}
         self.is_waiting = {robot_name : False for robot_name in self.robot_names}
+        self.stop_response = {robot_name : False for robot_name in self.robot_names}
+
         for robot in self.robot_names:
             self.central_plan[robot] = {}
             self.central_plan[robot]['state'] = -1
@@ -152,13 +154,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         cbs = CBSPlanner(self.env, max_iter = 1_000_000)
         pp = PriorityAgentPlanner(self.env, priority_method="longest" ,max_iter = 1_000_000)
-        pbs = PBSPlanner(self.env,"width")
+        pbs = PBSPlanner(self.env,"depth")
 
 
         self.get_logger().info("\n\nCALCULATING NEW PLANS\n")
         all_plans = []
         try:
-            all_plans = cbs.create_plan(self.env)
+            all_plans = pbs.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("Error : no plan with compatible paths was found")
             self.get_logger().info(f"current positions of robots :")
@@ -244,6 +246,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         additional = ""
         if (robot_id==""):
             additional = "a random "
+        else:
+            self.stop_response[robot]=True
+
 
         try:
             response = future.result()
@@ -275,7 +280,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         for robot in self.robot_names :
             if (self.central_plan[robot]['state']== -1 or self.central_plan[robot]['goal']== -1) :
                 return
-    
+
         if (self.first_plan):
             self.generate_plan_for_robots()
 
@@ -291,6 +296,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         if (self.stop_flag):
             #self.get_logger().info(f'global stop : not active')
+
+            # check if all robots acknowledged the stop signal
+            for robot in self.robot_names :
+                if (self.stop_response[robot]==False):
+                    self.get_logger().info(f'\n global stop is active but robot {robot} are not responsive')
+                    #return
 
             self.generate_plan_for_robots()
 
@@ -366,10 +377,10 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_conflicts_preprocessed = []
         for robot in self.robot_names :
-            if len(self.central_plan[robot]['plan']) < 5:
+            if len(self.central_plan[robot]['plan']) < 4:
                 all_conflicts_preprocessed.append(self.central_plan[robot]['plan'])
             else:
-                all_conflicts_preprocessed.append(self.central_plan[robot]['plan'][:4])
+                all_conflicts_preprocessed.append(self.central_plan[robot]['plan'][:3])
 
         
         all_conflicts = list(compute_all_k_conflicts(all_conflicts_preprocessed, limit=None, k=self.k1_length))
@@ -454,7 +465,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         if (self.repeated_reasons.count(reason) > 1):
             #self.stop_repeated_replaning = True
             if (reason == 0):
-                self.k1_length=0
+                self.k1_length=1
 
     def reset_repeated_reasons(self):
         self.repeated_reasons = []
@@ -467,6 +478,7 @@ if __name__ == '__main__':
     main()
 
     # TODO :
-    #  - PBS (depth) does not work; please make it work
+    #  - debug stop_response
+    #      - idea: an update will be skipped, if not all robots have send their response to the global stop activation
     #  - ignore generate_new_plans when 2 (or more) robots are in the same starting location
     #      - hopefully they will just drive according to current plan and get out of the same cell
