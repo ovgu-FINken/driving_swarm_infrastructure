@@ -79,9 +79,9 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
 	    # initialize dictionary for state and goal information
         self.central_plan = {}
-        self.waiting_list = {robot_name : [] for robot_name in self.robot_names}
-        self.is_waiting = {robot_name : False for robot_name in self.robot_names}
-        self.stop_response = {robot_name : False for robot_name in self.robot_names}
+        self.waiting_list = {robot : [] for robot in self.robot_names}
+        self.is_waiting = {robot : False for robot in self.robot_names}
+        self.stop_response = {robot : False for robot in self.robot_names}
 
         for robot in self.robot_names:
             self.central_plan[robot] = {}
@@ -95,11 +95,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         
         self.first_plan = True
 
-        self.k1_length=1
-
-        self.repeated_reasons = []
-        self.stop_repeated_replaning = False
-
         # Set up timer to distribute plans periodically
         self.timer = self.create_timer(1.0, self.update_plans)
         
@@ -111,29 +106,29 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         
     
 
-    def create_state_callback(self, robot_name):
+    def create_state_callback(self, robot):
         def callback(msg):
             #self.get_logger().warn(f'\nhey we got some info\n')
             # Handle state update from robot
-            self.get_logger().info(f'Received state {msg.data} from {robot_name}')
+            self.get_logger().info(f'Received state {msg.data} from {robot}')
             # Example of updating internal plan state
-            self.central_plan[robot_name]['state'] = msg.data
+            self.central_plan[robot]['state'] = msg.data
             #self.env
 
             # should the robot stop and wait for other robots?
-            if not(self.is_waiting[robot_name]):
-                self.send_single_wait_command(robot_name)
+            if not(self.is_waiting[robot]):
+                self.send_single_wait_command(robot)
 
         return callback
 
-    def create_goal_callback(self, robot_name):
+    def create_goal_callback(self, robot):
         def callback(msg):
             # Handle goal update from robot
-            if msg.data == self.central_plan[robot_name]['goal']:
+            if msg.data == self.central_plan[robot]['goal']:
                 return
-            self.get_logger().info(f'Received goal {msg.data} from {robot_name}')
+            self.get_logger().info(f'Received goal {msg.data} from {robot}')
             # Example of updating internal plan goal
-            self.central_plan[robot_name]['goal'] = msg.data
+            self.central_plan[robot]['goal'] = msg.data
 
             self.got_new_goal = True
 
@@ -149,6 +144,16 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
     def generate_plan_for_robots(self):
 
+        cur_state = []
+
+        for robot in self.robot_names:
+            cur_state.append(self.central_plan[robot]['state'])
+            if (cur_state.count(self.central_plan[robot]['state']) > 1):
+                self.get_logger().info(f"\n\noh no, multiple robots are in the same cell")
+                for robot in self.robot_names:
+                    self.get_logger().info(f"robot {robot} : {str(self.central_plan[robot]['state'])}")
+                return
+
         self.env.state= [self.central_plan[robot]['state']  for robot in self.robot_names]
         self.env.goal = [self.central_plan[robot]['goal']  for robot in self.robot_names]
 
@@ -160,7 +165,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         self.get_logger().info("\n\nCALCULATING NEW PLANS\n")
         all_plans = []
         try:
-            all_plans = pbs.create_plan(self.env)
+            all_plans = pp.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("Error : no plan with compatible paths was found")
             self.get_logger().info(f"current positions of robots :")
@@ -185,8 +190,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         self.identify_waiting_times()
 
-        self.k1_length = 1
-        self.reset_repeated_reasons()
 
 
     def identify_waiting_times(self):
@@ -261,7 +264,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             self.get_logger().error(f"Failed to handle the service call response for {additional} robot {robot_id} : {str(e)}")
         
 
-
     def send_plans_to_robots(self):
         
         #self.get_logger().info(f"\n\n an updated plan got sent to the robots \n")
@@ -282,13 +284,15 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 return
 
         if (self.first_plan):
+            self.get_logger().info(f'used this for the first time to plan')
             self.generate_plan_for_robots()
 
             self.first_plan = False
 
             self.send_plans_to_robots()
 
-            self.get_logger().info(f'used this for the first time to plan')
+            self.deactivate_global_stop()
+
 
             self.got_new_goal = False
             return
@@ -300,8 +304,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
             # check if all robots acknowledged the stop signal
             for robot in self.robot_names :
                 if (self.stop_response[robot]==False):
-                    self.get_logger().info(f'\n global stop is active but robot {robot} are not responsive')
-                    #return
+                    self.get_logger().info(f' global stop is active BUT robot {robot} is not responsive\n\n')
+                    return
 
             self.generate_plan_for_robots()
 
@@ -311,20 +315,12 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
             return
 
-
         self.reasons_to_replan()
-
 
         if (self.stop_flag):
             return
         
-        if (self.stop_repeated_replaning):
-            self.get_logger().info("\n\n did not replan due to repeated planing\n")
-        else:
-            self.get_logger().info(f"\n\n did not replan \n")
-
-
-        self.reset_repeated_reasons()
+        self.get_logger().info(f"\n\n did not replan \n")
 
         self.send_plans_to_robots()
 
@@ -352,28 +348,22 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 wrong_localization = True
                 break
 
+            if self.is_waiting[robot]:
+                continue
                                 
             a = len(self.central_plan[robot]['origin_plan'])
             b = len(self.central_plan[robot]['plan'])
             temp_timestep = a - b
 
-            if not(self.is_waiting[robot]):
+            # is timestep new maximum?
+            if (temp_timestep > max_timestep or max_timestep == -1) :
+                max_timestep = temp_timestep 
 
-                # is timestep new maximum?
-                if (temp_timestep > max_timestep or max_timestep == -1) :
-                    max_timestep = temp_timestep 
+            # is timestep new minimum?
+            if (temp_timestep < min_timestep or min_timestep == -1) :
+                min_timestep = temp_timestep
 
-                # is timestep new minimum?
-                if (temp_timestep < min_timestep or min_timestep == -1) :
-                    min_timestep = temp_timestep
-
-                total_time_diff = max_timestep - min_timestep
-
-
-        if (self.stop_repeated_replaning):
-            self.send_single_go_command(min_timestep)
-            return
-
+            total_time_diff = max_timestep - min_timestep
 
         all_conflicts_preprocessed = []
         for robot in self.robot_names :
@@ -383,7 +373,7 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 all_conflicts_preprocessed.append(self.central_plan[robot]['plan'][:3])
 
         
-        all_conflicts = list(compute_all_k_conflicts(all_conflicts_preprocessed, limit=None, k=self.k1_length))
+        all_conflicts = list(compute_all_k_conflicts(all_conflicts_preprocessed, limit=None, k=1))
 
 
         unique_robots = []
@@ -397,23 +387,19 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
 
         if (k1_conf) :
-            self.get_logger().info(f"\n\n replaned due to k-{self.k1_length} conflict in current plan \n")
+            self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
-            self.check_repeated_reasons(0)
-
 
         elif (total_time_diff > 1) :
             self.get_logger().info(f"\n\n replaned due to time difference limit : {total_time_diff} \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
-            self.check_repeated_reasons(1)
         
         elif (wrong_localization) :
             self.get_logger().info(f"\n\n replaned due to unexpected movement or wrong localization \n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
-            self.check_repeated_reasons(2)
 
         else : 
             #self.get_logger().info("\n\n did not replan \n")
@@ -460,16 +446,6 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
                 except Exception as e:
                     self.get_logger().error(f"Failed to send the stop signal via service to Roboter {robot} : {str(e)}")
 
-    def check_repeated_reasons(self,reason):
-        self.repeated_reasons.append(reason)
-        if (self.repeated_reasons.count(reason) > 1):
-            #self.stop_repeated_replaning = True
-            if (reason == 0):
-                self.k1_length=1
-
-    def reset_repeated_reasons(self):
-        self.repeated_reasons = []
-        self.stop_repeated_replaning = False
 
 def main():
     main_fn('ccr_centralized_planner', CCRCentralizedPlanner)
@@ -478,7 +454,7 @@ if __name__ == '__main__':
     main()
 
     # TODO :
-    #  - debug stop_response
-    #      - idea: an update will be skipped, if not all robots have send their response to the global stop activation
-    #  - ignore generate_new_plans when 2 (or more) robots are in the same starting location
-    #      - hopefully they will just drive according to current plan and get out of the same cell
+    #  - k1-conflict with waiting robot
+    #       - either ignore waiting robots in k1-calculation or dont update the plan of waiting robots
+    #  - do something in generate_new_plans when 2 (or more) robots are in the same starting location
+    #       - hopefully they will just drive according to current plan and get out of the same cell
