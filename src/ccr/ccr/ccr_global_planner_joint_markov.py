@@ -10,11 +10,29 @@ import numpy.typing as npt
 import functools
 from termcolor import colored
 from visualization_msgs.msg import MarkerArray, Marker
+from itertools import product
 from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
 
 
-class CCRGlobalPlannerRL(DrivingSwarmNode):
+def get_state_value(node: int, t: int, values: npt.NDArray[np.float64]) -> float:
+    """Get the state value for a given node and time step.
+    :param node: node index
+    :type node: int
+    :param t: time step
+    :type t: int
+    :return: state value
+    :rtype: float
+    """
+    horizon = values.shape[1]
+    if t < 0:
+        return 0.0
+    if t >= horizon:
+        return values[node, -1]
+    return values[node, t]
+
+
+class CCRGlobalPlannerMarkov(DrivingSwarmNode):
     """This node will execute the local planner for the CCR. It will use the map or a given graph file to generate a roadmap and convert local coordinates to graph nodes.
     The local planner will publish the next waypoint, current node and the graph to the global planner, which in turn is able to generate a discrete plan by uing CCR.
     This node (the local planner) is then able to compute waypoints using a vehicle model in the feasible region of the workspace and generate waypoints for execution.    
@@ -41,7 +59,6 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
         self.declare_parameter('horizon', 5)
-        self.declare_parameter('inertia', 0.0)
         self.declare_parameter('wait_cost', 1.01)
         self._published_plan = []
         self.state = None
@@ -75,47 +92,43 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
             wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
         )
-        self.inertia = self.get_parameter('inertia').get_parameter_value().double_value
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
         self.declare_parameter('planner_params_file', "planner_params.yaml")
         planner_params_file = self.get_parameter('planner_params_file').get_parameter_value().string_value
         with open(planner_params_file, 'r') as stream:
-            self.planner_params = yaml.safe_load(stream)
+            self.params = yaml.safe_load(stream)
 
-        self.get_logger().info(f"planner params: {self.planner_params}")
-        self.offset = self.planner_params['offset']
-        self.dynamisation_rate = self.planner_params['dynamisation_rate']
-        self.tau = self.planner_params['tau']
-        self.discount_factor = self.planner_params['discount_factor']
+        self.get_logger().info(f"planner params: {self.params}")
         self.nodelist = tuple(i for i, _ in enumerate(self.g.nodes()))
-        self.create_subscription(Int32, "nav/goal_node", self.goal_cb, 10)
-        self.create_subscription(Int32, "nav/current_node", self.state_cb, 10)
         self.other_states = {}
-        self.other_occupancy = {}
+        self.other_values = {}
+        self.other_goals = {}
+        self.distances = {}
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
-        self.occupancy_pub = self.create_publisher(Float32MultiArray, "nav/occupancy", 10)
         self.node_distances = np.array([float('inf')] * len(self.nodelist))
-        self.o = np.zeros((len(self.nodelist), self.planning_problem_parameters.conflict_horizon))
+        self.state_values = np.zeros( (len(self.nodelist), self.params["horizon"]) )
+        self.value_pub = self.create_publisher(Float32MultiArray, "nav/state_values", 10)
 
-        for robot in [n for n in self.robot_names if n != self.robot_name]:
+        for robot in self.robot_names:
             self.create_subscription(
-                Int32MultiArray, f"/{robot}/nav/plan",
-                functools.partial(self.robot_cb, robot),
+                Int32, f"/{robot}/nav/goal_node",
+                functools.partial(self.goal_cb, robot),
                 10
             )
             self.create_subscription(
-                Float32MultiArray, f"/{robot}/nav/occupancy",
-                functools.partial(self.occupancy_cb, robot),
+                Int32, f"/{robot}/nav/current_node",
+                functools.partial(self.state_cb, robot),
                 10
             )
-            #self.create_subscription(
-            #    Float32MultiArray, f"/{robot}/nav/v",
-            #    functools.partial(self.v_cb, robot),
-            #    10
-            #)
-            self.get_logger().info(f"subscribing /{robot}/nav/plan")
+            if robot == self.robot_name:
+                continue
+            self.create_subscription(
+                Float32MultiArray, f"/{robot}/nav/state_values",
+                functools.partial(self.value_cb, robot),
+                10
+            )
 
         self.create_timer(1.0, self.timer_cb)
         self.create_timer(0.1, self.fast_timer_cb)
@@ -127,143 +140,206 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             return
         if self.goal is None:
             return
-        self.publish_occupancy_values(ns=f"{self.robot_name}_o")
-        self.get_logger().info(f"dynamic tau: {self.get_dynamic_tau():.2f}")
-        self.get_logger().info(f"expected V : {self.get_expected_value(self.state, 0):.2f}")
+        self.publish_visualization_markers(ns=f"{self.robot_name}_o")
 
     def fast_timer_cb(self):
         if self.state is None:
             return
         if self.goal is None:
             return
+        self.get_logger().info(f"making update:")
+        self.update_state_values()
+        self.get_logger().info(f"update done")
         self.plan = self.update_plan()
         self.publish_plan(change_only=True)
-        self.update_occupancy()
-        self.occupancy_pub.publish(Float32MultiArray(data=self.o.flatten().tolist()))
+        #self.update_occupancy()
+        self.get_logger().info(f"publishing state values for {self.robot_name}")
+        self.value_pub.publish(Float32MultiArray(data=self.state_values.flatten().tolist()))                            
 
-    def goal_cb(self, msg):
+    def value_cb(self, robot, msg):
+        if robot == self.robot_name:
+            return 
+        arr = np.array(msg.data).reshape(self.state_values.shape)
+        self.other_values[robot] = arr
+        self.get_logger().info(f"received state values from {robot}")
+
+
+    def goal_cb(self, robot, msg):
+        if robot != self.robot_name:
+            self.other_goals[robot] = msg.data
+            return
         if msg.data == self.goal:
             return
         self.goal = msg.data
         self.get_logger().info(f"received new goal node {self.goal}")
-        self.calc_state_distances()
-
-    def calc_state_distances(self):
-        # for each state in the graph find the shortest distance to the goal
-        # the distance is the expected cost
-        self.get_logger().info("updating state values")
-        for node in self.nodelist:
+        self.state_values = self.default_state_values()
+        
+    def dist(self, start, goal):
+        """Compute the distance between two nodes in the graph.
+        :param start: start node
+        :type start: int
+        :param goal: goal node
+        :type goal: int
+        :return: distance between start and goal node
+        :rtype: float
+        """
+        if (start, goal) not in self.distances:
             try:
-                self.node_distances[node] = nx.shortest_path_length(self.g, node, self.goal, weight=self.env.planning_problem_parameters.weight_name)
-                self.node_distances[node] += np.random.uniform(-0.01, 0.01)
+                dist = nx.shortest_path_length(self.g, start, goal, weight=self.env.planning_problem_parameters.weight_name)
             except nx.NetworkXNoPath:
-                self.node_distances[node] = 0.0
-        self.get_logger().info(f"state values done for {len(self.nodelist)} nodes")
+                dist = float('inf')
+            self.distances[start, goal] = dist
+        return self.distances[start, goal]
+        
 
-    def update_occupancy(self):
-        """compute the occupancy probability for each node, and time step
-        t=0 is the current time step, t=1 is the next time step, etc.
+    def transition_reward(self, u: int, i: int, goal: int|None) -> float:
+        if goal is None:
+            return 0.0
+        if not (u, i) in self.g.edges():
+            return 0.0
+        if i == self.goal:
+            return 2.0
+        return self.dist(u, goal) - self.dist(i, goal)
+
+    def transition_fitness(self, u: int, i: int, t: int, values: npt.NDArray[np.float64]) -> float:
+        """ reward for the transition from from_node at time t to to_node at time t+1 """
+        gain = values[i, t+1] - values[u, t]
+        return (gain + self.params["offset"]) ** self.params["tau"]
+        
+    def simluate_pair(self, other: str) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """simulate the a pair of two policies, one for this robot and one for the other robot.
+        The policies are given by the state values of the robot and the other robot.
+        Return value will be the probailities of the robots to occupy state s_i_j at time t, the discounted reward of all visited states for self and the discounted reward of the other robot.
+
+        :param other: name of other robot
+        :type other: str
+        :return: probabilities of the robots to occupy state s_i_j at time t, the discounted reward of self and the discounted reward of the other robot
+        :rtype: list[npt.NDArray[np.float64]], dict, dict
         """
-        s = np.zeros(len(self.nodelist))
-        s[self.state] = 1.0
-        episode = self.simulate_policy(s, 0)
-        for t, s in enumerate(episode[:-1]):
-            self.o[:, t] = s
-        return self.o
+        s = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
+        s[self.state, self.other_states[other], 0] = 1.0
+        transition_probabilities_self = {}
+        transition_probabilities_other = {}
+        rlnl = range(len(self.nodelist))
+        for t in range(self.params["horizon"] - 1):
+            transition_probabilities_self[t] = np.zeros((len(self.nodelist), len(self.nodelist)))
+            transition_probabilities_other[t] = np.zeros((len(self.nodelist), len(self.nodelist)))
+            # transition (u,v)(t) -> (i,j)(t+1)
+            transition_fitness_self = np.zeros((len(self.nodelist), len(self.nodelist)))
+            transition_fitness_other = np.zeros((len(self.nodelist), len(self.nodelist)))
 
-    def state_cb(self, msg):
-        if msg.data == self.state:
-            return
-        self.get_logger().info(f"state changed: {self.state} -> {msg.data}")
-        self.state = msg.data
+            for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
+                # if no edge -> no transition
+                if (u, i) not in self.g.edges():
+                    continue
+                if (v, j) not in self.g.edges():
+                    continue
+                # if collision is possible, skip this transition
+                # node conflict:
+                if i == j:
+                    continue
+                # edge conflict:
+                if v == i:
+                    continue
+                if u == j:
+                    continue
+                # compute transition fitness (decision function)
+                transition_fitness_self[u, i] = self.transition_fitness(u, i, t, self.state_values)
+                transition_fitness_other[v, j] = self.transition_fitness(v, j, t, self.other_values[other])
+            
+            # compute the probabilities for the transitions
+            # we assume fitness proportional selection (roulette wheel selection)
+            for u in rlnl:
+                p_sum = np.sum(transition_fitness_self[u, :])
+                if p_sum > 0:
+                    transition_probabilities_self[t][u, :] = transition_fitness_self[u, :] / p_sum
+                p_sum = np.sum(transition_fitness_other[u, :])
+                if p_sum > 0:
+                    transition_probabilities_other[t][u, :] = transition_fitness_other[u, :] / p_sum
 
-    def get_transition_value(self, from_state: int, to_state: int,t: None|int) -> float:
-        transition_value = 0
-        return transition_value
+            # compute the next state
+            for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
+                s[i, j, t+1] += s[u, v, t] * transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
+            
+        # compute the rewards for the visited states
+        rewards_self = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
+        rewards_other = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
+        rewards_self[:, :, -1] = self.state_values[:, -1]
+        rewards_other[:, :, -1] = self.other_values[other][:, -1]
+        
+        
+        # reward at the last time step is based on the state-distance to the goal
+        for t in range(self.params["horizon"] - 2, -1, -1):
+            for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
+                p = transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
+                # compute the reward for the transition
+                r_t = self.transition_reward(u, i, self.goal)
+                r_next_state = rewards_self[i, j, t + 1]
+                rewards_self[u, v, t] = p * (r_t + self.params['gamma'] * r_next_state)
+                
+                r_t = self.transition_reward(v, j, self.other_goals[other]) if other in self.other_goals else 0.0
+                r_next_state = rewards_other[i, j, t + 1]
+                rewards_other[u, v, t] = p * (r_t + self.params['gamma'] * r_next_state)
 
-    def transition_values(self, state: int, t: None|int) -> npt.NDArray[np.float64]:
-        """get the transition probability for each state at time t
-        if t is None, return the transition probability, 
-        without considering other agents (which is the only information modified by time t)
-        """
-        if self.state is None:
-            return np.zeros(len(self.nodelist))
-        if self.goal is None:
-            return np.zeros(len(self.nodelist))
-        if state == self.goal:
-            ret = np.zeros(len(self.nodelist))
-            ret[state] = 1.0
-            return ret
-        neighbors = list(self.g.neighbors(state))
-        values = np.zeros(len(self.nodelist))
-        for n in neighbors:
-            values[n] = self.get_transition_value(state, n, t)
-        return values
-
-    def transition_matrix(self, t: int):
-        """ get the n*n transition matrix.
-        each entry is the probability of going from state i to state j
-        a transition is possible if there is an edge between i and j
-        the transition probability is based on the occupancy of state $s$ at time $t$
-        If the occupancy is 0, the transition probability is 1
-        """
-        T = np.zeros((len(self.nodelist), len(self.nodelist)))
+        return (s, rewards_self, rewards_other)
+        
+        
+    def default_state_values(self):
+        values = np.zeros((len(self.nodelist), self.params["horizon"]))
         for i in range(len(self.nodelist)):
-            T[i] = probabilities_from_values(self.transition_values(i, t))
-        return T
-    
-    def simulate_policy(self, state: npt.NDArray[np.float64], t0: int) -> list[npt.NDArray[np.float64]]:
-        """ compute the expected state-vector after applying the policy from a given state vector (s,t)"""
-        episode = [state]
-        for t in range(t0, self.planning_problem_parameters.conflict_horizon-1):
-            state = state @ (self.transition_matrix(t+1))
-            # normalize the state (dynamic tranisition matrix is not normalized)
-            if np.sum(state) == 0:
-                state = episode[-1]
-            else:
-                state = state / np.sum(state)
-            episode.append(state)
-        return episode
-    
-    
-    def update_plan(self, method:str = "greedy") -> list[int]|None:
+            values[i,:] = 100 - self.dist(self.nodelist[i], self.goal)
+        return values
+            
+    def update_state_values(self):
+        rewards_self = np.zeros((len(self.nodelist), self.params["horizon"]))
+        rewards_other = np.zeros((len(self.nodelist), self.params["horizon"]))
+        self.get_logger().info(f"computing state values for {self.other_values.keys()}")
+        if not len(self.other_values):
+            self.get_logger().info("no other values")
+            return
+        for robot in self.other_values.keys():
+            if robot == self.robot_name:
+                continue
+            #print(colored(f"simulating pair with {robot}", "blue"))
+            s, r_s, r_o = self.simluate_pair(robot)
+            rewards_self += np.sum(r_s, axis=1)
+            rewards_other += np.sum(r_o, axis=1)
+        
+        # parameters:
+        alpha = self.params["alpha"]
+        beta = self.params["beta"]
+
+        # update the state values for this robot
+        self.get_logger().info(f"updating state values for {self.robot_name}, rewards_self: {rewards_self.shape}, rewards_other: {rewards_other.shape}")
+        for t in range(self.params["horizon"]):
+            for i in range(len(self.nodelist)-1):
+                self.state_values[i, t] = (1 - alpha) * self.state_values[i, t] + alpha * (beta * rewards_self[i, t] + (1 - beta) * rewards_other[i, t])
+
+    def update_plan(self) -> list[int]|None:
         if self.state is None:
             return
         if self.goal is None:
             return
         if self.state == self.goal:
             return
-        state = self.state
-        plan = [state]
-        for t in range(self.planning_problem_parameters.conflict_horizon-1):
-            if state == self.goal:
-                break
-            if method == "greedy":
-                values = self.transition_values(state, t+1)
-                state = greedy_decision(values)
-            elif method == "random":
-                values = self.transition_values(state, t+1)
-                state = random_decision(probabilities_from_values(values))
-            elif method == "EM" or method == "EM1":
-                neighbors = list(self.g.neighbors(state))
-                neighbor_values = {}
-                for n in neighbors:
-                    neighbor_values[n] = self.get_expected_value(n, t+1)
-                    if n == state:
-                        neighbor_values[n] -= self.planning_problem_parameters.wait_action_cost
-                state = max(neighbor_values, key=neighbor_values.get)
-                if method == "EM1":
-                    method = "greedy"
-            elif method == "discounted_returns":
-                neighbors = list(self.g.neighbors(state))
-                neighbor_values = {}
-                for n in neighbors:
-                    neighbor_values[n] = self.discounted_returns(n, t+1) + self.get_transition_value(state, n, t) 
-                state = max(neighbor_values, key=neighbor_values.get)
-            else:
-                self.get_logger().warn(f"unknown method {method}")
-                return []
-            plan.append(state)
+        self.get_logger().info(f"updating plan for {self.robot_name} from {self.state} to {self.goal}")
+        s = self.state
+        plan = [s]
+        for t in range(self.params["horizon"]-1):
+            neighbors = list(self.g.neighbors(s))
+            fitness = {}
+            for n in neighbors:
+                if t < 2 and n in self.other_states.values():
+                    continue
+                if n == self.goal:
+                    plan.append(n)
+                    return plan
+                fitness[n] = self.transition_fitness(s, n, t, self.state_values)
+            if len(fitness) == 0:
+                self.get_logger().warn(f"no neighbors found for {s} at time {t}")
+                return plan
+            s = max(fitness, key=fitness.get)
+            plan.append(s)
         return plan
 
     def plan_is_feasible(self) -> bool:
@@ -273,7 +349,7 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             if not (n1, n2) in self.g.edges():
                 self.get_logger().warn(f"plan is not feasible")
                 self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
-                self.get_logger().warn(f"path: self.plan")
+                self.get_logger().warn(f"path: {self.plan}")
                 return False
 
         # dont go where another robot is at the moment.
@@ -290,67 +366,31 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             self._published_plan = [self.state]
             return 
 
-        if change_only and self._published_plan[:4] == self.plan[:4]:
+        if change_only and self._published_plan[:4] == self.plan[:4]: # type: ignore
             return
 
         msg = Int32MultiArray()
         msg.data = self.plan
         self.plan_pub.publish(msg)
         self._published_plan = self.plan
-
-    def log_plan_occupancy(self):
-        if self.plan is None:
+        
+    def state_cb(self, robot, msg):
+        #self.get_logger().info(f"state_cb for robot:{robot} with state:{msg.data}")
+        if robot == self.robot_name:
+            if msg.data == self.state:
+                return
+            self.get_logger().info(f"state changed: {self.state} -> {msg.data}, goal: {self.goal}")
+            self.state = msg.data
             return
-        str = "robot plan occupancy: "
-        for i, node in enumerate(self.plan):
-            if i < len(self.o[node]):
-                free = np.ones_like(self.o)
-                for robot, occ_robot in self.other_occupancy.items():
-                    if robot == self.robot_name:
-                        continue
-                    free *= 1 - occ_robot
-                str += f"(s={node}, t={i}, "
-                str += f"self_o={self.o[node][i]:.2f}, other_o={1-free[node, i]:.2f}), "
-            else:
-                break
-        self.get_logger().info(str)
+        if robot in self.other_states:
+            if self.other_states[robot] == msg.data:
+                return
+            #self.get_logger().info(f"other state changed: {robot} {self.other_states[robot]} -> {msg.data}")
+        self.other_states[robot] = msg.data
 
-    def robot_cb(self, robot, msg):
-        if robot == self.robot_name:
-            return 
-        plan = list(msg.data)
-        self.other_states[robot] = plan[0]
-
-    def occupancy_cb(self, robot, msg):
-        if robot == self.robot_name:
-            return 
-        arr = np.array(msg.data).reshape(self.o.shape)
-        arr_shifted = np.zeros_like(arr)
-        arr_shifted[:, 1:] = arr[:, :-1]
-        self.other_occupancy[robot] = 1.0 - (1.0 - arr) * (1.0 - arr_shifted) 
-
-    def publish_state_values(self, ns="v", id=1):
+    def publish_visualization_markers(self, ns="state_values", id=1):
         node_msg = MarkerArray()
-        for node, val in zip(self.nodelist, self.node_distances):
-            point = self.env.g.nodes()[node]['geometry'].center
-            marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.SPHERE)
-            marker.header.frame_id = 'map'
-            scale = (val + 0.0001) / (max(self.node_distances)+0.0001)
-            scale = 0.1 * scale # np.log(scale+1.0)
-            if scale < 0:
-                scale = 0.0
-            marker.scale.x = scale
-            marker.scale.y = scale
-            marker.scale.z = scale
-            marker.pose = Pose(position=Point(x=point.x, y=point.y, z=0.0))
-            marker.color = self.get_robot_color()
-            node_msg.markers.append(marker)
-            id += 1 
-        self.cell_pub.publish(node_msg)
-
-    def publish_occupancy_values(self, ns="o", id=1):
-        node_msg = MarkerArray()
-        for node, val in zip(self.nodelist, self.o[:,1:]):
+        for node, val in zip(self.nodelist, self.state_values[:,1:]):
             # scale = 0.2 * sum(val)
             # if scale <= 0:
             #     continue # dont add markers for empty cells
@@ -366,25 +406,26 @@ class CCRGlobalPlannerRL(DrivingSwarmNode):
             # id += 1 
             marker = Marker(action=Marker.ADD, ns=ns, id=id, type=Marker.TEXT_VIEW_FACING)
             marker.header.frame_id = 'map'
-            marker.pose.position = Point(x=point.x + self.robot_names.index(self.robot_name)*0.1+0.1, y=point.y, z=0.0)
-            marker.text = str(f"{val[0]*100:.0f},{val[1]*100:.0f},{val[2]*100:.0f},{val[3]*100:.0f}")
+            marker.pose.position = Point(x=point.x + self.robot_names.index(self.robot_name)*0.1+0.1, y=point.y, z=0.0) # type: ignore
+            #marker.text = str(f"{val[0]*100:.0f},{val[1]*100:.0f},{val[2]*100:.0f},{val[3]*100:.0f}")
+            marker.text = str(f"{val[0]:.2f},{val[1]:.2f},{val[2]:.2f},{val[3]:.2f}")
             marker.scale.z = 0.1
             marker.color = self.get_robot_color()
             #marker.color = ColorRGBA(r=0.0, g=0.0, b=0.0, a=.9)
-            node_msg.markers.append(marker)
+            node_msg.markers.append(marker) #type: ignore
             id += 1
         self.cell_pub.publish(node_msg)
         
     def get_robot_color(self):
         if len(self.robot_names) == 1:
             return ColorRGBA(r=0.0, g=1.0, b=0.0, a=.5)
-        robot_index = self.robot_names.index(self.robot_name)
+        robot_index:int = self.robot_names.index(self.robot_name) # type: ignore
         r = robot_index / (len(self.robot_names) - 1)
         b = 1.0 - r
         return ColorRGBA(r=r, g=0.0, b=b, a=.5)
-
+    
 def main():
-    main_fn("ccr_global_planner_RL", CCRGlobalPlannerRL)
+    main_fn("ccr_global_planner_markov", CCRGlobalPlannerMarkov)
 
 if __name__ == '__main__':
     main()

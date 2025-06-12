@@ -14,11 +14,12 @@ class DrivingSwarmNode(Node):
         super().__init__(name)
         self.get_logger().info("starting node "+colored(f"{name}", "green"))
         self.name = name
-        self.robot_name = self.get_namespace().strip("/")
+        self.robot_name:str = self.get_namespace().strip("/")
+        self.robots:list[str] = []
 
-    def get_list_of_robot_names(self):
+    def get_list_of_robot_names(self) -> list[str]:
         self.declare_parameter('robot_names', ['invalid_name'])
-        self.robots = self.get_parameter('robot_names').get_parameter_value().string_array_value
+        self.robots:list[str] = self.get_parameter('robot_names').get_parameter_value().string_array_value # type: ignore
         if self.robots[0] == 'invalid_name':
             self.get_logger().warn(colored('no robot names specified!', 'red'))
             self.get_logger().warn('please specify a list of robot names via the parameter "robot_names"')
