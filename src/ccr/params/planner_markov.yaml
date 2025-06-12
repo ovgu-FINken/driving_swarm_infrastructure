@@ -1,6 +1,6 @@
-horizon: 6
-offset: 5.0
+horizon: 5
+offset: 4.0
 tau: 2.0
 alpha: 0.3
-beta: 0.5
-gamma: 0.9
+beta: 1.0
+gamma: 0.999
