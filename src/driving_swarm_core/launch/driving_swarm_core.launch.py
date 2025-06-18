@@ -25,44 +25,51 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import ThisLaunchFileDir
-from launch_ros.actions import Node
-
-
-def edit_param_file_namespace(param_file_dir):
-    with open(param_file_dir, 'r') as f:
-        lines = f.readlines()
-
-    lines[0] = f"{os.uname()[1]}:\n"
-    with open(param_file_dir, 'w') as f:
-        f.writelines(lines)
-
+from launch_ros.actions import Node, PushRosNamespace
 
 def generate_launch_description():
-    default_param_dir = os.path.join(
-        get_package_share_directory('driving_swarm_core'),
-        'params',
-        'burger.yaml'
-    )
+    TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
+    ROS_DISTRO = os.environ.get('ROS_DISTRO')
+    LDS_MODEL = os.environ['LDS_MODEL']
+    LDS_LAUNCH_FILE = '/hlds_laser.launch.py'
 
-    tb3_param_dir = LaunchConfiguration(
-        'tb3_param_dir',
-        default=default_param_dir
-    )
-
-    # ATTENTION: this is editing the parameter file's content!
-    edit_param_file_namespace(default_param_dir)
+    namespace = LaunchConfiguration('namespace', default='')
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
+
+    if ROS_DISTRO == 'humble':
+        tb3_param_dir = LaunchConfiguration(
+            'tb3_param_dir',
+            default=os.path.join(
+                get_package_share_directory('turtlebot3_bringup'),
+                'param',
+                ROS_DISTRO,
+                TURTLEBOT3_MODEL + '.yaml'))
+    else:
+        tb3_param_dir = LaunchConfiguration(
+            'tb3_param_dir',
+            default=os.path.join(
+                get_package_share_directory('turtlebot3_bringup'),
+                'param',
+                TURTLEBOT3_MODEL + '.yaml'))
+
+    if LDS_MODEL == 'LDS-01':
+        lidar_pkg_dir = LaunchConfiguration(
+            'lidar_pkg_dir',
+            default=os.path.join(get_package_share_directory('hls_lfcd_lds_driver'), 'launch'))
+    elif LDS_MODEL == 'LDS-02':
+        lidar_pkg_dir = LaunchConfiguration(
+            'lidar_pkg_dir',
+            default=os.path.join(get_package_share_directory('ld08_driver'), 'launch'))
+        LDS_LAUNCH_FILE = '/ld08.launch.py'
+    else:
+        lidar_pkg_dir = LaunchConfiguration(
+            'lidar_pkg_dir',
+            default=os.path.join(get_package_share_directory('hls_lfcd_lds_driver'), 'launch'))
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    robot_name = LaunchConfiguration('robot_name', default=os.uname()[1])
 
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'robot_name',
-            default_value=robot_name,
-            description='for the namespace of this robot'
-        ),
-
         DeclareLaunchArgument(
             'use_sim_time',
             default_value=use_sim_time,
@@ -78,35 +85,40 @@ def generate_launch_description():
             default_value=tb3_param_dir,
             description='Full path to turtlebot3 parameter file to load'),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']
-            ),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
-        ),
+        DeclareLaunchArgument(
+            'namespace',
+            default_value=namespace,
+            description='Namespace for nodes'),
+
+        PushRosNamespace(namespace),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/hlds_laser.launch.py']
-            ),
+                [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']),
+            launch_arguments={'use_sim_time': use_sim_time,
+                              'namespace': ''}.items(),
+        ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([lidar_pkg_dir, LDS_LAUNCH_FILE]),
             launch_arguments={'port': '/dev/ttyUSB0',
-                              'frame_id': 'base_scan', 'namespace': 'robot_name'}.items(),
+                              'frame_id': 'base_scan',
+                              'namespace': namespace}.items(),
         ),
 
         Node(
             package='turtlebot3_node',
             executable='turtlebot3_ros',
-            parameters=[tb3_param_dir],
+            parameters=[
+                tb3_param_dir,
+                {'namespace': namespace}],
             arguments=['-i', usb_port],
-            output='both',
-            namespace=robot_name,
-            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-        ),
+            output='screen'),
 
         Node(
             package='driving_swarm_bringup',
             executable='watchdog',
-            namespace=robot_name,
+            namespace=namespace,
             output='both'
         )
     ])
