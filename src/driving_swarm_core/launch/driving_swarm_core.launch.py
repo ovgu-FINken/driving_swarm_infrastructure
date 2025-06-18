@@ -96,7 +96,7 @@ def generate_launch_description():
         Node(
             package='turtlebot3_node',
             executable='turtlebot3_ros',
-            parameters=[tb3_param_dir],
+            parameters=[tb3_param_dir, {'namespace': ''}.items()], # type: ignore
             arguments=['-i', usb_port],
             output='both',
             namespace=robot_name,
