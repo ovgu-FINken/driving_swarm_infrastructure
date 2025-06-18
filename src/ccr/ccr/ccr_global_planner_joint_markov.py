@@ -13,6 +13,7 @@ from visualization_msgs.msg import MarkerArray, Marker
 from itertools import product
 from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
+from functools import lru_cache
 
 
 def get_state_value(node: int, t: int, values: npt.NDArray[np.float64]) -> float:
@@ -105,8 +106,10 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.other_states = {}
         self.other_values = {}
         self.other_goals = {}
+        self.other_plans = {}
         self.distances = {}
         self.s = None
+        self.discounted_reward_self = None
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
         self.state_values = np.zeros( (len(self.nodelist), self.params["horizon"]) )
         self.value_pub = self.create_publisher(Float32MultiArray, "nav/state_values", 10)
@@ -129,6 +132,11 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                 functools.partial(self.value_cb, robot),
                 10
             )
+            self.create_subscription(
+                Int32MultiArray, f"/{robot}/nav/plan",
+                functools.partial(self.plan_cb, robot),
+                10
+            )
 
         self.create_timer(1.0, self.timer_cb)
         self.create_timer(0.1, self.fast_timer_cb)
@@ -148,10 +156,10 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         if self.goal is None:
             return
         #self.get_logger().info(f"making update:")
-        self.update_state_values()
-        #self.get_logger().info(f"update done")
         self.plan = self.update_plan()
         self.publish_plan(change_only=True)
+        self.update_state_values()
+        #self.get_logger().info(f"update done")
         #self.update_occupancy()
         #self.get_logger().info(f"publishing state values for {self.robot_name}")
         self.value_pub.publish(Float32MultiArray(data=self.state_values.flatten().tolist()))                            
@@ -174,6 +182,13 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.get_logger().info(f"received new goal node {self.goal}")
         self.state_values = self.default_state_values()
         
+    def plan_cb(self, robot, msg):
+        if robot == self.robot_name:
+            return
+        if len(msg.data) == 0:
+            return
+        self.other_plans[robot] = msg.data
+        
     def dist(self, start, goal):
         """Compute the distance between two nodes in the graph.
         :param start: start node
@@ -191,6 +206,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             self.distances[start, goal] = dist
         return self.distances[start, goal]
     
+    @lru_cache()
     def connected(self, u: int, v: int) -> bool:
         """Check if two nodes are connected in the graph.
         :param u: first node
@@ -202,13 +218,15 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         """
         return (self.nodelist[u], self.nodelist[v]) in self.g.edges()
 
+    @lru_cache()
     def transition_reward(self, u: int, i: int, goal: int|None) -> float:
         if goal is None:
             return 0.0
         if not self.connected(u, i):
             return 0.0
+        #return 1.0
         if i == self.goal:
-            return 2.0
+            return 10.0
         return self.dist(u, goal) - self.dist(i, goal)
 
     def transition_fitness(self, u: int, i: int, t: int, values: npt.NDArray[np.float64], goal: int) -> float:
@@ -217,14 +235,14 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             return 0.0
         gain = values[i, t+1]
         if goal is not None:
-            gain += self.transition_reward(u, i, goal)
+            gain += 1.0 * self.transition_reward(u, i, goal)
         if gain < 0:
             gain = 0.0
         ret = (gain + self.params["offset"]) ** self.params["tau"]
         assert not np.isnan(ret), f"transition fitness is NaN for ({u}, {i}) at time {t}, gain: {gain}, offset: {self.params['offset']}, tau: {self.params['tau']}"
         return ret
         
-    def simluate_pair(self, other: str) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    def simulate_pair(self, other: str) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """simulate the a pair of two policies, one for this robot and one for the other robot.
         The policies are given by the state values of the robot and the other robot.
         Return value will be the probailities of the robots to occupy state s_i_j at time t, the discounted reward of all visited states for self and the discounted reward of the other robot.
@@ -240,85 +258,88 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         transition_probabilities_other = {}
         rlnl = range(len(self.nodelist))
         for t in range(self.params["horizon"] - 1):
-            transition_probabilities_self[t] = np.zeros((len(self.nodelist), len(self.nodelist)))
-            transition_probabilities_other[t] = np.zeros((len(self.nodelist), len(self.nodelist)))
-            # transition (u,v)(t) -> (i,j)(t+1)
-            transition_fitness_self = np.zeros((len(self.nodelist), len(self.nodelist)))
-            transition_fitness_other = np.zeros((len(self.nodelist), len(self.nodelist)))
-
-            for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
-                # if no edge -> no transition
-                if not self.connected(u, i):
-                    continue
-                if not self.connected(v, j):
-                    continue
-                # if collision is possible, skip this transition
-                # node conflict:
-                if i == j:
-                    continue
-                # edge conflict:
-                if v == i:
-                    continue
-                if u == j:
-                    continue
-                # compute transition fitness (decision function)
-                transition_fitness_self[u, i] = self.transition_fitness(u, i, t, self.state_values, self.goal)
-                transition_fitness_other[v, j] = self.transition_fitness(v, j, t, self.other_values[other], self.other_goals[other] if other in self.other_goals else None)
+            transition_probabilities_self[t], transition_probabilities_other[t] = self.compute_transition_matrix_t(other, t)
             
-            # compute the probabilities for the transitions
-            # we assume fitness proportional selection (roulette wheel selection)
-            for u in rlnl:
-                p_sum = np.sum(transition_fitness_self[u, :])
-                if p_sum > 0:
-                    transition_probabilities_self[t][u, :] = transition_fitness_self[u, :] / p_sum
-                p_sum = np.sum(transition_fitness_other[u, :])
-                if p_sum > 0:
-                    transition_probabilities_other[t][u, :] = transition_fitness_other[u, :] / p_sum
-            
-            # check if any transition probabilities are NaN
-            if np.isnan(transition_probabilities_self[t]).any():
-                self.get_logger().warn(f"transition probabilities self at time {t} are NaN")
-                self.get_logger().warn(f"transition fitness self: {transition_fitness_self}")
-                
-            # check if any transition probabilities are NaN
-            if np.isnan(transition_probabilities_other[t]).any():
-                self.get_logger().warn(f"transition probabilities other at time {t} are NaN")
-                self.get_logger().warn(f"transition fitness other: {transition_fitness_other}")
-
             # compute the next state
             for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
                 s[i, j, t+1] += s[u, v, t] * transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
+            
+            assert (np.sum(s[:, :, t+1]) - 1.0)**2 < 0.1, f"expected state at {t+1} to sum to 1, but got {np.sum(s[:, :, t+1])}, transition probabilities self: {transition_probabilities_self[t]}, transition probabilities other: {transition_probabilities_other[t]}"
             
         # compute the rewards for the visited states
         discounted_reward_self = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
         discounted_reward_other = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
         
         # rewards after horizon: values of the last state of the episode
-        #rewards_self[:, :, -1] = self.state_values[:, -1]
-        #rewards_other[:, :, -1] = self.other_values[other][:, -1]
+        # discounted_reward_self[:, :, -1] = self.state_values[:, -1]
+        # discounted_reward_other[:, :, -1] = self.other_values[other][:, -1]
 
         
-        # reward at the last time step is based on the state-distance to the goal
         for t in range(self.params["horizon"] - 2, -1, -1):
-            for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
-                if not self.connected(u, i) or not self.connected(v, j):
-                    continue
-                p = transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
-                # compute the reward for the transition
-                r_t = self.transition_reward(u, i, self.goal)
-                r_next_state = discounted_reward_self[i, j, t + 1]
-                dr = p * (r_t + self.params['gamma'] * r_next_state)
-                if np.isnan(dr):
-                    self.get_logger().warn(f"nan in discounted reward for ({u}, {v})(t={t}) -> ({i}, {j}), p: {p}, r_t: {r_t}, r_next_state: {r_next_state}")
-                    dr = 0.0
-                discounted_reward_self[u, v, t] += dr
+            for u, v in product(rlnl, rlnl):
+                for i, j in product(rlnl, rlnl):
+                    if not self.connected(u, i) or not self.connected(v, j):
+                        continue
+                    p = transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
+                    # compute the reward for the transition
+                    r_t = self.transition_reward(u, i, self.goal)
+                    r_t *= np.sum(s[i, :, t+1]) / (np.sum(s[i, :, t+1])  + np.sum(s[:, j, t+1]) + 1e-10)
+                    r_next_state = discounted_reward_self[i, j, t + 1]
+                    dr = p * (r_t + self.params['gamma'] * r_next_state)
+                    if np.isnan(dr):
+                        self.get_logger().warn(f"nan in discounted reward for ({u}, {v})(t={t}) -> ({i}, {j}), p: {p}, r_t: {r_t}, r_next_state: {r_next_state}")
+                        dr = 0.0
+                    discounted_reward_self[u, v, t] += dr
                 
-                r_t = self.transition_reward(v, j, self.other_goals[other]) if other in self.other_goals else 0.0
-                r_next_state = discounted_reward_other[i, j, t + 1]
-                discounted_reward_other[u, v, t] += p * (r_t + self.params['gamma'] * r_next_state)
+                    r_t = self.transition_reward(v, j, self.other_goals[other]) if other in self.other_goals else 0.0
+                    r_next_state = discounted_reward_other[i, j, t + 1]
+                    discounted_reward_other[u, v, t] += p * (r_t + self.params['gamma'] * r_next_state)
+                # self.get_logger().info(f"discounted reward self at time {t} for ({u}, {v}): {discounted_reward_self[u, v, t]}")
+                # TODO: this has some potential, but does not work yet:
+                # discounted_reward_self[u, v, t] *= s[u, v, t]**0.25 # only give rewards for reachable states
 
         self.s = s
+        self.discounted_reward_self = discounted_reward_self
         return (s, discounted_reward_self, discounted_reward_other)
+
+    def compute_transition_matrix_t(self, other, t):
+        transition_probabilities_self = np.zeros((len(self.nodelist), len(self.nodelist)))
+        transition_probabilities_other = np.zeros((len(self.nodelist), len(self.nodelist)))
+            # transition (u,v)(t) -> (i,j)(t+1)
+        transition_fitness_self = np.zeros((len(self.nodelist), len(self.nodelist)))
+        transition_fitness_other = np.zeros((len(self.nodelist), len(self.nodelist)))
+
+        rlnl = range(len(self.nodelist))
+        for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
+                # if no edge -> no transition
+            if not self.connected(u, i):
+                continue
+            if not self.connected(v, j):
+                continue
+                # if collision is possible, skip this transition
+                # node conflict:
+            if i == j:
+                continue
+                # edge conflict:
+            if v == i:
+                continue
+            if u == j:
+                continue
+                # compute transition fitness (decision function)
+            transition_fitness_self[u, i] = self.transition_fitness(u, i, t, self.state_values, self.goal)
+            transition_fitness_other[v, j] = self.transition_fitness(v, j, t, self.other_values[other], self.other_goals[other] if other in self.other_goals else None)
+            
+        # compute the probabilities for the transitions
+        # we assume fitness proportional selection (roulette wheel selection)
+        for u in rlnl:
+            p_sum = np.sum(transition_fitness_self[u, :])
+            if p_sum > 0:
+                transition_probabilities_self[u, :] = transition_fitness_self[u, :] / p_sum
+                    # assert transition_probabilities_self[t][u].sum() == 1.0, f"transition probabilities self at time {t} for {u} do not sum to 1: {transition_probabilities_self[t][u, :]}"
+            p_sum = np.sum(transition_fitness_other[u, :])
+            if p_sum > 0:
+                transition_probabilities_other[u, :] = transition_fitness_other[u, :] / p_sum
+        return transition_probabilities_self, transition_probabilities_other
         
         
     def default_state_values(self):
@@ -338,9 +359,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             if robot == self.robot_name:
                 continue
             #print(colored(f"simulating pair with {robot}", "blue"))
-            s, r_s, r_o = self.simluate_pair(robot)
-            rewards_self += np.sum(r_s, axis=1)
-            rewards_other += np.sum(r_o, axis=1)
+            s, r_s, r_o = self.simulate_pair(robot)
+            rewards_self += r_s[:, self.other_states[robot], :]
+            rewards_other += r_o[:, self.other_states[robot], :]
         
         # parameters:
         alpha = self.params["alpha"]
@@ -360,14 +381,23 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             return
         if self.state == self.goal:
             return
-        self.get_logger().info(f"updating plan for {self.robot_name} from {self.state} to {self.goal}")
+        #self.get_logger().info(f"updating plan for {self.robot_name} from {self.state} to {self.goal}")
         s = self.state
         plan = [s]
+        blocked_states = set(self.other_states.values())
+        for robot, plan_other in self.other_plans.items():
+            if robot == self.robot_name:
+                continue
+            if len(plan_other) < 2:
+                continue
+            # dont use the first two states of the other robot, because they are not yet in the future
+            blocked_states |= set(plan_other[:2])
+
         for t in range(self.params["horizon"]-1):
             neighbors = list(self.g.neighbors(s))
             fitness = {}
             for n in neighbors:
-                if t < 2 and n in self.other_states.values():
+                if t < 2 and n in blocked_states:
                     continue
                 if n == self.goal:
                     plan.append(n)
@@ -435,6 +465,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
     def publish_visualization_markers(self, ns="state_values", id=1):
         node_msg = MarkerArray()
         vis_values = self.state_values# [:,1:] # skip the first column, which is the current state value
+        #if self.discounted_reward_self is None:
+        #    return
+        #vis_values = np.sum(self.discounted_reward_self, axis=1)
         #if self.s is None:
         #    return
         #vis_values = np.sum(self.s, axis=1) # sum over all possible states of the other robot, to get single robot occupancy probabilities
