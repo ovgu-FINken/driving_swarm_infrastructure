@@ -159,13 +159,13 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         cbs = CBSPlanner(self.env, max_iter = 1_000_000)
         pp = PriorityAgentPlanner(self.env, priority_method="longest" ,max_iter = 1_000_000)
-        pbs = PBSPlanner(self.env,"depth")
+        pbs = PBSPlanner(self.env,"width")
 
 
         self.get_logger().info("\n\nCALCULATING NEW PLANS\n")
         all_plans = []
         try:
-            all_plans = pp.create_plan(self.env)
+            all_plans = pbs.create_plan(self.env)
         except nx.NetworkXNoPath:
             self.get_logger().info("Error : no plan with compatible paths was found")
             self.get_logger().info(f"current positions of robots :")
@@ -324,6 +324,41 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         self.send_plans_to_robots()
 
+    
+    def has_k1(self,plans):
+        prev_timestep = [val[0] for val in plans]
+
+        for i in range(1,4):
+            temp = []
+            for j, robot in enumerate(self.robot_names):
+                if len(plans[j])<i+1:
+                    continue
+                if self.is_waiting[robot]:
+                    continue
+                if prev_timestep.count(plans[j][i]) > 0 and not(plans[j][i]==plans[j][i-1]):
+                    return True
+                if temp.count(plans[j][i])>0:
+                    return True
+                temp.append(plans[j][i])
+            prev_timestep = temp.copy()
+        return False
+
+    
+    def has_k1_oo(self, plans):
+        for indx1, plan1 in enumerate(plans):
+            for indx2, plan2 in enumerate(plans):
+                if plan1 == plan2:
+                    continue
+                for i in range(len(plan1)):
+                    try:
+                        if plan1[i] == plan2[i] or plan1[i] == plan2[i+1]:
+                            return True, (indx1+1,indx2+1)
+                    except IndexError:
+                        pass
+        return False, (0,0)
+
+
+
 
     def reasons_to_replan(self):
 
@@ -367,6 +402,8 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
 
         all_conflicts_preprocessed = []
         for robot in self.robot_names :
+            
+            # shorten plan if length to long
             if len(self.central_plan[robot]['plan']) < 4:
                 all_conflicts_preprocessed.append(self.central_plan[robot]['plan'])
             else:
@@ -380,14 +417,18 @@ class CCRCentralizedPlanner(DrivingSwarmNode):
         k1_conf = False
         for i in range(len(all_conflicts)):
             unique_robots = set(val.agent for val in all_conflicts[i].conflicting_agents)
+
             if (len(unique_robots) > 1) :
+                #self.get_logger().info(f"\n\n\n WORKS: {unique_robots} \n\n\n")
                 k1_conf = True
                 break
-                
 
 
-        if (k1_conf) :
-            self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n")
+        new_k1_conf = self.has_k1(all_conflicts_preprocessed)
+        newer_k1_conf, _ = self.has_k1_oo(all_conflicts_preprocessed)
+
+        if (k1_conf or new_k1_conf) :
+            self.get_logger().info(f"\n\n replaned due to k-1 conflict in current plan \n specific reason: old: {k1_conf} | new: {new_k1_conf} | newer: {newer_k1_conf}\n")
             #self.generate_plan_for_robots()
             self.activate_global_stop()
 
