@@ -62,6 +62,7 @@ def generate_launch_description():
             package='robot_state_publisher',
             executable='robot_state_publisher',
             output='screen',
+            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
             parameters=[
                     rsp_params,
                     {'use_sim_time': use_sim_time}])
