@@ -82,7 +82,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']
             ),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
+            launch_arguments={'use_sim_time': use_sim_time, 'namespace': ''}.items(),
         ),
 
         IncludeLaunchDescription(
@@ -90,13 +90,13 @@ def generate_launch_description():
                 [ThisLaunchFileDir(), '/hlds_laser.launch.py']
             ),
             launch_arguments={'port': '/dev/ttyUSB0',
-                              'frame_id': 'base_scan', 'namespace': 'robot_name'}.items(),
+                              'frame_id': 'base_scan', 'namespace': ''}.items(),
         ),
 
         Node(
             package='turtlebot3_node',
             executable='turtlebot3_ros',
-            parameters=[tb3_param_dir],
+            parameters=[tb3_param_dir, {'namespace': ''},],
             arguments=['-i', usb_port],
             output='both',
             namespace=robot_name,
