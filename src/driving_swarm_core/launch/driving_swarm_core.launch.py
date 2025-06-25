@@ -83,6 +83,7 @@ def generate_launch_description():
                 [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']
             ),
             launch_arguments={'use_sim_time': use_sim_time, 'namespace': ''}.items(),
+            remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
         ),
 
         IncludeLaunchDescription(
