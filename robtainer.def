@@ -18,10 +18,15 @@ From: osrf/ros:humble-desktop-jammy
 
   # OSRF Repo für Gazebo Fortress hinzufügen
   echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
+  sudo apt update
+
   wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
   apt-get update && apt-get install -y tmux
 
   apt-get update && apt-get install -y python3 python3-pip python3-distutils
+
+  apt install zenoh-bridge-ros2dds
 
   apt-get update && apt-get install -y \
     wget \
@@ -33,7 +38,6 @@ From: osrf/ros:humble-desktop-jammy
     ros-humble-ackermann-msgs \
     ros-humble-ros-gz \
     ros-humble-rviz2 \
-    ros-humble-rmw-zenoh-cpp
 
   # install cmake 3.31
   CMAKE_VERSION=3.31.0
