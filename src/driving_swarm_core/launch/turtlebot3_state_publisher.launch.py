@@ -51,6 +51,7 @@ def generate_launch_description():
 
     rsp_params = {'robot_description': robot_desc}
 
+    robot_name = LaunchConfiguration('robot_name', default=os.uname()[1])
     # print (robot_desc) # Printing urdf information.
 
     return LaunchDescription([
@@ -61,6 +62,7 @@ def generate_launch_description():
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
+            namespace=robot_name,
             output='screen',
             remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
             parameters=[
