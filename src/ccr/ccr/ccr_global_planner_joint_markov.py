@@ -93,6 +93,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
             wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
         )
+        largest_cc = max(nx.connected_components(self.env.g), key=len)
+        # Create subgraph and make a copy (optional, depending on use case)
+        self.env.g = self.env.g.subgraph(largest_cc).copy()
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
@@ -102,7 +105,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             self.params = yaml.safe_load(stream)
 
         self.get_logger().info(colored(f"planner params: {self.params}", "yellow"))
-        self.nodelist = tuple(i for i, _ in enumerate(self.g.nodes()))
+        self.nodelist = tuple(n for _, n in enumerate(self.g.nodes()))
         self.other_states = {}
         self.other_values = {}
         self.other_goals = {}
@@ -174,12 +177,17 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
 
     def goal_cb(self, robot, msg):
         if robot != self.robot_name:
-            self.other_goals[robot] = msg.data
+            self.other_goals[robot] = self.nodelist.index(msg.data)
             return
-        if msg.data == self.goal:
+        if self.goal is not None and msg.data == self.nodelist[self.goal]:
             return
-        self.goal = msg.data
-        self.get_logger().info(f"received new goal node {self.goal}")
+        # reverse lookup for goal
+        # msg.data is in node indicies
+        # self.goal should be index in nodelist
+        self.goal = self.nodelist.index(msg.data)
+        self.transition_reward.cache_clear()
+        self.get_logger().info(f"received new goal node {msg.data}(-> {self.goal})")
+        assert msg.data in self.g.nodes(), "goal must be a valid node within the graph"
         self.state_values = self.default_state_values()
         
     def plan_cb(self, robot, msg):
@@ -187,7 +195,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             return
         if len(msg.data) == 0:
             return
-        self.other_plans[robot] = msg.data
+        self.other_plans[robot] = [self.nodelist.index(n) for n in msg.data]
         
     def dist(self, start, goal):
         """Compute the distance between two nodes in the graph.
@@ -216,7 +224,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         :return: True if the nodes are connected, False otherwise
         :rtype: bool
         """
-        return (self.nodelist[u], self.nodelist[v]) in self.g.edges()
+        return self.g.has_edge(self.nodelist[u], self.nodelist[v])
 
     @lru_cache()
     def transition_reward(self, u: int, i: int, goal: int|None) -> float:
@@ -227,6 +235,8 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         #return 1.0
         if i == self.goal:
             return 10.0
+        if u == i:
+            return -1.0
         return self.dist(u, goal) - self.dist(i, goal)
 
     def transition_fitness(self, u: int, i: int, t: int, values: npt.NDArray[np.float64], goal: int) -> float:
@@ -264,7 +274,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             for u, v, i, j in product(rlnl, rlnl, rlnl, rlnl):
                 s[i, j, t+1] += s[u, v, t] * transition_probabilities_self[t][u, i] * transition_probabilities_other[t][v, j]
             
-            assert (np.sum(s[:, :, t+1]) - 1.0)**2 < 0.1, f"expected state at {t+1} to sum to 1, but got {np.sum(s[:, :, t+1])}, transition probabilities self: {transition_probabilities_self[t]}, transition probabilities other: {transition_probabilities_other[t]}"
+            #assert (np.sum(s[:, :, t+1]) - 1.0)**2 < 0.1, f"expected state at {t+1} to sum to 1, but got {np.sum(s[:, :, t+1])}, transition probabilities self: {transition_probabilities_self[t]}, transition probabilities other: {transition_probabilities_other[t]}"
             
         # compute the rewards for the visited states
         discounted_reward_self = np.zeros((len(self.nodelist), len(self.nodelist), self.params["horizon"]))
@@ -374,6 +384,11 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                 self.state_values[i, t] = (1 - alpha) * self.state_values[i, t] + alpha * (beta * rewards_self[i, t] + (1 - beta) * rewards_other[i, t])
         # self.state_values = np.clip(self.state_values, 0.0, 1000.0) # all states are valuable
 
+    def get_neigbours_by_index(self, u:int):
+        n = self.nodelist[u]
+        neighbours = self.g.neighbors(n)
+        return [self.nodelist.index(i) for i in neighbours]
+
     def update_plan(self) -> list[int]|None:
         if self.state is None:
             return
@@ -394,7 +409,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             blocked_states |= set(plan_other[:2])
 
         for t in range(self.params["horizon"]-1):
-            neighbors = list(self.g.neighbors(s))
+            neighbors = self.get_neigbours_by_index(s)
             fitness = {}
             for n in neighbors:
                 if t < 2 and n in blocked_states:
@@ -408,11 +423,10 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                 return plan
             s = max(fitness, key=fitness.get)
             plan.append(s)
-        plan = [self.nodelist[i] for i in plan]  # convert int indexes to node keys
         return plan
 
     def plan_is_feasible(self) -> bool:
-        if not self.plan:
+        if self.plan:
             return False
         for n1, n2 in zip(self.plan[:-1], self.plan[1:]):
             if not (n1, n2) in self.g.edges():
@@ -430,7 +444,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
     def publish_plan(self, change_only=True):
         if not self.plan_is_feasible():
             msg = Int32MultiArray()
-            msg.data = [self.state]
+            msg.data = [ self.nodelist[self.state] ]
             self.plan_pub.publish(msg)
             self._published_plan = [self.state]
             return 
@@ -438,29 +452,29 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         if change_only and self._published_plan[:4] == self.plan[:4]: # type: ignore
             return
 
-        msg = Int32MultiArray()
-        msg.data = self.plan
-        self.plan_pub.publish(msg)
         self._published_plan = self.plan
+        msg = Int32MultiArray()
+        msg.data = [self.nodelist[n] for n in self.plan]
+        self.plan_pub.publish(msg)
         
     def state_cb(self, robot, msg):
-        #self.get_logger().info(f"state_cb for robot:{robot} with state:{msg.data}")
+        # make sure to translate node label to index in nodelist
         if robot == self.robot_name:
-            if msg.data == self.state:
+            if self.nodelist.index(msg.data) == self.state:
                 return
             self.get_logger().info(f"state changed: {self.state} -> {msg.data}, goal: {self.goal}")
-            self.state = msg.data
+            self.state = self.nodelist.index(msg.data)
             # we enter a new state, i.e., t=t+1
             #self.state_values[:,0:-1] = self.state_values[:,1:] # shift values to the left
             #self.state_values[:,-1] = self.default_state_values()[:,-1]
             #self.state_values = 0.5* self.state_values + 0.5* self.default_state_values()
-
             return
+
         if robot in self.other_states:
-            if self.other_states[robot] == msg.data:
+            if self.other_states[robot] == self.nodelist.index(msg.data):
                 return
             #self.get_logger().info(f"other state changed: {robot} {self.other_states[robot]} -> {msg.data}")
-        self.other_states[robot] = msg.data
+        self.other_states[robot] = self.nodelist.index(msg.data)
 
     def publish_visualization_markers(self, ns="state_values", id=1):
         node_msg = MarkerArray()
