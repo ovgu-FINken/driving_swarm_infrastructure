@@ -1,0 +1,17 @@
+{
+  plugins: {
+    ros2dds: {
+      nodename: "zenoh_bridge_ros2dds",
+      namespace: "/",  // <- Damit du alle Topics publishen kannst
+      domain: 0,
+      ros_localhost_only: true,
+      ros_automatic_discovery_range: "LOCALHOST"
+    }
+  },
+  connect: {
+    endpoints: [
+      "tcp/192.168.8.220:7447"
+    ]
+  }
+}
+
