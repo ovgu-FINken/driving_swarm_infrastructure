@@ -7,41 +7,50 @@ From: osrf/ros:humble-desktop-jammy
   Description "BA Apptainer mit ROS 2 Humble"
 
 %files
-  ros/driving_swarm_infrastructure /ros_ws
-  
+  ../driving_swarm_infrastructure /ros_ws
+
 %environment
   export GDK_BACKEND=x11
 
 %post -c /usr/bin/bash
   mkdir /ros
-  apt-get update && apt-get install -y wget gnupg2
 
-  # OSRF Repo für Gazebo Fortress hinzufügen
-  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
-  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
-  sudo apt update
+  export DEBIAN_FRONTEND=noninteractive
 
-  wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
-  apt-get update && apt-get install -y tmux
-
-  apt-get update && apt-get install -y python3 python3-pip python3-distutils
-
-  apt install zenoh-bridge-ros2dds
-
+  # Basis-Tools und Voraussetzungen
   apt-get update && apt-get install -y \
     wget \
     gnupg2 \
+    sudo \
     nano \
     neovim \
+    python3 \
+    python3-pip \
+    python3-distutils \
     python3-setuptools \
-    gazebo-fortress \
+    lsb-release \
+    curl \
+    tmux
+
+  # Gazebo Fortress
+  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+  wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add -
+  apt-get update && apt-get install -y gazebo-fortress
+
+  # Eclipse Zenoh Repo (trusted=yes umgehen fehlende GPG)
+  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" >> /etc/apt/sources.list
+  apt-get update && apt-get install -y \
+    zenoh-bridge-ros2dds \
+    ros-humble-rmw-cyclonedds-cpp
+
+  # ROS-Erweiterungen
+  apt-get install -y \
     ros-humble-ackermann-msgs \
     ros-humble-ros-gz \
-    ros-humble-rviz2 \
+    ros-humble-rviz2
 
-  # install cmake 3.31
+  # CMake 3.31 installieren
   CMAKE_VERSION=3.31.0
-  mkdir -p /opt
   cd /opt
   wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
   tar -xzf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
@@ -49,19 +58,21 @@ From: osrf/ros:humble-desktop-jammy
   ln -s /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
   rm cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
 
-  # custom rcfile
-  cp ~/.bashrc /customrc
+  # Custom RC
+  cp /root/.bashrc /customrc
   echo "source /opt/ros/humble/setup.bash" >> /customrc
 
+  # Python-Packages
   pip install numpy==1.23.5
-  pip install scikit-image   
+  pip install scikit-image
   pip install trimesh
-  pip install pycollada  
+  pip install pycollada
 
+  # ROS Workspace vorbereiten
   cd /ros_ws
   rosdep init || true
   rosdep update
-  cd /ros_ws
-  rosdep install --from-paths src/ --ignore-src -y        
+  rosdep install --from-paths src/ --ignore-src -y
+
 %runscript
   exec /bin/bash --rcfile /customrc
