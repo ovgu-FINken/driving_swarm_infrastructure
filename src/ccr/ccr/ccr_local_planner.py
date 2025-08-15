@@ -124,7 +124,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
         self.get_logger().info("connected to trajectory follower service")
         self.initial_pos = self.get_tf_pose()
         self.create_timer(1.0, self.timer_cb)
-        self.set_state_ready()
+        #self.set_state_ready()
 
     def graph_to_marker_array(self):
         poly_msg = MarkerArray()
