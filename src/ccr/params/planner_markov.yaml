@@ -2,5 +2,5 @@ horizon: 8
 offset: 3.0
 tau: 1.0
 alpha: 0.3
-beta: 0.7
+beta: 0.3
 gamma: 0.9
