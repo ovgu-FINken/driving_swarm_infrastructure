@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'msx_pseudo_roofcam_node = msx.msx_pseudo_roofcam_node:main',
         ],
     },
 )
