@@ -17,6 +17,7 @@ import random
 import tempfile
 import yaml
 
+#Generates n random positions inside of a definded x_range and y_range with an orientation theta
 def generate_random_poses(n_robots, x_range=(-0.75, 0.75), y_range=(-1.8, 1.2), theta_range=(-3.14, 3.14)):
     poses = []
     for _ in range(n_robots):
@@ -37,18 +38,16 @@ def generate_launch_description():
         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
 
-    # Roboteranzahl bestimmen
     robots_file = args['robot_names_file']
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     n_robots = len(robots)
 
-    # Randomisierte Liste erzeugen
+    
     poses = generate_random_poses(n_robots)
 
-    # In eine temporäre YAML-Datei schreiben
     tmp_poses_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml')
-    yaml.dump(poses, tmp_poses_file, default_flow_style=True)  # schreibt als "- [x, y, theta]"
+    yaml.dump(poses, tmp_poses_file, default_flow_style=True)
     tmp_poses_file.close()
 
     args['poses_file'] = tmp_poses_file.name
