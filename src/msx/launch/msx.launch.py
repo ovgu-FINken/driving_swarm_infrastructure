@@ -18,7 +18,7 @@ import tempfile
 import yaml
 
 #Generates n random positions inside of a definded x_range and y_range with an orientation theta
-def generate_random_poses(n_robots, x_range=(-0.75, 0.75), y_range=(-1.8, 1.2), theta_range=(-3.14, 3.14)):
+def generate_random_poses(n_robots, x_range=(-0.77, 0.73), y_range=(-1.6, 1.1), theta_range=(-3.14, 3.14)):
     poses = []
     for _ in range(n_robots):
         x = random.uniform(*x_range)
