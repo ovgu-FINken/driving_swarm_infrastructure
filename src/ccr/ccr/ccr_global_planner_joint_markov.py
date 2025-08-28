@@ -12,6 +12,19 @@ from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point, Pose
 from rclpy.time import Duration
 import numba as nb
+from dataclasses import dataclass
+
+
+@dataclass
+class AlgoParams():
+    w_v: float = 0.1
+    w_o: float = 0.1
+    w_r: float = 0.1
+    alpha: float = 0.5
+    beta: float = 0.5
+    gamma: float = 0.9
+    tau: float = 1.0
+
 
 @nb.jit 
 def calculate_reward_matrix(goal, distances, adjacency):
@@ -26,20 +39,98 @@ def calculate_reward_matrix(goal, distances, adjacency):
     #r = np.clip(r, -2, 5)
     return r * adjacency
 
+
 @nb.jit 
-def calcuate_transition_fitness(rewards, values, adjacency, offset=5, tau=1):
-    f = rewards.copy() + offset
-    f *= adjacency
+def calcuate_transition_fitness(rewards,
+                                values,
+                                adjacency,
+                                occupancy,
+                                w_v: float = 0.1,
+                                w_o: float = 0.1,
+                                w_r: float = 0.1,
+                                tau: float = 1.0
+                                ):
+    f = w_r * rewards.copy() + 1
     for u in range(f.shape[0]):
         for i in range(f.shape[1]):
-            f[u,i] += values[i]
+            f[u, i] += w_v * values[i] - w_o * occupancy[i]
+    f *= adjacency
     f = f ** tau
     # f = (f.transpose() / f.sum(axis=1)).transpose()
     return f# np.clip(f, 0.0, 1.0)
 
+@nb.jit
+def simulate_single_jit(s0,
+                        N: int,
+                        T: int,
+                        goal,
+                        adjacency,
+                        distances,
+                        values,
+                        occupancy,
+                        w_v: float = 0.1,
+                        w_o: float = 0.1,
+                        w_r: float = 0.1,
+                        tau: float = 1.0,
+                        gamma: float = 1.0
+                        ):
+    r = calculate_reward_matrix(goal, distances, adjacency)
+    s = np.zeros((T,N))
+    s[0] = s0
+    pT = np.zeros((T, N, N))
+    for t in range(T - 1):
+        pT[t] = calcuate_transition_fitness(r, values[t+1], adjacency, occupancy[t+1], w_v=w_v, w_o=w_o, w_r=w_r, tau=tau)
+        for u in range(N):
+            splus = np.zeros_like(s[t])
+            psum = 0
+            for i in range(N):
+                if adjacency[u, i] == 0:
+                    continue
+                p = pT[t, u, i]
+                if p == 0:
+                    continue
+                psum += p
+                splus[i] = splus[u] * p
+            if psum > 0:
+                s[t+1] += splus / psum
+    # state is done
+    # rewards:
+    DR = np.zeros((T+1, N))
+    for i in range(N):
+        DR[-1, i] = 20 - distances[i, goal]
+
+    for t in range(T-1, -1, -1):
+        for u in range(N):
+            dr_plus = 0
+            psum = 0
+            for i in range(N):
+                if adjacency[u, i] == 0.0:
+                    continue
+                p = pT[t, u, i]
+                psum += p
+                dr_plus += p * (r[u, i] + gamma * DR[t+1, i])
+            if psum > 0:
+                DR[t, u] += dr_plus / psum
+    return s, DR[:-1]
+        
 
 @nb.jit
-def simulate_pair_jit(s0, N: int, T: int, goal_self, goal_other, adjacency, distances, values_self, values_other, gamma:float=1.0, offset=5, tau=1):
+def simulate_pair_jit(s0,
+                      N: int,
+                      T: int,
+                      goal_self,
+                      goal_other,
+                      adjacency,
+                      distances,
+                      values_self,
+                      values_other,
+                      occupancy,
+                      w_v: float = 0.1,
+                      w_o: float = 0.1,
+                      w_r: float = 0.1,
+                      tau: float = 1.0,
+                      gamma: float = 1.0
+                      ):
     # calculate reward matrix
     log = ""
     
@@ -55,8 +146,8 @@ def simulate_pair_jit(s0, N: int, T: int, goal_self, goal_other, adjacency, dist
         # state s[t+1] will be updated by using state s[t]
         
         # calculate transition probabilities for each agent
-        pT_self[t] = calcuate_transition_fitness(r_self, values_self[t+1], adjacency, offset=offset, tau=tau)
-        pT_other[t] = calcuate_transition_fitness(r_other, values_other[t+1], adjacency, offset=offset, tau=tau)        
+        pT_self[t] = calcuate_transition_fitness(r_self, values_self[t+1], adjacency, occupancy[t+1], w_v=w_v, w_o=w_o, w_r=w_r, tau=tau)
+        pT_other[t] = calcuate_transition_fitness(r_other, values_other[t+1], adjacency, occupancy[t+1], w_v=w_v, w_o=w_o, w_r=w_r, tau=tau)        
         
         # transition u,v -> i,j
         for u in range(N):
@@ -80,27 +171,23 @@ def simulate_pair_jit(s0, N: int, T: int, goal_self, goal_other, adjacency, dist
                         psum += p
                         splus[i,j] += p * s[t, u, v] 
                 # all states should sum to one.
-                splus *= 1.0 / psum if psum > 0.0 else 0.0
-                s[t+1] += splus
+                if psum > 0:
+                    s[t+1] += splus / psum
         log += " " + str(np.sum(s[t+1]))
 
     # compute the rewards for the visited states
     DR_self = np.zeros((T+1, N, N))
     DR_other = np.zeros((T+1, N, N))
-    for i in range(N):
-        DR_self[-1,i,:] = distances[i, goal_self]
-        DR_other[-1,:,i] = distances[i, goal_other]
-    
+
     # rewards after horizon: values of the last state of the episode
-    DR_self[-1, :, :] = 1 # -distances[:, goal_self]
-    DR_other[-1, :, :] = 1 # -distances[:, goal_self]
+    for i in range(N):
+        DR_self[-1,i,:] = 20 - distances[i, goal_self]
+        DR_other[-1,:,i] = 20 - distances[i, goal_other]
+    
     
     for t in range(T - 1, -1, -1):
         for u in range(N):
             for v in range(N):
-                if s[t, u, v] == 0.0:
-                    pass
-                    #continue
                 dr_plus_self = 0
                 dr_plus_other = 0
                 psum = 0
@@ -197,12 +284,21 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.declare_parameter('planner_params_file', "planner_params.yaml")
         planner_params_file = self.get_parameter('planner_params_file').get_parameter_value().string_value
         with open(planner_params_file, 'r') as stream:
-            self.params = yaml.safe_load(stream)
+            self.params_dict = yaml.safe_load(stream)
 
-        self.get_logger().info(colored(f"planner params: {self.params}", "yellow"))
+        self.params = AlgoParams(
+            w_v=self.params_dict['w_v'],
+            w_o=self.params_dict['w_o'],
+            w_r=self.params_dict['w_r'],
+            alpha=self.params_dict['alpha'],
+            beta=self.params_dict['beta'],
+            gamma=self.params_dict['gamma'],
+            tau=self.params_dict['tau'],
+        )
+        self.get_logger().info(colored(f"planner params: {self.params_dict}", "yellow"))
         self.nodelist = tuple(n for _, n in enumerate(self.g.nodes()))
         self.N = len(self.nodelist)
-        self.T = self.params["horizon"]
+        self.T = self.params_dict["horizon"]
         self.adjacency = np.zeros((self.N, self.N))
         for i in range(self.N):
             for j in range(self.N):
@@ -219,6 +315,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.other_values = {}
         self.other_goals = {}
         self.other_plans = {}
+        self.other_expected_states = {}
         self.s = None
         self.discounted_reward_self = None
         self.plan_pub = self.create_publisher(Int32MultiArray, "nav/plan", 10)
@@ -227,9 +324,11 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.occupancy = np.zeros((self.T, self.N))
 
         
-        self.get_logger().info(f"executing simulate pair for precompile")
-        simulate_pair_jit(np.zeros_like(self.adjacency), self.N, self.T, 0, 0, self.adjacency, self.distances, self.state_values, self.state_values)
-        self.get_logger().info(f"executing simulate pair for precompile done")
+        self.get_logger().info(colored("executing simulate pair for precompile", "blue"))
+        simulate_pair_jit(np.zeros_like(self.adjacency), self.N, self.T, 0, 0, self.adjacency, self.distances, self.state_values, self.state_values, self.occupancy)
+        simulate_single_jit(np.zeros_like(self.nodelist), self.N, self.T, 0, self.adjacency, self.distances, self.state_values, self.occupancy)
+        self.get_logger().info(colored("done precompile", "green"))
+        
         self.value_pub = self.create_publisher(Float32MultiArray, "nav/state_values", 10)
 
         for robot in self.robot_names:
@@ -302,7 +401,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.transition_rewards = calculate_reward_matrix(self.goal, self.distances, self.adjacency)
         self.get_logger().info(f"received new goal node {msg.data}(-> {self.goal})")
         self.get_logger().info(f"rewards: \n{np.round(self.transition_rewards, 2)}")
-        self.get_logger().info(f"fitness: \n{np.round(calcuate_transition_fitness(self.transition_rewards, self.state_values[0], self.adjacency, offset=self.params['offset'], tau=self.params['tau']),)}")
+        #self.get_logger().info(f"fitness: \n{np.round(calcuate_transition_fitness(self.transition_rewards, self.state_values[0], self.adjacency, self.offset,)}")
         assert msg.data in self.g.nodes(), "goal must be a valid node within the graph"
         self.state_values = self.default_state_values()
         
@@ -336,12 +435,31 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         :return: probabilities of the robots to occupy state s_i_j at time t, the discounted reward of self and the discounted reward of the other robot
         :rtype: list[npt.NDArray[np.float64]], dict, dict
         """
-        N:int = len(self.nodelist)
-        T:int = self.params["horizon"]
-        s0 = np.zeros((N, N))
+        s0 = np.zeros((self.N, self.N))
         s0[self.state, self.other_states[other]] = 1.0
+        pair_occupancy = self.occupancy
+        pair_occupancy = self.occupancy - self.expected_state
+        if other in self.other_expected_states:
+            pair_occupancy -= self.other_expected_states[other]
             
-        s, discounted_reward_self, discounted_reward_other, log = simulate_pair_jit(s0, N, T, self.goal, self.other_goals[other], self.adjacency, self.distances, self.state_values, self.other_values[other], gamma=self.params["gamma"])
+        s, discounted_reward_self, discounted_reward_other, log = simulate_pair_jit(
+            s0,
+            self.N,
+            self.T,
+            self.goal,
+            self.other_goals[other],
+            self.adjacency,
+            self.distances,
+            self.state_values,
+            self.other_values[other],
+            pair_occupancy,
+            w_v=self.params.w_v,
+            w_o=self.params.w_o,
+            w_r=self.params.w_r,
+            tau=self.params.tau,
+            gamma=self.params.gamma,
+            
+        )
         if np.isnan(discounted_reward_self).any():
             self.get_logger().warn("nan in discounted rewards")
             self.get_logger().warn(f"s0: {s0}, s: {s}")
@@ -356,13 +474,25 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         return values
             
     def update_state_values(self):
-        if not len(self.other_values):
-            self.get_logger().info("no other values")
-            return
-        rewards_self = np.zeros((self.T, self.N))
+        
+        # run single run without other agents explicitly modelled
+        s0 = np.zeros(self.N)
+        s0[self.state] = 1.0
+        expected_state, rewards_self = simulate_single_jit(s0,
+                                                           self.N,
+                                                           self.T,
+                                                           self.goal,
+                                                           self.adjacency,
+                                                           self.distances,
+                                                           self.state_values,
+                                                           self.occupancy,
+                                                           w_v=self.params.w_v,
+                                                           w_o=self.params.w_o,
+                                                           w_r=self.params.w_r,
+                                                           tau=self.params.tau,
+                                                           gamma=self.params.gamma
+                                                           )
         rewards_other = np.zeros((self.T, self.N))
-        # self.get_logger().info(f"computing state values for {self.other_values.keys()}")
-        expected_state = np.zeros((self.T, self.N))
         occupancy = np.zeros((self.T, self.N))
         for robot in self.other_values.keys():
             if robot not in self.other_states:
@@ -373,7 +503,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             s, r_s, r_o = self.simulate_pair(robot)
             next_state = np.sum(s[1], axis=1)
             current_state = np.sum(s[0], axis=1)
-            l = [f"{a:.2f}->{b:.2f}" for a, b in zip(current_state, next_state)]
+            # l = [f"{a:.2f}->{b:.2f}" for a, b in zip(current_state, next_state)]
             # self.get_logger().info(f"next states: {','.join(l)}")
             # rs is a matrix with values [t, u, v]
             # we do not care about the v-state, so we use axis 2
@@ -382,20 +512,19 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             # similarly for the other robot in the joint plan, but we have to aggregate over u
             rewards_other += r_o.max(axis=1)
             expected_state += s.sum(axis=2)
+            self.other_expected_states[robot] = s.sum(axis=1)
             occupancy += s.sum(axis=1)
 
         self.occupancy = occupancy
         
-        self.expected_state = expected_state / len(self.other_values)
+        self.expected_state = expected_state / (len(self.other_values) + 1)
         # parameters:
-        alpha = self.params["alpha"]
-        beta = self.params["beta"]
 
         # update the state values for this robot
         # self.get_logger().info(f"updating state values for {self.robot_name}, rewards_self: {rewards_self.shape}, rewards_other: {rewards_other.shape}")
         for t in range(self.T):
             for i in range(self.N):
-                self.state_values[t, i] = (1 - alpha) * self.state_values[t, i] + alpha * (beta * rewards_self[t, i] + (1 - beta) * rewards_other[t, i])
+                self.state_values[t, i] = (1 - self.params.alpha) * self.state_values[t, i] + self.params.alpha * (self.params.beta * rewards_self[t, i] + (1 - self.params.beta) * rewards_other[t, i])
         self.state_values = rewards_self
         # self.state_values = np.clip(self.state_values, 0.0, 1000.0) # all states are valuable
 
@@ -408,30 +537,41 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         if self.state is None:
             return
         if self.goal is None:
-            return
+            return [self.state, self.state]
         if self.state == self.goal:
-            return self.nodelist[self.state]
+            return [self.state, self.state]
         #self.get_logger().info(f"updating plan for {self.robot_name} from {self.state} to {self.goal}")
         state = self.state
         plan = [state]
         for t in range(self.T-1):
-            s = np.zeros_like(self.nodelist)
-            s[state] = 1
             # = np.zeros_like(self.transition_rewards)
-            f = calcuate_transition_fitness(self.transition_rewards, self.state_values[t+1], adjacency=self.adjacency, offset=self.params['offset'], tau=self.params['tau'])
-            for other_state in self.other_states.values():
-                f[other_state] = 0
-            state = np.argmax(f[state])
-            plan.append(state)
+            f = calcuate_transition_fitness(self.transition_rewards,
+                                            self.state_values[t+1],
+                                            self.adjacency,
+                                            self.occupancy[t+1],
+                                            w_v=self.params.w_v,
+                                            w_o=self.params.w_o,
+                                            w_r=self.params.w_r,
+                                            tau=self.params.tau,
+                                            )[state, :]
+            if t < 2:
+                for other_state in self.other_states.values():
+                    f[other_state] = 0
+            #self.get_logger().info(f"s={state}, fitness={f}")
+            next_state:int = np.argmax(f) # type: ignore
+            #self.get_logger().info(f"s->s+ = {state}->{next_state}, f={f[next_state]}, connected={self.adjacency[state, next_state]}")
+            plan.append(next_state)
+            state = next_state
         return plan
 
     def plan_is_feasible(self) -> bool:
-        if self.plan:
+        if self.plan is None:
             return False
         for n1, n2 in zip(self.plan[:-1], self.plan[1:]):
-            if not (n1, n2) in self.g.edges():
+            if not (self.nodelist[n1], self.nodelist[n2]) in self.g.edges():
                 self.get_logger().warn(f"plan is not feasible")
                 self.get_logger().warn(f"edge {n1} -> {n2} is not in the graph")
+                self.get_logger().warn(f"adjacency {self.adjacency[n1, n2]}")
                 self.get_logger().warn(f"path: {self.plan}")
                 return False
 
@@ -444,12 +584,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
     def publish_plan(self, change_only=True):
         if self.plan is None:
             return [self.nodelist[self.state]]
-        #if not self.plan_is_feasible():
-        #    msg = Int32MultiArray()
-        #    msg.data = [ self.nodelist[self.state] ]
-        #    self.plan_pub.publish(msg)
-        #    self._published_plan = [self.state]
-        #    return 
+        if not self.plan_is_feasible():
+            self.get_logger().warn(colored("plan is not feasible", "red"))
+            self.get_logger().info(f"plan: {self.plan}")
 
         if change_only and self._published_plan[:4] == self.plan[:4]: # type: ignore
             return
@@ -466,16 +603,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                 return
             self.get_logger().info(f"state changed: {self.state} -> {msg.data}, goal: {self.goal}")
             self.state = self.nodelist.index(msg.data)
-            # we enter a new state, i.e., t=t+1
-            #self.state_values[:,0:-1] = self.state_values[:,1:] # shift values to the left
-            #self.state_values[:,-1] = self.default_state_values()[:,-1]
-            #self.state_values = 0.5* self.state_values + 0.5* self.default_state_values()
             return
-
-        if robot in self.other_states:
-            if self.other_states[robot] == self.nodelist.index(msg.data):
-                return
-            #self.get_logger().info(f"other state changed: {robot} {self.other_states[robot]} -> {msg.data}")
         self.other_states[robot] = self.nodelist.index(msg.data)
 
     def publish_visualization_markers(self, ns="state_values", id=1):

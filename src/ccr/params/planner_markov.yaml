@@ -1,6 +1,8 @@
 horizon: 8
-offset: 3.0
-tau: 1.0
+w_o: 0.1
+w_v: 0.1
+w_r: 0.1
 alpha: 0.3
 beta: 0.3
 gamma: 0.9
+tau: 1.0

@@ -79,6 +79,7 @@ class TrajectoryFollower(DrivingSwarmNode):
         self.co1 = self.create_publisher(PoseStamped, 'nav/cutoff_1', 9)
         self.path_publisher = self.create_publisher(Path, 'nav/trajectory', 9)
         self.local_pub = self.create_publisher(MarkerArray, 'nav/dwa', 9)
+        self.warning_issued = False
         self.wait_for_tf()
         self.create_service(
             UpdateTrajectory,
@@ -234,8 +235,11 @@ class TrajectoryFollower(DrivingSwarmNode):
         # publish topics for vizual debugging and analysis
         if self.trajectory is not None:
             self.path_publisher.publish(self.trajectory)
+            self.warning_issued = False
         else:
-            self.get_logger().warn('no trajectory')
+            if not self.warning_issued:
+                self.get_logger().warn('no trajectory')
+                self.warning_issued = True
         msg = MarkerArray()
         marker = Marker(action=Marker.ADD, ns="traj", id=0, type=Marker.LINE_STRIP)
         marker.header.frame_id = self.own_frame
