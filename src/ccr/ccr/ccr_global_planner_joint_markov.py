@@ -24,17 +24,19 @@ class AlgoParams():
     beta: float = 0.5
     gamma: float = 0.9
     tau: float = 1.0
+    r_wait: float = 1.5
+    r_goal: float = 2.0
 
 
 @nb.jit 
-def calculate_reward_matrix(goal, distances, adjacency):
+def calculate_reward_matrix(goal, distances, adjacency, r_wait=1.5, r_goal=2.0):
     r = np.zeros_like(adjacency)
     for u in range(distances.shape[0]):
         for i in range(distances.shape[1]):
             r[u,i] += distances[u, goal] - distances[i, goal]
 
-    np.fill_diagonal(r, -1.5)
-    r[:,goal] = 2
+    np.fill_diagonal(r, -r_wait)
+    r[:,goal] = r_goal
     #return adjacency
     #r = np.clip(r, -2, 5)
     return r * adjacency
@@ -72,9 +74,11 @@ def simulate_single_jit(s0,
                         w_o: float = 0.1,
                         w_r: float = 0.1,
                         tau: float = 1.0,
-                        gamma: float = 1.0
+                        gamma: float = 1.0,
+                        r_wait: float = 1.5,
+                        r_goal: float = 2.0,
                         ):
-    r = calculate_reward_matrix(goal, distances, adjacency)
+    r = calculate_reward_matrix(goal, distances, adjacency,r_wait=r_wait, r_goal=r_goal)
     s = np.zeros((T,N))
     s[0] = s0
     pT = np.zeros((T, N, N))
@@ -129,13 +133,15 @@ def simulate_pair_jit(s0,
                       w_o: float = 0.1,
                       w_r: float = 0.1,
                       tau: float = 1.0,
-                      gamma: float = 1.0
+                      gamma: float = 1.0,
+                      r_wait: float = 1.5,
+                      r_goal: float = 2.0,
                       ):
     # calculate reward matrix
     log = ""
     
-    r_self = calculate_reward_matrix(goal_self, distances, adjacency) 
-    r_other = calculate_reward_matrix(goal_other, adjacency, distances)
+    r_self  = calculate_reward_matrix(goal_self,  distances, adjacency, r_wait=r_wait, r_goal=r_goal) 
+    r_other = calculate_reward_matrix(goal_other, distances, adjacency, r_wait=r_wait, r_goal=r_goal)
     s = np.zeros((T, N, N))
     s[0] = s0
     pT_self = np.zeros((T, N, N))
@@ -294,6 +300,8 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             beta=self.params_dict['beta'],
             gamma=self.params_dict['gamma'],
             tau=self.params_dict['tau'],
+            r_wait=self.params_dict['r_wait'],
+            r_goal=self.params_dict['r_goal'],
         )
         self.get_logger().info(colored(f"planner params: {self.params_dict}", "yellow"))
         self.nodelist = tuple(n for _, n in enumerate(self.g.nodes()))
@@ -398,7 +406,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         # msg.data is in node indicies
         # self.goal should be index in nodelist
         self.goal = self.nodelist.index(msg.data)
-        self.transition_rewards = calculate_reward_matrix(self.goal, self.distances, self.adjacency)
+        self.transition_rewards = calculate_reward_matrix(self.goal, self.distances, self.adjacency, r_wait=self.params.r_wait, r_goal=self.params.r_goal)
         self.get_logger().info(f"received new goal node {msg.data}(-> {self.goal})")
         self.get_logger().info(f"rewards: \n{np.round(self.transition_rewards, 2)}")
         #self.get_logger().info(f"fitness: \n{np.round(calcuate_transition_fitness(self.transition_rewards, self.state_values[0], self.adjacency, self.offset,)}")
@@ -458,6 +466,8 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             w_r=self.params.w_r,
             tau=self.params.tau,
             gamma=self.params.gamma,
+            r_wait=self.params.r_wait,
+            r_goal=self.params.r_goal,
             
         )
         if np.isnan(discounted_reward_self).any():
@@ -490,7 +500,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                                                            w_o=self.params.w_o,
                                                            w_r=self.params.w_r,
                                                            tau=self.params.tau,
-                                                           gamma=self.params.gamma
+                                                           gamma=self.params.gamma,
+                                                           r_wait=self.params.r_wait,
+                                                           r_goal=self.params.r_goal,
                                                            )
         rewards_other = np.zeros((self.T, self.N))
         occupancy = np.zeros((self.T, self.N))

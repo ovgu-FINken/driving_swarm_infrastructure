@@ -6,3 +6,5 @@ alpha: 0.3
 beta: 0.3
 gamma: 0.9
 tau: 1.0
+r_wait: 1.5
+r_goal: 2.0
