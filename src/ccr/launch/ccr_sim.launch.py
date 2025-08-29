@@ -83,7 +83,7 @@ def controller_spawning(context, *args, **kwargs):
         controllers.append(Node(
            package='ccr',
            executable=f'ccr_{ccr_version}',
-           prefix=f'python3 -m cProfile -o {robot}_ccr_profile.prof',
+           #prefix=f'python3 -m cProfile -o {robot}_ccr_profile.prof',
            namespace=robot,
            parameters=[{
               'use_sim_time': use_sim_time,
