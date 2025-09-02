@@ -181,7 +181,7 @@ def main():
             "use_rviz:=false",
             "use_rosbag:=false",
             "simulator:=gzserver",
-            f"data_file:={run_dir}/run_{run_cfg['algo'][0]}_{run_cfg['mode']}_{run_cfg['n']}_{run_cfg['run']}.csv.gz",
+            f"data_file:=run_{run_cfg['algo'][0]}_{run_cfg['mode']}_{run_cfg['n']}_{run_cfg['run']}.csv.gz",
         ]
         command += param_list
         logging.info(f"===================\n{run_cfg_to_str(run_cfg)}\n===================")

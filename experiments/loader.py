@@ -6,12 +6,20 @@ import pandas as pd
 from glob import glob
 import os
 import uuid
+from pathlib import Path
 
 def read_directory(directory: str):
+    params = Path(directory) / "params.yaml"
+    if not params.exists():
+        print(f"skipping {directory}, because params.yaml does not exist")
+        return None
     # read *csv.gz and params.yaml
     csv_files = glob(str(directory) + "/*.csv.gz")
+    if not len(csv_files):
+        return None
     with open(str(directory) + "/params.yaml", 'r') as f:
         params = yaml.load(f, Loader=yaml.SafeLoader)
+    print(f"reading csv {csv_files[0]}")
     df = pd.read_csv(csv_files[0])
     for k, v in params.items():
         if isinstance(v, numbers.Number):
@@ -28,11 +36,16 @@ def read_directory(directory: str):
     return df
 
 def read_all_subdirectories(directory: str):
+    if not Path(directory).exists():
+        print(f"ERROR: path {directory} does not exist")
     dfs = []
-    for subdirectory in glob(str(directory) + "/*"):
+    for subdirectory in glob(str(directory) + "*/**", recursive=True):
         if not os.path.isdir(subdirectory):
             continue
-        dfs.append(read_directory(subdirectory))
+        print(f"reading dir: {subdirectory}")
+        df = read_directory(subdirectory)
+        if df is not None:
+            dfs.append(df)
     
     df = pd.concat(dfs, ignore_index=True)
     df.n = df.n.astype(int)

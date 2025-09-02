@@ -424,7 +424,7 @@ class CCRLocalPlanner(DrivingSwarmNode):
     def trajectory_cb(self, msg):
         self.trajectory = msg
         # if we do have a trajectory, but do not have a plan, we should stop (this should not happen)
-        if not len(self.plan):
+        if self.plan is None or not len(self.plan):
             self.get_logger().info("no plan, stopping trajectory")
             self.send_path([], ti=0)
             return

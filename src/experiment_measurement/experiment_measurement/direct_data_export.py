@@ -5,6 +5,9 @@ from driving_swarm_utils.node import DrivingSwarmNode
 from functools import partial
 from geometry_msgs.msg import Twist
 import yaml
+from pathlib import Path
+import os
+
 
 def get_topic_type_from_str(topic_type):
     if topic_type == "Int32":
@@ -160,6 +163,8 @@ class DirectDataExport(DrivingSwarmNode):
 
     def save_data(self):
         df = pd.concat(self.data, ignore_index=True)
+        if not Path(self.data_file).parent.exists():
+            os.makedirs(Path(self.data_file).parent)
         df.to_csv(self.data_file, index=False)
         self.get_logger().info(f"saving data to {self.data_file}")
         self.get_logger().info(f"the data:\n{df.head(20)}")
