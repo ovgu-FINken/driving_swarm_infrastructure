@@ -49,6 +49,23 @@ def controller_spawning(context, *args, **kwargs):
        output='both',
     ))
 
+    for robot in robots[:n_robots]:
+        controllers.append(Node(
+            package='msx',
+            executable='msx_robot_node',
+            namespace=robot,
+            parameters=[{'use_sim_time': use_sim_time}],
+            remappings=[('topic', f'/{robot}/topic')],
+            output='screen',
+        ))
+
+    controllers.append(Node(
+        package='msx',
+        executable='msx_pseudo_roofcam_node',
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    ))
+
     #for robot in robots[:n_robots]:
     #    controllers.append(Node(
     #       package='driving_swarm_behaviour',

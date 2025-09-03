@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'msx_pseudo_roofcam_node = msx.msx_pseudo_roofcam_node:main',
+            'msx_robot_node = msx.msx_robot_node:main',
         ],
     },
 )
