@@ -28,10 +28,63 @@ def generate_random_poses(n_robots, x_range=(-0.77, 0.73), y_range=(-1.6, 1.1), 
     return poses
 
 
+def controller_spawning(context, *args, **kwargs):
+    controllers = []
+
+    n_robots = int(LaunchConfiguration('n_robots').perform(context))
+    robots_file = LaunchConfiguration('robot_names_file').perform(context)
+    use_sim_time = TextSubstitution(text='true')
+    with open(robots_file, 'r') as stream:
+        robots = yaml.safe_load(stream)
+        
+    controllers.append(Node(
+       package='experiment_measurement',
+       executable='direct_data_export',
+       parameters=[{
+          'use_sim_time': use_sim_time,
+          'robot_names': robots[:n_robots],
+          'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export.yaml'),
+          'data_file': LaunchConfiguration('data_file').perform(context),
+       }],
+       output='both',
+    ))
+
+    for robot in robots[:n_robots]:
+        controllers.append(Node(
+            package='msx',
+            executable='msx_robot_node',
+            namespace=robot,
+            parameters=[{'use_sim_time': use_sim_time}],
+            remappings=[('topic', f'/{robot}/topic')],
+            output='screen',
+        ))
+
+    controllers.append(Node(
+        package='msx',
+        executable='msx_pseudo_roofcam_node',
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    ))
+
+    #for robot in robots[:n_robots]:
+    #    controllers.append(Node(
+    #       package='driving_swarm_behaviour',
+    #       executable='reactive',
+    #       namespace=robot,
+    #       parameters=[{
+    #        'use_sim_time': use_sim_time,
+    #        }],
+    #       remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+    #       output='screen',
+    #    ))
+    
+    return controllers
+
+
 def generate_launch_description():
     args = {
         'behaviour': 'false',
-        'world': 'icra2024.world',
+        'world': 'msx_icra2024.world',
         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
         'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
         'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics_reactive.yaml'),
@@ -63,40 +116,3 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld
-
-
-def controller_spawning(context, *args, **kwargs):
-    controllers = []
-
-    n_robots = int(LaunchConfiguration('n_robots').perform(context))
-    robots_file = LaunchConfiguration('robot_names_file').perform(context)
-    use_sim_time = TextSubstitution(text='true')
-    with open(robots_file, 'r') as stream:
-        robots = yaml.safe_load(stream)
-        
-    controllers.append(Node(
-       package='experiment_measurement',
-       executable='direct_data_export',
-       parameters=[{
-          'use_sim_time': use_sim_time,
-          'robot_names': robots[:n_robots],
-          'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export.yaml'),
-          'data_file': LaunchConfiguration('data_file').perform(context),
-       }],
-       output='both',
-    ))
-
-    #for robot in robots[:n_robots]:
-    #    controllers.append(Node(
-    #       package='driving_swarm_behaviour',
-    #       executable='reactive',
-    #       namespace=robot,
-    #       parameters=[{
-    #        'use_sim_time': use_sim_time,
-    #        }],
-    #       remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-    #       output='screen',
-    #    ))
-    
-    return controllers
-
