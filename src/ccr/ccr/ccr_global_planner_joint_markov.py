@@ -340,8 +340,8 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
 
         
         self.get_logger().info(colored("executing simulate pair for precompile", "blue"))
-        simulate_pair_jit(np.zeros_like(self.adjacency), self.N, self.T, 0, 0, self.adjacency, self.distances, self.state_values, self.state_values, self.occupancy)
-        simulate_single_jit(np.zeros_like(self.nodelist), self.N, self.T, 0, self.adjacency, self.distances, self.state_values, self.occupancy)
+        simulate_pair_jit(np.zeros((self.N, self.N)), self.N, self.T, 0, 0, self.adjacency, self.distances, self.state_values, self.state_values, self.occupancy)
+        simulate_single_jit(np.zeros(self.N), self.N, self.T, 0, self.adjacency, self.distances, self.state_values, self.occupancy)
         self.get_logger().info(colored("done precompile", "green"))
         
         self.value_pub = self.create_publisher(Float32MultiArray, "nav/state_values", 10)
