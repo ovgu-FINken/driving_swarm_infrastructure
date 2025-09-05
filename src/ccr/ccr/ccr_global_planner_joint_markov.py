@@ -113,7 +113,7 @@ def simulate_single_jit(s0,
                 p = pT[t, u, i]
                 psum += p
                 dr_plus += p * (r[u, i] + gamma * DR[t+1, i])
-            if psum > 0:
+            if psum > 0 and s[t, u] > 0:
                 DR[t, u] += dr_plus / psum
     return s, DR[:-1]
         
@@ -213,7 +213,7 @@ def simulate_pair_jit(s0,
                         psum += p
                         dr_plus_self += p * (r_self[u, i] + gamma * DR_self[t+1, i, j])
                         dr_plus_other += p * (r_other[v, j] + gamma * DR_other[t+1, i, j])
-                if psum > 0:
+                if psum > 0 and s[t, u, v] > 0:
                     DR_self[t, u, v] += dr_plus_self / psum
                     DR_other[t, u, v] += dr_plus_other / psum
                 
@@ -248,7 +248,16 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
         self.declare_parameter('horizon', 5)
-        self.declare_parameter('wait_cost', 1.01)
+        self.declare_parameter('r_wait', 1.5)
+        self.declare_parameter('r_goal', 2.0)
+        self.declare_parameter('alpha', 0.3)
+        self.declare_parameter('beta', 0.5)
+        self.declare_parameter('gamma', 0.9)
+        self.declare_parameter('tau', 1.0)
+        self.declare_parameter('w_r', 1.0)
+        self.declare_parameter('w_o', 1.0)
+        self.declare_parameter('w_v', 1.0)
+        
         self._published_plan = []
         self.state = None
         self.plan = []
@@ -279,7 +288,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.planning_problem_parameters = environment.PlanningProblemParameters(
             pad_path=False,
             conflict_horizon=self.get_parameter('horizon').get_parameter_value().integer_value,
-            wait_action_cost=self.get_parameter('wait_cost').get_parameter_value().double_value,
+            wait_action_cost=self.get_parameter('r_wait').get_parameter_value().double_value,
         )
         largest_cc = max(nx.connected_components(self.env.g), key=len)
         # Create subgraph and make a copy (optional, depending on use case)
@@ -287,26 +296,24 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.g = self.env.get_graph().to_directed()
         planning.compute_normalized_weight(self.g, self.planning_problem_parameters.weight_name)
         self.g.add_edges_from([(n, n) for n in self.g.nodes()], weight=self.env.planning_problem_parameters.weight_name)
-        self.declare_parameter('planner_params_file', "planner_params.yaml")
-        planner_params_file = self.get_parameter('planner_params_file').get_parameter_value().string_value
-        with open(planner_params_file, 'r') as stream:
-            self.params_dict = yaml.safe_load(stream)
 
         self.params = AlgoParams(
-            w_v=self.params_dict['w_v'],
-            w_o=self.params_dict['w_o'],
-            w_r=self.params_dict['w_r'],
-            alpha=self.params_dict['alpha'],
-            beta=self.params_dict['beta'],
-            gamma=self.params_dict['gamma'],
-            tau=self.params_dict['tau'],
-            r_wait=self.params_dict['r_wait'],
-            r_goal=self.params_dict['r_goal'],
+            w_v=self.get_parameter('w_v').get_parameter_value().double_value,
+            w_o=self.get_parameter('w_o').get_parameter_value().double_value,
+            w_r=self.get_parameter('w_r').get_parameter_value().double_value,
+            alpha=self.get_parameter('alpha').get_parameter_value().double_value,
+            beta=self.get_parameter('beta').get_parameter_value().double_value,
+            gamma=self.get_parameter('gamma').get_parameter_value().double_value,
+            tau=self.get_parameter('tau').get_parameter_value().double_value,
+            r_goal=self.get_parameter('r_goal').get_parameter_value().double_value,
+            r_wait=self.get_parameter('r_wait').get_parameter_value().double_value,
+
         )
-        self.get_logger().info(colored(f"planner params: {self.params_dict}", "yellow"))
+        self.horizon = self.get_parameter('horizon').get_parameter_value().integer_value
+        self.get_logger().info(colored(f"planner params: {self.params}", "yellow"))
         self.nodelist = tuple(n for _, n in enumerate(self.g.nodes()))
-        self.N = len(self.nodelist)
-        self.T = self.params_dict["horizon"]
+        self.N:int = len(self.nodelist)
+        self.T:int = self.horizon
         self.adjacency = np.zeros((self.N, self.N))
         for i in range(self.N):
             for j in range(self.N):

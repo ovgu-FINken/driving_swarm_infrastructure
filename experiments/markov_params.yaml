@@ -1,0 +1,23 @@
+algorithms:
+  global_planner_joint_markov:
+    alpha: [0.3]
+    beta: [0.5]
+    gamma: [0.9]
+    tau: [2.0, 1.0]
+    w_r: [0.05, 0.1. 0.2]
+    w_v: [0.05, 0.1. 0.2]
+    w_go: [0.05, 0.1. 0.2]
+    horizon: [8]
+    r_wait: [1.5]
+    r_goal: [2.0]
+
+modes:
+  - fake
+  - sim
+n_robots: 5
+n_runs: 3
+run_timeout: 900.0
+init_timeout: 0.0
+waypoints_file: "icra2024_waypoints1m.yaml"
+poses_file: "icra2024_poses1m.yaml"
+params_file: "ccr_1m.yaml"

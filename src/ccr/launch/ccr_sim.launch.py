@@ -89,7 +89,17 @@ def controller_spawning(context, *args, **kwargs):
               'use_sim_time': use_sim_time,
               'robot_names': robots[:n_robots],
               'priorities': LaunchConfiguration('priorities').perform(context),
-              'planner_params_file': os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('planner_params_file').perform(context)),
+              #'planner_params_file': os.path.join(get_package_share_directory('ccr'), 'params', LaunchConfiguration('planner_params_file').perform(context)),
+              'alpha': float(LaunchConfiguration('alpha').perform(context)),
+              'beta': float(LaunchConfiguration('beta').perform(context)),
+              'gamma': float(LaunchConfiguration('gamma').perform(context)),
+              'tau': float(LaunchConfiguration('tau').perform(context)),
+              'w_v': float(LaunchConfiguration('w_v').perform(context)),
+              'w_o': float(LaunchConfiguration('w_o').perform(context)),
+              'w_r': float(LaunchConfiguration('w_r').perform(context)),
+              'r_wait': float(LaunchConfiguration('r_wait').perform(context)),
+              'r_goal': float(LaunchConfiguration('r_goal').perform(context)),
+              'horizon': int(LaunchConfiguration('horizon').perform(context)),
            }, grid_params, local_planner_params, global_planner_params
               ],
            output='both',
@@ -113,7 +123,17 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('priorities', default_value=EnvironmentVariable('CCR_PRIORITIES', default_value='same')))
     ld.add_action(DeclareLaunchArgument('params', default_value='ccr_params.yaml'))
     ld.add_action(DeclareLaunchArgument('waypoints_file', default_value=EnvironmentVariable('WAYPOINTS_FILE', default_value='icra2024_waypoints.yaml')))
-    ld.add_action(DeclareLaunchArgument('planner_params_file', default_value=EnvironmentVariable('CCR_PLANNER_PARAMS', default_value='planner_aco.yaml')))
+    #ld.add_action(DeclareLaunchArgument('planner_params_file', default_value=EnvironmentVariable('CCR_PLANNER_PARAMS', default_value='planner_aco.yaml')))
+    ld.add_action(DeclareLaunchArgument('alpha', default_value='0.3'))
+    ld.add_action(DeclareLaunchArgument('beta', default_value='0.5'))
+    ld.add_action(DeclareLaunchArgument('gamma', default_value='0.9'))
+    ld.add_action(DeclareLaunchArgument('tau', default_value='2.0'))
+    ld.add_action(DeclareLaunchArgument('w_r', default_value='0.1'))
+    ld.add_action(DeclareLaunchArgument('w_v', default_value='0.1'))
+    ld.add_action(DeclareLaunchArgument('w_o', default_value='0.1'))
+    ld.add_action(DeclareLaunchArgument('r_wait', default_value='1.5'))
+    ld.add_action(DeclareLaunchArgument('r_goal', default_value='2.0'))
+    ld.add_action(DeclareLaunchArgument('horizon', default_value='8'))
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
