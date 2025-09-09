@@ -13,13 +13,6 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
-        self.phi = np.array([])
-        self.alpha = np.array([])
-        self.t = np.zeros((1, 2))
-
-        self.robot_publishers = {}
-        self.pub_all = self.create_publisher(Float32MultiArray, "/roof_cam_view", 10)
-
         self.subscription = self.create_subscription(
             ModelStates,
             '/model_states',
@@ -27,36 +20,75 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
             10
         )
 
-
     def listener_callback(self, msg: ModelStates):
+        robot_names = []
+        robot_positions = []
+
+        # --- collect all robot positions ---
         for idx, name in enumerate(msg.name):
             if "robot" in name: 
                 pose = msg.pose[idx]
+                robot_positions.append(np.array([pose.position.x, pose.position.y]))
+                robot_names.append(name)
 
-                if name not in self.robot_publishers:
-                    topic_name = f"/{name}"
-                    self.robot_publishers[name] = self.create_publisher(Pose, topic_name + "/pose", 10)
-                    self.get_logger().info(f"Created publisher for {name} as topic {topic_name}")
+        robot_positions = np.stack(robot_positions) if robot_positions else np.empty((0, 2))
 
-                # publish Pose
-                self.robot_publishers[name].publish(pose)
+        # --- labeling for each robot ---
+        robot_labels = {}
+        robot_distances = {}
 
-        # kombiniere alle Arrays in einen Vektor
-        combined = np.concatenate([
-            self.phi.astype(np.float32).flatten(),
-            self.alpha.astype(np.float32).flatten(),
-            self.t.astype(np.float32).flatten()
-        ])
+        for i, name in enumerate(robot_names):
+            own_pos = robot_positions[i]
 
-        msg_all = Float32MultiArray()
-        msg_all.data = combined.tolist()
+            # compute vectors, distances, and angles to all other robots
+            others = []
+            for j, other_name in enumerate(robot_names):
+                if i == j:
+                    continue
+                vec = robot_positions[j] - own_pos
+                dist = np.linalg.norm(vec)
+                angle = np.arctan2(vec[1], vec[0])  # angle relative to cameras x-axis
+                others.append((other_name, dist, angle))
 
-        # optional: Dimensionen dokumentieren
-        msg_all.layout.dim.append(MultiArrayDimension(label="phi",   size=len(self.phi),   stride=len(self.phi)))
-        msg_all.layout.dim.append(MultiArrayDimension(label="alpha", size=len(self.alpha), stride=len(self.alpha)))
-        msg_all.layout.dim.append(MultiArrayDimension(label="t",     size=self.t.size,    stride=self.t.size))
+            if not others:
+                robot_labels[name] = {}
+                robot_distances[name] = {}
+                continue
 
-        self.pub_all.publish(msg_all)
+            # --- 1. find nearest neighbor (gets label 0) ---
+            nearest = min(others, key=lambda x: x[1])  
+            nearest_name, _, ref_angle = nearest
+
+            # --- 2. shift all other angles so that nearest neighbor is at 0 ---
+            shifted = []
+            for other_name, dist, angle in others:
+                rel_angle = angle - ref_angle
+                if rel_angle < 0:
+                    rel_angle += 2 * np.pi  # normalize into [0, 2π)
+                shifted.append((other_name, dist, rel_angle))
+
+            # --- 3. sort by angle (counter-clockwise) ---
+            shifted.sort(key=lambda x: x[2])
+
+            # --- 4. assign labels (0 for nearest, then increasing CCW) ---
+            labels = {}
+            for lbl, (other_name, _, _) in enumerate(shifted):
+                labels[other_name] = lbl
+
+            robot_labels[name] = labels
+            robot_distances[name] = [(other_name, dist) for other_name, dist, _ in shifted]
+
+        self.robot_labels = robot_labels
+
+        # log robot positions
+        self.get_logger().info(f"Robot positions:\n{robot_positions}")
+        # log distances of each robot to all others
+        for robot, dists in robot_distances.items():
+            dist_str = ", ".join([f"{other}: {dist:.2f}" for other, dist in dists])
+            self.get_logger().info(f"{robot} distances -> {dist_str}")
+        # log robot labeling from camera
+        for robot, labels in robot_labels.items():
+            self.get_logger().info(f"{robot}: {labels}")
 
 def main():
     main_fn('MSXPseudoRoofcamNode', MSXPseudoRoofcamNode)

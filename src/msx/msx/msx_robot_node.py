@@ -6,8 +6,9 @@ from geometry_msgs.msg import Pose
 
 
 class MSXRobotNode(DrivingSwarmNode):
-    def __init__(self):
-        super().__init__('robot_node')
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.WARN)
         self.subscription = self.create_subscription(
             Pose,
@@ -19,12 +20,8 @@ class MSXRobotNode(DrivingSwarmNode):
     def listener_callback(self, msg):
         self.get_logger().info(f"Got Pose: x={msg.position.x:.2f}, y={msg.position.y:.2f}, z={msg.position.z:.2f}")
     
-def main(args=None):
-    rclpy.init(args=args)
-    node = MSXRobotNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+def main():
+    main_fn('MSXRobotNode', MSXRobotNode)
 
 if __name__ == '__main__':
     main()
