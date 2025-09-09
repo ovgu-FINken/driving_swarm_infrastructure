@@ -28,7 +28,6 @@
             <uri>model://msx_icra2024/mesh/map.dae</uri>
           </mesh>
         </geometry>
-        <cast_shadows>false</cast_shadows>
       </visual>
     </link>
     <static>1</static>
