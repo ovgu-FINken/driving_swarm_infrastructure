@@ -61,7 +61,7 @@ class CCRFakeExecution(DrivingSwarmNode):
         with open(poses_file, 'r') as stream:
             poses = yaml.safe_load(stream)
         
-        self.declare_parameter('transition_prob', 1.0)
+        self.declare_parameter('transition_prob', 0.25)
         self.transition_prob = self.get_parameter('transition_prob').get_parameter_value().double_value
 
         # convert starting pose to state
