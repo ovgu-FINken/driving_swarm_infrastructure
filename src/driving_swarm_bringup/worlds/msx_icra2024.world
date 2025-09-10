@@ -57,10 +57,10 @@
             </plane>
           </geometry>
           <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
+            <ambient>0.5 0.5 0.6 1</ambient>
+            <diffuse>0.5 0.5 0.6 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+            <emissive>0 0 0 1</emissive>
           </material>
         </visual>
         <self_collide>0</self_collide>
@@ -106,7 +106,7 @@
           <pose>0 0 0 0 -0 0</pose>
           <geometry>
             <mesh>
-              <uri>model://icra2024/mesh/map.dae</uri>
+              <uri>model://msx_icra2024/mesh/map.dae</uri>
             </mesh>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -127,7 +127,7 @@
           <pose>0 0 0 0 -0 0</pose>
           <geometry>
             <mesh>
-              <uri>model://icra2024/mesh/map.dae</uri>
+              <uri>model://msx_icra2024/mesh/map.dae</uri>
             </mesh>
           </geometry>
         </visual>

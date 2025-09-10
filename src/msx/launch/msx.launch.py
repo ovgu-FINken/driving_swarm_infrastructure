@@ -111,8 +111,20 @@ def generate_launch_description():
         launch_arguments=args.items()
     )
 
+    spawn_waldo = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        arguments=[
+            '-file', os.path.join(get_package_share_directory('msx'), 'models', 'waldo.sdf'),
+            '-entity', 'waldo',
+            '-x', '1', '-y', '0', '-z', '0.05'
+            ],
+            output='screen'
+        )
+
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
+    ld.add_action(spawn_waldo)
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld
