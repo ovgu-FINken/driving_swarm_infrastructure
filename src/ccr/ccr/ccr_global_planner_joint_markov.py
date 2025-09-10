@@ -527,8 +527,10 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             # rs is a matrix with values [t, u, v]
             # we do not care about the v-state, so we use axis 2
             # now we have a matrix [t, u, <agg v>]
-            rewards_self += r_s.max(axis=2)
+            # we assume the minimum value of the state, as the interaction with the other agent creates a lower bound)
+            rewards_self = np.minimum(r_s.max(axis=2), rewards_self)
             # similarly for the other robot in the joint plan, but we have to aggregate over u
+            # here we want the maximum value, i.e., the value for the robot where it is most valuable. Arguably, this could also be the sum
             rewards_other += r_o.max(axis=1)
             expected_state += s.sum(axis=2)
             self.other_expected_states[robot] = s.sum(axis=1)
