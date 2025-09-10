@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from geometry_msgs.msg import Pose
-
+from std_msgs.msg import Float32MultiArray
 
 class MSXRobotNode(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -11,14 +11,14 @@ class MSXRobotNode(DrivingSwarmNode):
 
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.WARN)
         self.subscription = self.create_subscription(
-            Pose,
-            'pose', # Change Topic later on
+            Float32MultiArray,
+            'sundata', # Change Topic later on
             self.listener_callback,
             10)
         self.subscription
 
     def listener_callback(self, msg):
-        self.get_logger().info(f"Got Pose: x={msg.position.x:.2f}, y={msg.position.y:.2f}, z={msg.position.z:.2f}")
+        self.get_logger().info(f"Got data: {msg.data}")
     
 def main():
     main_fn('MSXRobotNode', MSXRobotNode)
