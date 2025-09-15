@@ -12,6 +12,7 @@ import glob
 def execute(cmd, run_dir="", timeout=float('inf')):
     t = time.time()
     timed_out = False
+    logging.info(f'time: {t}')
     logging.info(f'running command: \n{cmd}')
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, cwd=run_dir)
     for stdout_line in iter(popen.stdout.readline, ""):
