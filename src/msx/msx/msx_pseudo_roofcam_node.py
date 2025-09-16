@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
-from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 
 import numpy as np
 
@@ -20,9 +20,12 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
             10
         )
 
+        self.pub = self.create_publisher(Float64MultiArray, "/roofcam/data", 100)
+
     def listener_callback(self, msg: ModelStates):
         robot_names = []
         robot_positions = []
+        all_data = []
 
         # --- collect all robot positions ---
         for idx, name in enumerate(msg.name):
@@ -78,7 +81,34 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
             robot_labels[name] = labels
             robot_distances[name] = [(other_name, dist) for other_name, dist, _ in shifted]
 
+            # --- 5. pack into numpy array [neighbors × features] ---
+            data_mat = np.array([[dist, angle] for _, dist, angle in shifted])
+            all_data.append(data_mat)
+
         self.robot_labels = robot_labels
+
+        # --- align sizes (pad with -1 if different neighbor counts) ---
+        max_neighbors = max(arr.shape[0] for arr in all_data)
+        num_robots = len(all_data)
+        feature_size = 2
+
+        full_array = -1.0 * np.ones((num_robots, max_neighbors, feature_size))  # padding with -1
+        for i, arr in enumerate(all_data):
+            n = arr.shape[0]
+            full_array[i, :n, :] = arr
+
+        # --- pack into Float64MultiArray ---
+        msg_out = Float64MultiArray()
+        msg_out.layout.dim = [
+            MultiArrayDimension(label="robots", size=num_robots, stride=num_robots * max_neighbors * feature_size),
+            MultiArrayDimension(label="neighbors", size=max_neighbors, stride=max_neighbors * feature_size),
+            MultiArrayDimension(label="features", size=feature_size, stride=feature_size)
+        ]
+        msg_out.layout.data_offset = 0
+        msg_out.data = full_array.flatten().tolist()
+
+        # --- publish once for all robots ---
+        self.pub.publish(msg_out)
 
         # log robot positions
         self.get_logger().info(f"Robot positions:\n{robot_positions}")
