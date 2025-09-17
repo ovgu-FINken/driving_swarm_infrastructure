@@ -64,9 +64,11 @@ From: osrf/ros:humble-desktop-jammy
 
   # Python-Packages
   pip install numpy==1.23.5
+  pip install pandas==1.5.3
   pip install scikit-image
   pip install trimesh
   pip install pycollada
+  pip install --user --force-reinstall numpy==1.23.5
 
   # ROS Workspace vorbereiten
   cd /ros_ws
