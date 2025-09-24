@@ -12,6 +12,7 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution, Environm
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
+from launch.actions import TimerAction
 
 import random
 import tempfile
@@ -59,12 +60,6 @@ def controller_spawning(context, *args, **kwargs):
             output='screen',
         ))
 
-    controllers.append(Node(
-        package='msx',
-        executable='msx_pseudo_roofcam_node',
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen',
-    ))
 
     #for robot in robots[:n_robots]:
     #    controllers.append(Node(
@@ -121,10 +116,21 @@ def generate_launch_description():
             ],
             output='screen'
         )
-
+    
+    delayed_roofcam = TimerAction(
+        period=20.0,  # z.B. 5 Sekunden warten
+        actions=[Node(
+            package='msx',
+            executable='msx_pseudo_roofcam_node',
+            parameters=[{'use_sim_time': True}],
+            output='screen'
+        )]
+    )
+    
     ld = LaunchDescription()
     ld.add_action(multi_robot_launch)
     ld.add_action(spawn_waldo)
+    ld.add_action(delayed_roofcam)
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
     return ld
