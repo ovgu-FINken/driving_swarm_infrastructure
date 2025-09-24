@@ -30,7 +30,8 @@ From: osrf/ros:humble-desktop-jammy
     python3-setuptools \
     lsb-release \
     curl \
-    tmux
+    tmux \
+    htop
 
   # Gazebo Fortress
   echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
