@@ -49,6 +49,11 @@ class MSXMockCamNode(DrivingSwarmNode):
 
         self.pub.publish(msg_out)
 
+        # in other node:
+        # data = np.array(msg.data
+        #arr = data.reshape((-1, 2))   # Nx2-Matrix: N robots, 2 columns (x,y)
+        #x_i, y_i = arr[i, 0], arr[i, 1]
+
 def main():
     main_fn('MSXMockCamNode', MSXMockCamNode)
 
