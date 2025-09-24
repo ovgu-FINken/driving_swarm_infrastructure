@@ -118,7 +118,7 @@ def generate_launch_description():
         )
     
     delayed_roofcam = TimerAction(
-        period=20.0,  # z.B. 5 Sekunden warten
+        period=20.0, # Wait 20 Seconds
         actions=[Node(
             package='msx',
             executable='msx_pseudo_roofcam_node',
