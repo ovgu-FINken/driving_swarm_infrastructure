@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
             'msx_pseudo_roofcam_node = msx.msx_pseudo_roofcam_node:main',
             'msx_robot_node = msx.msx_robot_node:main',
+            'msx_mock_cam_node = msx.msx_mock_cam_node:main',
         ],
     },
 )
