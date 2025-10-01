@@ -48,7 +48,7 @@ def calcuate_transition_fitness(rewards,
                                 adjacency,
                                 occupancy,
                                 w_v: float = 0.1,
-                                w_o: float = 0.1,
+                                w_o: float = 0.0,
                                 w_r: float = 0.1,
                                 tau: float = 1.0
                                 ):
@@ -71,7 +71,7 @@ def simulate_single_jit(s0,
                         values,
                         occupancy,
                         w_v: float = 0.1,
-                        w_o: float = 0.1,
+                        w_o: float = 0.0,
                         w_r: float = 0.1,
                         tau: float = 1.0,
                         gamma: float = 1.0,
@@ -91,10 +91,8 @@ def simulate_single_jit(s0,
                 if adjacency[u, i] == 0:
                     continue
                 p = pT[t, u, i]
-                if p == 0:
-                    continue
                 psum += p
-                splus[i] = splus[u] * p
+                splus[i] = s[t, u] * p
             if psum > 0:
                 s[t+1] += splus / psum
     # state is done
@@ -112,7 +110,7 @@ def simulate_single_jit(s0,
                     continue
                 p = pT[t, u, i]
                 psum += p
-                dr_plus += p * (r[u, i] + gamma * DR[t+1, i])
+                dr_plus += p * (r[u, i] + gamma * DR[t+1, i]) + 1
             if psum > 0 and s[t, u] > 0:
                 DR[t, u] += dr_plus / psum
     return s, DR[:-1]
@@ -194,6 +192,9 @@ def simulate_pair_jit(s0,
     for t in range(T - 1, -1, -1):
         for u in range(N):
             for v in range(N):
+                # states that are not reachable have no value
+                if s[t, u, v] <= 0.0:
+                    continue
                 dr_plus_self = 0
                 dr_plus_other = 0
                 psum = 0
@@ -211,7 +212,7 @@ def simulate_pair_jit(s0,
                             continue
                         p = pT_self[t, u, i] * pT_other[t, v, j]
                         psum += p
-                        dr_plus_self += p * (r_self[u, i] + gamma * DR_self[t+1, i, j])
+                        dr_plus_self += p * (r_self[u, i] + gamma * DR_self[t+1, i, j]) 
                         dr_plus_other += p * (r_other[v, j] + gamma * DR_other[t+1, i, j])
                 if psum > 0 and s[t, u, v] > 0:
                     DR_self[t, u, v] += dr_plus_self / psum
@@ -247,16 +248,16 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
         self.declare_parameter('grid_type', 'square')
         self.declare_parameter('grid_size', .5)
         self.declare_parameter('inflation_size', 0.2)
-        self.declare_parameter('horizon', 5)
+        self.declare_parameter('horizon', 8)
         self.declare_parameter('r_wait', 1.5)
-        self.declare_parameter('r_goal', 2.0)
-        self.declare_parameter('alpha', 0.3)
-        self.declare_parameter('beta', 0.5)
+        self.declare_parameter('r_goal', 1.8)
+        self.declare_parameter('alpha', 0.25)
+        self.declare_parameter('beta', 0.75)
         self.declare_parameter('gamma', 0.9)
-        self.declare_parameter('tau', 1.0)
-        self.declare_parameter('w_r', 1.0)
-        self.declare_parameter('w_o', 1.0)
-        self.declare_parameter('w_v', 1.0)
+        self.declare_parameter('tau', 1.2)
+        self.declare_parameter('w_r', 0.1)
+        self.declare_parameter('w_o', 0.0)
+        self.declare_parameter('w_v', 0.1)
         
         self._published_plan = []
         self.state = None
@@ -511,6 +512,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                                                            r_wait=self.params.r_wait,
                                                            r_goal=self.params.r_goal,
                                                            )
+        if len(self.other_values):
+            rewards_self = np.ones_like(rewards_self) * 100
+            expected_state = np.zeros_like(expected_state)
         rewards_other = np.zeros((self.T, self.N))
         occupancy = np.zeros((self.T, self.N))
         for robot in self.other_values.keys():
@@ -520,15 +524,12 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
                 continue
             #print(colored(f"simulating pair with {robot}", "blue"))
             s, r_s, r_o = self.simulate_pair(robot)
-            next_state = np.sum(s[1], axis=1)
-            current_state = np.sum(s[0], axis=1)
-            # l = [f"{a:.2f}->{b:.2f}" for a, b in zip(current_state, next_state)]
-            # self.get_logger().info(f"next states: {','.join(l)}")
-            # rs is a matrix with values [t, u, v]
+            # r_s is a matrix with values [t, u, v]
             # we do not care about the v-state, so we use axis 2
             # now we have a matrix [t, u, <agg v>]
             # we assume the minimum value of the state, as the interaction with the other agent creates a lower bound)
             rewards_self = np.minimum(r_s.max(axis=2), rewards_self)
+            #rewards_self += r_s.max(axis=2)
             # similarly for the other robot in the joint plan, but we have to aggregate over u
             # here we want the maximum value, i.e., the value for the robot where it is most valuable. Arguably, this could also be the sum
             rewards_other += r_o.max(axis=1)
@@ -629,8 +630,8 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
 
     def publish_visualization_markers(self, ns="state_values", id=1):
         node_msg = MarkerArray()
-        vis_values = self.state_values# [:,1:] # skip the first column, which is the current state value
-        #vis_values = self.expected_state
+        #vis_values = self.state_values# [:,1:] # skip the first column, which is the current state value
+        vis_values = self.expected_state
         #self.get_logger().info(f"vis value shape: {vis_values.shape}")
         #if self.discounted_reward_self is None:
         #    return
