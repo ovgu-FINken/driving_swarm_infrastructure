@@ -517,6 +517,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             expected_state = np.zeros_like(expected_state)
         rewards_other = np.zeros((self.T, self.N))
         occupancy = np.zeros((self.T, self.N))
+        reachable_states = np.ones((self.T, self.N))
         for robot in self.other_values.keys():
             if robot not in self.other_states:
                 continue
@@ -528,6 +529,7 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             # we do not care about the v-state, so we use axis 2
             # now we have a matrix [t, u, <agg v>]
             # we assume the minimum value of the state, as the interaction with the other agent creates a lower bound)
+            reachable_states[s.sum(axis=2) == 0] = 0
             rewards_self = np.minimum(r_s.max(axis=2), rewards_self)
             #rewards_self += r_s.max(axis=2)
             # similarly for the other robot in the joint plan, but we have to aggregate over u
@@ -536,6 +538,10 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
             expected_state += s.sum(axis=2)
             self.other_expected_states[robot] = s.sum(axis=1)
             occupancy += s.sum(axis=1)
+        
+        # if state is not reachable - don't give any value to the state
+        rewards_self *= reachable_states
+        rewards_other *= reachable_states
 
         self.occupancy = occupancy
         
