@@ -539,13 +539,15 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
 
         self.occupancy = occupancy
         
-        self.expected_state = expected_state / (len(self.other_values) + 1)
+        if len(self.other_values):
+            self.expected_state = expected_state / (len(self.other_values))
         # parameters:
 
         # update the state values for this robot
         # self.get_logger().info(f"updating state values for {self.robot_name}, rewards_self: {rewards_self.shape}, rewards_other: {rewards_other.shape}")
         for t in range(self.T):
             for i in range(self.N):
+                
                 self.state_values[t, i] = (1 - self.params.alpha) * self.state_values[t, i] + self.params.alpha * (self.params.beta * rewards_self[t, i] + (1 - self.params.beta) * rewards_other[t, i])
         self.state_values = rewards_self
         # self.state_values = np.clip(self.state_values, 0.0, 1000.0) # all states are valuable
@@ -630,8 +632,9 @@ class CCRGlobalPlannerMarkov(DrivingSwarmNode):
 
     def publish_visualization_markers(self, ns="state_values", id=1):
         node_msg = MarkerArray()
-        #vis_values = self.state_values# [:,1:] # skip the first column, which is the current state value
-        vis_values = self.expected_state
+        vis_values = self.state_values# [:,1:] # skip the first column, which is the current state value
+        
+        #vis_values = self.expected_state
         #self.get_logger().info(f"vis value shape: {vis_values.shape}")
         #if self.discounted_reward_self is None:
         #    return
