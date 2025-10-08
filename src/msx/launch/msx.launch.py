@@ -53,7 +53,7 @@ def controller_spawning(context, *args, **kwargs):
     for robot in robots[:n_robots]:
         controllers.append(Node(
             package='msx',
-            executable='msx_robot_node',
+            executable='sunburst_robot_calc',
             namespace=robot,
             parameters=[{'use_sim_time': use_sim_time}],
             remappings=[('topic', f'/{robot}/topic')],
@@ -121,7 +121,7 @@ def generate_launch_description():
         period=20.0, # Wait 20 Seconds
         actions=[Node(
             package='msx',
-            executable='msx_pseudo_roofcam_node',
+            executable='sunburst_skyview_calc',
             parameters=[{'use_sim_time': True}],
             output='screen'
         )]

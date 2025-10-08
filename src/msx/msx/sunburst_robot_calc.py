@@ -5,14 +5,14 @@ from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from std_msgs.msg import Float64MultiArray
 import numpy as np
 
-class MSXRobotNode(DrivingSwarmNode):
+class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         self.subscription = self.create_subscription(
             Float64MultiArray,
-            '/roofcam/data',
+            '/sunburstSkyview/data',
             self.listener_callback,
             10)
         self.subscription
@@ -43,7 +43,7 @@ class MSXRobotNode(DrivingSwarmNode):
         self.get_logger().info(f"Neighbor list per robot:\n{neighbor_list}")
 
 def main():
-    main_fn('MSXRobotNode', MSXRobotNode)
+    main_fn('SunburstRobotCalc', SunburstRobotCalc)
 
 if __name__ == '__main__':
     main()

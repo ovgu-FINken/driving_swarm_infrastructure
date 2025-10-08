@@ -7,9 +7,9 @@ import cv2
 import numpy as np
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 
-class RoofCamNode(DrivingSwarmNode):
+class SkyviewFinder(DrivingSwarmNode):
     def __init__(self):
-        super().__init__('roofcam_node')
+        super().__init__('skyviewFinder')
 
         self.bridge = CvBridge()
         self.subscription = self.create_subscription(
@@ -70,7 +70,7 @@ class RoofCamNode(DrivingSwarmNode):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RoofCamNode()
+    node = SkyviewFinder()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

@@ -9,7 +9,7 @@ from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 
 import numpy as np
 
-class MSXPseudoRoofcamNode(DrivingSwarmNode):
+class SunburstSkyviewCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
@@ -20,7 +20,7 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/roofcam/data", 100)
+        self.pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/data", 100)
 
     def listener_callback(self, msg: ModelStates):
         robot_names = []
@@ -121,7 +121,7 @@ class MSXPseudoRoofcamNode(DrivingSwarmNode):
             self.get_logger().info(f"{robot}: {labels}")
 
 def main():
-    main_fn('MSXPseudoRoofcamNode', MSXPseudoRoofcamNode)
+    main_fn('SunburstSkyviewCalc', SunburstSkyviewCalc)
 
 if __name__ == '__main__':
     main()

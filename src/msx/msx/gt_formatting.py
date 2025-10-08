@@ -8,7 +8,7 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 import numpy as np
 
-class MSXMockCamNode(DrivingSwarmNode):
+class GTFormatting(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
@@ -55,7 +55,7 @@ class MSXMockCamNode(DrivingSwarmNode):
         #x_i, y_i = arr[i, 0], arr[i, 1]
 
 def main():
-    main_fn('MSXMockCamNode', MSXMockCamNode)
+    main_fn('GTFormatting', GTFormatting)
 
 if __name__ == '__main__':
      main()     

@@ -25,9 +25,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'msx_pseudo_roofcam_node = msx.msx_pseudo_roofcam_node:main',
-            'msx_robot_node = msx.msx_robot_node:main',
-            'msx_mock_cam_node = msx.msx_mock_cam_node:main',
+            'sunburst_skyview_calc = msx.sunburst_skyview_calc:main',
+            'sunburst_robot_calc = msx.sunburst_robot_calc:main',
+            'skyview_finder = msx.skyview_finder:main',
         ],
     },
 )
