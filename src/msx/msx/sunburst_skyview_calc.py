@@ -14,29 +14,28 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
         super().__init__(name)
 
         self.subscription = self.create_subscription(
-            ModelStates,
-            '/model_states',
+            Float64MultiArray,
+            '/robotPos/data',
             self.listener_callback,
             10
         )
 
         self.pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/data", 100)
 
-    def listener_callback(self, msg: ModelStates):
-        robot_names = []
-        robot_positions = []
+    def listener_callback(self, msg: Float64MultiArray):
+        # --- reconstruct Nx2 position matrix from Float64MultiArray ---
+        data = np.array(msg.data, dtype=np.float64)
+        if data.size == 0:
+            return
+
+        # Each row: [x, y] for one robot
+        num_robots = msg.layout.dim[0].size if msg.layout.dim else data.size // 2
+        robot_positions = data.reshape((num_robots, 2))
+
+        # Robot naming convention (for internal consistency)
+        robot_names = [f"robot_{i}" for i in range(num_robots)]
+
         all_data = []
-
-        # --- collect all robot positions ---
-        for idx, name in enumerate(msg.name):
-            if "robot" in name: 
-                pose = msg.pose[idx]
-                robot_positions.append(np.array([pose.position.x, pose.position.y]))
-                robot_names.append(name)
-
-        robot_positions = np.stack(robot_positions) if robot_positions else np.empty((0, 2))
-
-        # --- labeling for each robot ---
         robot_labels = {}
         robot_distances = {}
 
@@ -72,6 +71,7 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
 
             # --- 3. sort by angle (counter-clockwise) ---
             shifted.sort(key=lambda x: x[2])
+            labels = {other_name: lbl for lbl, (other_name, _, _) in enumerate(shifted)}
 
             # --- 4. assign labels (0 for nearest, then increasing CCW) ---
             labels = {}
@@ -86,6 +86,9 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
             all_data.append(data_mat)
 
         self.robot_labels = robot_labels
+
+        if not all_data:
+            return
 
         # --- align sizes (pad with -1 if different neighbor counts) ---
         max_neighbors = max(arr.shape[0] for arr in all_data)
@@ -104,21 +107,20 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
             MultiArrayDimension(label="neighbors", size=max_neighbors, stride=max_neighbors * feature_size),
             MultiArrayDimension(label="features", size=feature_size, stride=feature_size)
         ]
-        msg_out.layout.data_offset = 0
         msg_out.data = full_array.flatten().tolist()
 
         # --- publish once for all robots ---
         self.pub.publish(msg_out)
 
         # log robot positions
-        self.get_logger().info(f"Robot positions:\n{robot_positions}")
+        #self.get_logger().info(f"Robot positions:\n{robot_positions}")
         # log distances of each robot to all others
-        for robot, dists in robot_distances.items():
-            dist_str = ", ".join([f"{other}: {dist:.2f}" for other, dist in dists])
-            self.get_logger().info(f"{robot} distances -> {dist_str}")
+        #for robot, dists in robot_distances.items():
+        #    dist_str = ", ".join([f"{other}: {dist:.2f}" for other, dist in dists])
+        #    self.get_logger().info(f"{robot} distances -> {dist_str}")
         # log robot labeling from camera
-        for robot, labels in robot_labels.items():
-            self.get_logger().info(f"{robot}: {labels}")
+        #for robot, labels in robot_labels.items():
+        #    self.get_logger().info(f"{robot}: {labels}")
 
 def main():
     main_fn('SunburstSkyviewCalc', SunburstSkyviewCalc)

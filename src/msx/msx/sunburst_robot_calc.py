@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray 
 import numpy as np
 
 class SunburstRobotCalc(DrivingSwarmNode):
@@ -15,7 +15,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
             '/sunburstSkyview/data',
             self.listener_callback,
             10)
-        self.subscription
+
+        # please use this to publish estimated waldo position
+        self.pub_error = self.create_publisher(Float64MultiArray, "/sunburstRobotCalc/waldoPosition", 100)
 
     def listener_callback(self, msg: Float64MultiArray):
         dims = msg.layout.dim

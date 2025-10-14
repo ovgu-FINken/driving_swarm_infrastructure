@@ -19,7 +19,7 @@ class GTFormatting(DrivingSwarmNode):
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/robot_pos/data", 100)
+        self.pub = self.create_publisher(Float64MultiArray, "/robotPos/data", 100)
 
     def listener_callback(self, msg: ModelStates):
         robot_positions = []

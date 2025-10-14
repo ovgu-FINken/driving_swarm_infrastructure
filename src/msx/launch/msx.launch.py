@@ -60,6 +60,14 @@ def controller_spawning(context, *args, **kwargs):
             output='screen',
         ))
 
+    controllers.append(Node(
+                package='msx',
+                executable='gt_formatting',
+                #namespace=robot,
+                parameters=[{'use_sim_time': use_sim_time}],
+                #remappings=[('topic', f'/{robot}/topic')],
+                output='screen',
+            ))
 
     #for robot in robots[:n_robots]:
     #    controllers.append(Node(
