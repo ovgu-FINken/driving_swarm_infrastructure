@@ -33,16 +33,16 @@ class SunburstRobotCalc(DrivingSwarmNode):
         angles = full_array[:, :, 1]     # second feature is angle
 
         # --- Debugging output ---
-        self.get_logger().info(f"Full array (robots x neighbors x features):\n{full_array}")
-        self.get_logger().info(f"Distances matrix:\n{distances}")
-        self.get_logger().info(f"Angles matrix:\n{angles}")
+        #self.get_logger().info(f"Full array (robots x neighbors x features):\n{full_array}")
+        #self.get_logger().info(f"Distances matrix:\n{distances}")
+        #self.get_logger().info(f"Angles matrix:\n{angles}")
 
         # Optional: If you want a list of neighbors per robot
-        neighbor_list = []
-        for i in range(num_robots):
-            neighbors = full_array[i, :, :]
-            neighbor_list.append(neighbors)
-        self.get_logger().info(f"Neighbor list per robot:\n{neighbor_list}")
+        #neighbor_list = []
+        #for i in range(num_robots):
+        #    neighbors = full_array[i, :, :]
+        #    neighbor_list.append(neighbors)
+        #self.get_logger().info(f"Neighbor list per robot:\n{neighbor_list}")
 
 def main():
     main_fn('SunburstRobotCalc', SunburstRobotCalc)
