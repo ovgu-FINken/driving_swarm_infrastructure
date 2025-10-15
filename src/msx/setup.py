@@ -29,6 +29,7 @@ setup(
             'sunburst_robot_calc = msx.sunburst_robot_calc:main',
             'skyview_finder = msx.skyview_finder:main',
             'gt_formatting = msx.gt_formatting:main',
+            'reactive_behaviour = msx.reactive_behaviour:main',
         ],
     },
 )
