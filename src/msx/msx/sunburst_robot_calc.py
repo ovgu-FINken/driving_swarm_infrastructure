@@ -2,22 +2,55 @@
 import rclpy
 from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
-from std_msgs.msg import Float64MultiArray 
+from std_msgs.msg import Float64MultiArray
+from sensor_msgs.msg import LaserScan
+from driving_swarm_utils.utils import detect_tb_from_ranges
 import numpy as np
+import time
 
 class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
+
+        self.skyview_distances = None
+        self.skyview_angles = None
+        self.lidar_data = None
+
         self.subscription = self.create_subscription(
             Float64MultiArray,
             '/sunburstSkyview/data',
             self.listener_callback,
             10)
 
+        self.subscription2 = self.create_subscription(
+            LaserScan,
+            'scan',
+            self.laser_callback,
+            rclpy.qos.qos_profile_sensor_data)
+
+        time.sleep(5)
+        self.create_timer(10.0, self.calc_timer)
+
         # please use this to publish estimated waldo position
         self.pub_error = self.create_publisher(Float64MultiArray, "/sunburstRobotCalc/waldoPosition", 100)
+
+
+    def do_math(self):
+        self.get_logger().info('do_math')
+        for main_idx in range(len(self.lidar_data)):
+
+        pass
+
+    def calc_timer(self):
+        self.do_math()
+        pass
+
+    def laser_callback(self, msg):
+        r = msg.ranges
+        r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
+        self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment, cluster_size_threshold=15)
+        pass
 
     def listener_callback(self, msg: Float64MultiArray):
         dims = msg.layout.dim
@@ -33,16 +66,20 @@ class SunburstRobotCalc(DrivingSwarmNode):
         angles = full_array[:, :, 1]     # second feature is angle
 
         # --- Debugging output ---
-        self.get_logger().info(f"Full array (robots x neighbors x features):\n{full_array}")
-        self.get_logger().info(f"Distances matrix:\n{distances}")
-        self.get_logger().info(f"Angles matrix:\n{angles}")
+        # self.get_logger().info(f"Full array (robots x neighbors x features):\n{full_array}")
+        # self.get_logger().info(f"Distances matrix:\n{distances}")
+        # self.get_logger().info(f"Angles matrix:\n{angles}")
 
         # Optional: If you want a list of neighbors per robot
         neighbor_list = []
         for i in range(num_robots):
             neighbors = full_array[i, :, :]
             neighbor_list.append(neighbors)
-        self.get_logger().info(f"Neighbor list per robot:\n{neighbor_list}")
+        # self.get_logger().info(f"Neighbor list per robot:\n{neighbor_list}")
+
+        self.skyview_distances = distances
+        self.skyview_angles = angles
+        pass
 
 def main():
     main_fn('SunburstRobotCalc', SunburstRobotCalc)
