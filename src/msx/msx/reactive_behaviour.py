@@ -57,7 +57,7 @@ class ReactiveController(DrivingSwarmNode):
             if self.forward_distance > 0.4:
                 self.clear = True
             if self.forward_distance > 0.3:
-                msg.linear.x = 0.10
+                msg.linear.x = 0.05
                 msg.angular.z = 0.0
             else:
                 # if the robot is too close to an obstacle, turn
@@ -67,7 +67,7 @@ class ReactiveController(DrivingSwarmNode):
                         self.sign *= -1.0
                         self.clear = False
                 msg.linear.x = 0.0
-                msg.angular.z = self.sign * 1.0
+                msg.angular.z = self.sign * 0.5
             self.sign_pub.publish(Int32(data=int(self.sign)))
             self.publisher.publish(msg)
         else:
