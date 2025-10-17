@@ -29,7 +29,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.laser_callback,
             rclpy.qos.qos_profile_sensor_data)
 
-        time.sleep(5)
+        time.sleep(10)
         self.create_timer(10.0, self.calc_timer)
 
         # please use this to publish estimated waldo position
@@ -37,8 +37,17 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
 
     def do_math(self):
-        self.get_logger().info('do_math')
-        for main_idx in range(len(self.lidar_data)):
+        # self.get_logger().info('do_math')
+        if len(self.lidar_data) > 0:
+            self.get_logger().info(f"Robot Positions: {self.lidar_data}")
+            pass
+        # self.get_logger().info(self.skyview_distances)
+        # self.get_logger().info(self.skyview_angles)
+
+        # The skyview distances
+        # 
+
+        # for main_idx in range(len(self.lidar_data)):
 
         pass
 
@@ -49,7 +58,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
     def laser_callback(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
-        self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment, cluster_size_threshold=15)
+        self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment, cluster_size_threshold=20)
+        # self.get_logger().info(f"Robots: {self.lidar_data}")
         pass
 
     def listener_callback(self, msg: Float64MultiArray):
