@@ -91,7 +91,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             marker.lifetime.sec = 1  # 0 = forever
             marker_array.markers.append(marker)
 
-        self.publisher.publish(marker_array)
+        self.pub_marker.publish(marker_array)
 
 
         pass
