@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from std_msgs.msg import Float64MultiArray
+from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import LaserScan
 from driving_swarm_utils.utils import detect_tb_from_ranges
 import numpy as np
@@ -28,6 +29,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
             'scan',
             self.laser_callback,
             rclpy.qos.qos_profile_sensor_data)
+
+        self.pub_marker = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
 
         time.sleep(10)
         self.create_timer(10.0, self.calc_timer)
@@ -60,6 +63,37 @@ class SunburstRobotCalc(DrivingSwarmNode):
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
         self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment, cluster_size_threshold=20)
         # self.get_logger().info(f"Robots: {self.lidar_data}")
+
+        marker_array = MarkerArray()
+
+        for i, (x, y) in enumerate(self.lidar_data):
+            marker = Marker()
+            marker.header.frame_id = "base_scan"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.ns = "cluster_positions"
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+
+            marker.pose.position.x = x
+            marker.pose.position.y = y
+            marker.pose.orientation.w = 1.0
+
+            marker.scale.x = 0.2
+            marker.scale.y = 0.2
+            marker.scale.z = 0.2
+
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
+
+            marker.lifetime.sec = 1  # 0 = forever
+            marker_array.markers.append(marker)
+
+        self.publisher.publish(marker_array)
+
+
         pass
 
     def listener_callback(self, msg: Float64MultiArray):
