@@ -4,7 +4,7 @@ from termcolor import colored
 import rclpy
 from rclpy.node import Node
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Point
 from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 import numpy as np
 
@@ -19,18 +19,25 @@ class GTFormatting(DrivingSwarmNode):
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/robotPos/data", 100)
+        self.pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
+        self.pub_waldo_pos = self.create_publisher(Point, "/waldoPos", 100)
 
     def listener_callback(self, msg: ModelStates):
         robot_positions = []
+        waldo_position = None
+
         for idx, name in enumerate(msg.name):
+            pose = msg.pose[idx]
             if "robot" in name:
-                pose = msg.pose[idx]
                 robot_positions.append([pose.position.x, pose.position.y])
+            elif name == "waldo":
+                waldo_position = pose.position
 
         if not robot_positions:
             return
 
+
+        # ---- robot positions ---
         arr = np.array(robot_positions)
 
         msg_out = Float64MultiArray()
@@ -48,6 +55,15 @@ class GTFormatting(DrivingSwarmNode):
         msg_out.data = arr.flatten().tolist()
 
         self.pub.publish(msg_out)
+
+        # --- waldo position ---
+        if waldo_position is not None:
+            waldo_msg = Point() 
+            waldo_msg.x = waldo_position.x
+            waldo_msg.y = waldo_position.y
+            waldo_msg.z = 0.0
+            self.pub_waldo_pos.publish(waldo_msg)
+            #print(f"Published : {waldo_msg}")
 
         # in other node:
         # data = np.array(msg.data
