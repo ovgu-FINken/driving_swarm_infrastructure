@@ -27,6 +27,8 @@ setup(
         'console_scripts': [
             'sunburst_skyview_calc = msx.sunburst_skyview_calc:main',
             'sunburst_robot_calc = msx.sunburst_robot_calc:main',
+            'topology_skyview_calc = msx.topology_skyview_calc:main',
+            'topology_robot_calc = msx.topology_robot_calc:main',
             'skyview_finder = msx.skyview_finder:main',
             'gt_formatting = msx.gt_formatting:main',
             'reactive_behaviour = msx.reactive_behaviour:main',
