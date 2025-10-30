@@ -28,7 +28,7 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview", 100)
+        self.pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/data", 100)
 
         self.pub_waldo = self.create_publisher(Float64MultiArray, "/sunburstSkyview/waldo", 100)
 

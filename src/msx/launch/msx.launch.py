@@ -55,7 +55,10 @@ def controller_spawning(context, *args, **kwargs):
             package='msx',
             executable='sunburst_robot_calc',
             namespace=robot,
-            parameters=[{'use_sim_time': use_sim_time}],
+            parameters=[{
+                'use_sim_time': use_sim_time,
+                'robot_names': robots[:n_robots],
+            }],
             remappings=[('topic', f'/{robot}/topic')],
             output='screen',
         ))
@@ -64,21 +67,37 @@ def controller_spawning(context, *args, **kwargs):
                 package='msx',
                 executable='gt_formatting',
                 #namespace=robot,
-                parameters=[{'use_sim_time': use_sim_time}],
+                parameters=[{
+                    'use_sim_time': use_sim_time,
+                    'robot_names': robots[:n_robots],
+                }],
+                #remappings=[('topic', f'/{robot}/topic')],
+                output='screen',
+            ))
+
+    controllers.append(Node(
+                package='msx',
+                executable='error_calc',
+                parameters=[{
+                    'use_sim_time': use_sim_time,
+                    'robot_names': robots[:n_robots],
+                }],
+                #namespace=robot,
                 #remappings=[('topic', f'/{robot}/topic')],
                 output='screen',
             ))
 
     for robot in robots[:n_robots]:
         controllers.append(Node(
-           package='msx',
-           executable='reactive_behaviour',
-           namespace=robot,
-           parameters=[{
-            'use_sim_time': use_sim_time,
+            package='msx',
+            executable='reactive_behaviour',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+                'robot_names': robots[:n_robots],
             }],
-           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-           output='screen',
+            namespace=robot,
+            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+            output='screen',
         ))
     
     return controllers
@@ -126,7 +145,7 @@ def generate_launch_description():
             ],
             output='screen'
         )
-    
+
     delayed_roofcam = TimerAction(
         period=20.0, # Wait 20 Seconds
         actions=[Node(

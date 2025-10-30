@@ -21,21 +21,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # TODO: Make sure data is matched between SkyView message and waldo data
         self.subscription = self.create_subscription(
             Float64MultiArray,
-            '/sunburstSkyview',
+            '/sunburstSkyview/data',
             self.listener_callback,
             10)
-
-        # self.subscription = self.create_subscription(
-        #     Float64MultiArray,
-        #     'robotA/sunburstSkyviewCalc/data',
-        #     self.listener_callback,
-        #     10)
-
-        self.subscription2 = self.create_subscription(
-            LaserScan,
-            'scan',
-            self.laser_callback,
-            rclpy.qos.qos_profile_sensor_data)
 
         self.sub_waldo_pos = self.create_subscription(
             Float64MultiArray,
@@ -43,13 +31,19 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.waldo_cb,
             10)
 
+        self.subscription2 = self.create_subscription(
+            LaserScan,
+            'scan',
+            self.laser_callback,
+            rclpy.qos.qos_profile_sensor_data)
+
         self.pub_marker = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
 
         time.sleep(10)
         self.create_timer(10.0, self.calc_timer)
 
         # please use this to publish estimated waldo position
-        self.pub_error = self.create_publisher(Float64MultiArray, "/sunburstRobotCalc/waldoPosition", 100)
+        self.pub_error = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
 
     def waldo_cb(self, msg: Float64MultiArray):
         #print(f"WALDO : {msg}")

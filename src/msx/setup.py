@@ -30,6 +30,7 @@ setup(
             'skyview_finder = msx.skyview_finder:main',
             'gt_formatting = msx.gt_formatting:main',
             'reactive_behaviour = msx.reactive_behaviour:main',
+            'error_calc = msx.error_calc:main',
         ],
     },
 )
