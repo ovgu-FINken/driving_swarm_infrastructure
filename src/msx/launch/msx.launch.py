@@ -18,8 +18,8 @@ import random
 import tempfile
 import yaml
 
-#Generates n random positions inside of a definded x_range and y_range with an orientation theta
-def generate_random_poses(n_robots, x_range=(-0.77, 0.73), y_range=(-1.6, 1.1), theta_range=(-3.14, 3.14)):
+# Generates n random positions inside of a definded x_range and y_range with an orientation theta
+def generate_random_poses(n_robots, x_range=(-0.85, 0.85), y_range=(-0.85, 0.85), theta_range=(-3.14, 3.14)):
     poses = []
     for _ in range(n_robots):
         x = random.uniform(*x_range)
@@ -88,7 +88,9 @@ def generate_launch_description():
     args = {
         'behaviour': 'false',
         'world': 'square_room.world',
+        # 'world': 'face.world',
         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'square_room.yaml'),
+        # 'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'face.yaml'),
         'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
         'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics_reactive.yaml'),
         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
