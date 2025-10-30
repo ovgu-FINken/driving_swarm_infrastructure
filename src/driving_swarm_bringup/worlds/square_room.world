@@ -33,7 +33,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>100 100</size>
+              <size>2 2</size>
             </plane>
           </geometry>
           <surface>
@@ -72,7 +72,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>100 100</size>
+              <size>2 2</size>
             </plane>
           </geometry>
           <material>
@@ -93,7 +93,7 @@
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type="adiabatic"/>
 
-    <!-- Physics: same speed as your reference -->
+    <!-- Physics -->
     <physics type="ode" name="template_like_ode">
       <max_step_size>0.002</max_step_size>
       <real_time_factor>5</real_time_factor>
@@ -127,16 +127,16 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
 
-    <!-- Square room: 5 m x 5 m inside, 0.1 m thick, 0.4 m tall (Z center 0.20) -->
+    <!-- Square room: 2 m x 2 m inside, 0.1 m thick, 0.4 m tall (Z center 0.20) -->
     <model name="wall_north">
       <static>1</static>
       <link name="link">
-        <pose>0 2.5 0.20 0 0 0</pose>
+        <pose>0 1.0 0.20 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>5.0 0.1 0.4</size></box></geometry>
+          <geometry><box><size>2.0 0.1 0.4</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>5.0 0.1 0.4</size></box></geometry>
+          <geometry><box><size>2.0 0.1 0.4</size></box></geometry>
         </visual>
       </link>
     </model>
@@ -144,12 +144,12 @@
     <model name="wall_south">
       <static>1</static>
       <link name="link">
-        <pose>0 -2.5 0.20 0 0 0</pose>
+        <pose>0 -1.0 0.20 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>5.0 0.1 0.4</size></box></geometry>
+          <geometry><box><size>2.0 0.1 0.4</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>5.0 0.1 0.4</size></box></geometry>
+          <geometry><box><size>2.0 0.1 0.4</size></box></geometry>
         </visual>
       </link>
     </model>
@@ -157,12 +157,12 @@
     <model name="wall_east">
       <static>1</static>
       <link name="link">
-        <pose>2.5 0 0.20 0 0 0</pose>
+        <pose>1.0 0 0.20 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>0.1 5.0 0.4</size></box></geometry>
+          <geometry><box><size>0.1 2.0 0.4</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>0.1 5.0 0.4</size></box></geometry>
+          <geometry><box><size>0.1 2.0 0.4</size></box></geometry>
         </visual>
       </link>
     </model>
@@ -170,17 +170,17 @@
     <model name="wall_west">
       <static>1</static>
       <link name="link">
-        <pose>-2.5 0 0.20 0 0 0</pose>
+        <pose>-1.0 0 0.20 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>0.1 5.0 0.4</size></box></geometry>
+          <geometry><box><size>0.1 2.0 0.4</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>0.1 5.0 0.4</size></box></geometry>
+          <geometry><box><size>0.1 2.0 0.4</size></box></geometry>
         </visual>
       </link>
     </model>
 
-    <!-- GUI: built-in top-down camera (no model include) -->
+    <!-- GUI: built-in top-down camera -->
     <gui fullscreen="0">
       <camera name="user_camera">
         <pose>0 0 10 0 1.5708 0</pose>

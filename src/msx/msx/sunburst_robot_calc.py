@@ -18,11 +18,18 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_angles = None
         self.lidar_data = None
 
+        # TODO: Make sure data is matched between SkyView message and waldo data
         self.subscription = self.create_subscription(
             Float64MultiArray,
             '/sunburstSkyview',
             self.listener_callback,
             10)
+
+        # self.subscription = self.create_subscription(
+        #     Float64MultiArray,
+        #     'robotA/sunburstSkyviewCalc/data',
+        #     self.listener_callback,
+        #     10)
 
         self.subscription2 = self.create_subscription(
             LaserScan,
@@ -95,24 +102,24 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # For the data from each of the N robots
         min_scales = []
         min_angles = []
-        for rbt_idx in range(len(self.skyview_angles)):
+        for rbt_idx, _ in enumerate(self.skyview_angles):
             divisor = 1
-            sum = 0
+            the_sum = 0
             for other_idx in range(len(self.skyview_angles[rbt_idx])):
-                sum -= 2*self.lidar_angles[other_idx]
-                sum += 2*self.skyview_angles[rbt_idx][other_idx]
+                the_sum -= 2*self.lidar_angles[other_idx]
+                the_sum += 2*self.skyview_angles[rbt_idx][other_idx]
                 divisor += 2
                 pass
-            angle = sum/divisor
+            angle = the_sum/divisor
             min_angles.append(angle)
 
             divisor = 0
-            sum = 0
-            for other_idx in range(len(self.skyview_distances[rbt_idx])):
-                sum += 2*self.skyview_distances[rbt_idx][other_idx]*self.lidar_distances[other_idx]
+            the_sum = 0
+            for other_idx, _ in enumerate(self.skyview_distances[rbt_idx]):
+                the_sum += 2*self.skyview_distances[rbt_idx][other_idx]*self.lidar_distances[other_idx]
                 divisor += 2*self.skyview_distances[rbt_idx][other_idx]**2
                 pass
-            scale = sum/divisor
+            scale = the_sum/divisor
             min_scales.append(scale)
             pass
 
@@ -146,8 +153,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         # To ensure the math won't have a division by zero error!
         if self.skyview_angles is not None and self.skyview_distances is not None:
-            if len(self.lidar_data) > 1 and len(self.skyview_angles) > 0 and len(self.skyview_distances) > 0:
+            if len(self.lidar_data) > 1 and len(self.skyview_angles) > 1 and len(self.skyview_distances) > 1:
                 self.do_math()
+                pass
             else:
                 self.get_logger().info(f"DATA MISSING")
             pass
@@ -156,7 +164,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
     def laser_callback(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
-        self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment, cluster_range_threshold=3.5, cluster_size_threshold=20)
+        self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
         # The output of the positions is relative to the current position of the laser scanner
         # Using the x-axis of the robot (aka the first value from the msg.ranges)
 
@@ -196,7 +204,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
             marker_array.markers.append(marker)
 
         self.pub_marker.publish(marker_array)
-
 
         pass
 
