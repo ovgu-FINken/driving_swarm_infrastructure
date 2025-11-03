@@ -17,15 +17,27 @@ from launch.actions import TimerAction
 import random
 import tempfile
 import yaml
+import numpy as np
 
 # Generates n random positions inside of a definded x_range and y_range with an orientation theta
-def generate_random_poses(n_robots, x_range=(-0.85, 0.85), y_range=(-0.85, 0.85), theta_range=(-3.14, 3.14)):
+def generate_random_poses(n_robots, x_range=(-0.8, 0.8), y_range=(-0.8, 0.8), theta_range=(-3.14, 3.14)):
+    closeness_threshold = 0.2
     poses = []
-    for _ in range(n_robots):
+    while len(poses) < n_robots:
         x = random.uniform(*x_range)
         y = random.uniform(*y_range)
         theta = random.uniform(*theta_range)
-        poses.append([x, y, theta])
+        if len(poses) > 0:
+            good_to_add = True
+            for pose in poses:
+                if np.sqrt((x - pose[0]) ** 2 + (y - pose[1]) ** 2) < closeness_threshold:
+                    good_to_add = False
+                    break
+            if good_to_add:
+                poses.append([x, y, theta])
+        else:
+            poses.append([x, y, theta])
+        pass
     return poses
 
 
