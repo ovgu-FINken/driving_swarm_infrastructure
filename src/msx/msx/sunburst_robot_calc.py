@@ -50,7 +50,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.create_timer(1.0, self.calc_timer)
 
         # please use this to publish estimated waldo position
-        self.pub_error = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
+        self.pub_waldo = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
 
     def waldo_cb(self, msg: Float64MultiArray):
         # print(f"WALDO : {msg}")
@@ -193,8 +193,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
         if len(errors):
             my_rbt_idx = min(errors, key=errors.get)
             self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
-            to_send = [self.skyview_waldo_angles[my_rbt_idx] + vals[my_rbt_idx][0], self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]]
-            self.pub_error.publish(to_send)
+            to_send = Float64MultiArray()
+            to_send.data = [self.skyview_waldo_angles[my_rbt_idx] + vals[my_rbt_idx][0], self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]]
+            self.pub_waldo.publish(to_send)
             pass
         else:
             pass
