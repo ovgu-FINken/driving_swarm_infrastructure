@@ -14,30 +14,30 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
 
         self.waldo_pos = None
 
-        self.subscription = self.create_subscription(
+        self.robot_pos_sub = self.create_subscription(
             Float64MultiArray,
             '/robotPos',
-            self.listener_callback,
+            self.robot_pos_cb,
             10
         )
 
-        self.sub_waldo_pos = self.create_subscription(
+        self.waldo_pos_sub = self.create_subscription(
             Point,
             '/waldoPos',
             self.waldo_cb,
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/data", 100)
+        self.sunburst_skyview_data_pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/data", 100)
 
-        self.pub_waldo = self.create_publisher(Float64MultiArray, "/sunburstSkyview/waldo", 100)
+        self.sunburst_skyview_waldo_pub = self.create_publisher(Float64MultiArray, "/sunburstSkyview/waldo", 100)
 
 
     def waldo_cb(self, msg: Point):
         self.waldo_pos = (msg.x, msg.y)
         # print(f"recieved waldo pos : {self.waldo_pos}")
 
-    def listener_callback(self, msg: Float64MultiArray):
+    def robot_pos_cb(self, msg: Float64MultiArray):
         # --- reconstruct Nx2 position matrix from Float64MultiArray ---
         data = np.array(msg.data, dtype=np.float64)
         if data.size == 0 or self.waldo_pos == None:
@@ -138,7 +138,7 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
         msg_out.data = full_array.flatten().tolist()
 
         # --- publish once for all robots ---
-        self.pub.publish(msg_out)
+        self.sunburst_skyview_data_pub.publish(msg_out)
 
         # --- publish Waldo data ---
         waldo_arr = np.array(waldo_data, dtype=np.float64)
@@ -148,7 +148,7 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
             MultiArrayDimension(label="features", size=2, stride=2)  # [distance, angle]
         ]
         waldo_msg.data = waldo_arr.flatten().tolist()
-        self.pub_waldo.publish(waldo_msg)
+        self.sunburst_skyview_waldo_pub.publish(waldo_msg)
         #print(f"Published waldo data : {waldo_msg}")
 
         # log robot positions

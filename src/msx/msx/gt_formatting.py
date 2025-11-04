@@ -12,17 +12,17 @@ class GTFormatting(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
-        self.subscription = self.create_subscription(
+        self.model_sub = self.create_subscription(
             ModelStates,
             '/model_states',
-            self.listener_callback,
+            self.model_cb,
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
-        self.pub_waldo_pos = self.create_publisher(Point, "/waldoPos", 100)
+        self.robot_pos_pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
+        self.waldo_pos_pub = self.create_publisher(Point, "/waldoPos", 100)
 
-    def listener_callback(self, msg: ModelStates):
+    def model_cb(self, msg: ModelStates):
         robot_positions = []
         waldo_position = None
 
@@ -54,7 +54,7 @@ class GTFormatting(DrivingSwarmNode):
 
         msg_out.data = arr.flatten().tolist()
 
-        self.pub.publish(msg_out)
+        self.robot_pos_pub.publish(msg_out)
 
         # --- waldo position ---
         if waldo_position is not None:
@@ -62,7 +62,7 @@ class GTFormatting(DrivingSwarmNode):
             waldo_msg.x = waldo_position.x
             waldo_msg.y = waldo_position.y
             waldo_msg.z = 0.0
-            self.pub_waldo_pos.publish(waldo_msg)
+            self.waldo_pos_pub.publish(waldo_msg)
             #print(f"Published : {waldo_msg}")
 
         # in other node:

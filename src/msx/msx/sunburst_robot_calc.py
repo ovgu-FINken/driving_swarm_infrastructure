@@ -26,31 +26,31 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.angle_threshold = np.pi / 6
 
         # TODO: Make sure data is matched between SkyView message and waldo data
-        self.subscription = self.create_subscription(
+        self.skyview_pub = self.create_subscription(
             Float64MultiArray,
             '/sunburstSkyview/data',
-            self.listener_callback,
+            self.skyview_cb,
             10)
 
-        self.sub_waldo_pos = self.create_subscription(
+        self.waldo_pos_sub = self.create_subscription(
             Float64MultiArray,
             "/sunburstSkyview/waldo",
             self.waldo_cb,
             10)
 
-        self.subscription2 = self.create_subscription(
+        self.lidar_pub = self.create_subscription(
             LaserScan,
             'scan',
-            self.laser_callback,
+            self.laser_cb,
             rclpy.qos.qos_profile_sensor_data)
 
-        self.pub_marker = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
+        self.marker_pub = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
 
         # time.sleep(10)
         self.create_timer(1.0, self.calc_timer)
 
         # please use this to publish estimated waldo position
-        self.pub_waldo = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
+        self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
 
     def waldo_cb(self, msg: Float64MultiArray):
         # print(f"WALDO : {msg}")
@@ -195,7 +195,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
             to_send = Float64MultiArray()
             to_send.data = [self.skyview_waldo_angles[my_rbt_idx] + vals[my_rbt_idx][0], self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]]
-            self.pub_waldo.publish(to_send)
+            self.waldo_pub.publish(to_send)
             pass
         else:
             pass
@@ -259,7 +259,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             pass
         pass
 
-    def laser_callback(self, msg):
+    def laser_cb(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
         self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
@@ -301,11 +301,11 @@ class SunburstRobotCalc(DrivingSwarmNode):
             marker.lifetime.sec = 1  # 0 = forever
             marker_array.markers.append(marker)
 
-        self.pub_marker.publish(marker_array)
+        self.marker_pub.publish(marker_array)
 
         pass
 
-    def listener_callback(self, msg: Float64MultiArray):
+    def skyview_cb(self, msg: Float64MultiArray):
         dims = msg.layout.dim
         num_robots = dims[0].size
         max_neighbors = dims[1].size
