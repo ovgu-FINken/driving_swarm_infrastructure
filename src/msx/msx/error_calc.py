@@ -10,6 +10,16 @@ from std_msgs.msg import Float64MultiArray, MultiArrayDimension, Float64
 import functools
 import numpy as np
 
+
+def translation_matrix(x_shift, y_shift):
+    return np.array([[1, 0, x_shift], [0, 1, y_shift], [0, 0, 1]])
+
+def scale_matrix(scale):
+    return np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])
+
+def rotation_matrix(angle):
+    return np.array([[np.cos(angle), -np.sin(angle), 0], [np.sin(angle), np.cos(angle), 0], [0, 0, 1]])
+
 class ErrorCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
@@ -39,6 +49,9 @@ class ErrorCalc(DrivingSwarmNode):
         self.waldo_pos_sub = self.create_subscription(
             Point, "/waldoPos", self.waldo_pos_cb, 10
         )
+        self.robot_head_sub = self.create_subscription(
+            Float64MultiArray, f"/robotHeading", self.robot_head_cb, 10
+        )
 
     def estimated_waldo_pos_cb(self, robot, msg):
         self.get_logger().info(f'got msg for {robot}: {msg}')
@@ -57,6 +70,9 @@ class ErrorCalc(DrivingSwarmNode):
     def waldo_pos_cb(self, msg):
         # msg is geometry_msgs/Point
         self.real_waldo_pos = np.array([msg.x, msg.y])
+
+    def robot_head_cb(self, msg):
+        self.robot_headings = msg.data
 
     def compute_waldo_errors(self):
         """
@@ -94,7 +110,11 @@ class ErrorCalc(DrivingSwarmNode):
             # Estimated Waldo position from the robot
             waldo_est_rel = self.waldo_pos[robot]
 
+            robot_heading = self.robot_headings[i]
 
+            # waldo_angle_with_global_ref_frame =
+            R = rotation_matrix(-robot_heading)
+            self.get_logger().warn(f"robot_heading = {robot_heading}")
 
             # Compute Euclidean distance error
             error = np.linalg.norm(waldo_est_rel - waldo_true_rel)

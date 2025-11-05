@@ -21,15 +21,22 @@ class GTFormatting(DrivingSwarmNode):
 
         self.robot_pos_pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
         self.waldo_pos_pub = self.create_publisher(Point, "/waldoPos", 100)
+        self.robot_head_pub = self.create_publisher(Float64MultiArray, "/robotHeadings", 100)
+
+    def quat_to_angle(self, quat):
+        x, y, z, w = quat
+        return np.arctan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
 
     def model_cb(self, msg: ModelStates):
         robot_positions = []
         waldo_position = None
+        robot_headings = []
 
         for idx, name in enumerate(msg.name):
             pose = msg.pose[idx]
             if "robot" in name:
                 robot_positions.append([pose.position.x, pose.position.y])
+                robot_headings.append(self.quat_to_angle(pose.orientation))
             elif name == "waldo":
                 waldo_position = pose.position
 
@@ -53,8 +60,12 @@ class GTFormatting(DrivingSwarmNode):
         ))
 
         msg_out.data = arr.flatten().tolist()
+        robot_headings = np.array(robot_headings)
+        heading_msg = Float64MultiArray()
+        heading_msg.data = robot_headings.flatten().tolist()
 
         self.robot_pos_pub.publish(msg_out)
+        self.robot_head_pub.publish(heading_msg)
 
         # --- waldo position ---
         if waldo_position is not None:
