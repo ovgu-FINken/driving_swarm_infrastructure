@@ -24,7 +24,7 @@ class GTFormatting(DrivingSwarmNode):
         self.robot_head_pub = self.create_publisher(Float64MultiArray, "/robotHeadings", 100)
 
     def quat_to_angle(self, quat):
-        x, y, z, w = quat
+        x, y, z, w = quat.x, quat.y, quat.z, quat.w
         return np.arctan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
 
     def model_cb(self, msg: ModelStates):
