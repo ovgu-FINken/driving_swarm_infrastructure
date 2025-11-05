@@ -56,7 +56,7 @@ def controller_spawning(context, *args, **kwargs):
        parameters=[{
           'use_sim_time': use_sim_time,
           'robot_names': robots[:n_robots],
-          'data_export_config_file': os.path.join(get_package_share_directory('ccr'), 'params', 'data_export.yaml'),
+          'data_export_config_file': os.path.join(get_package_share_directory('msx'), 'params', 'data_export.yaml'),
           'data_file': LaunchConfiguration('data_file').perform(context),
        }],
        output='both',
