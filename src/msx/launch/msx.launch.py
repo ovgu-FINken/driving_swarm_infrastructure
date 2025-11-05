@@ -99,18 +99,18 @@ def controller_spawning(context, *args, **kwargs):
                 output='screen',
             ))
 
-    #for robot in robots[:n_robots]:
-    #    controllers.append(Node(
-    #        package='msx',
-    #        executable='reactive_behaviour',
-    #        parameters=[{
-    #            'use_sim_time': use_sim_time,
-    #            'robot_names': robots[:n_robots],
-    #        }],
-    #        namespace=robot,
-    #        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-    #        output='screen',
-    #    ))
+    for robot in robots[:n_robots]:
+       controllers.append(Node(
+           package='msx',
+           executable='reactive_behaviour',
+           parameters=[{
+               'use_sim_time': use_sim_time,
+               'robot_names': robots[:n_robots],
+           }],
+           namespace=robot,
+           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+           output='screen',
+       ))
     
     return controllers
 
@@ -153,7 +153,7 @@ def generate_launch_description():
         arguments=[
             '-file', os.path.join(get_package_share_directory('msx'), 'models', 'waldo.sdf'),
             '-entity', 'waldo',
-            '-x', '1', '-y', '0', '-z', '0.05'
+            '-x', '0', '-y', '0', '-z', '0.05'
             ],
             output='screen'
         )

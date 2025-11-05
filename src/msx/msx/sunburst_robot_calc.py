@@ -121,7 +121,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 pass
             pass
         if not len(assignments):
-            return np.inf, np.inf
+            return np.inf, np.inf, np.inf, np.inf
         # self.get_logger().info(f"assignments: {assignments}")
 
         sky_dist_subset = [sky_dist[sky_idx] for sky_idx, lidar_idx in assignments]
@@ -184,7 +184,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         for rbt_idx, _ in enumerate(self.skyview_angles):
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
                                                         self.lidar_distances, self.lidar_angles)
-            if angle_error == np.inf and scale_error == np.inf:
+            if angle_error != np.inf and scale_error != np.inf:
                 errors[rbt_idx] = self.angle_error_weight * angle_error + self.scale_error_weight * scale_error
                 vals[rbt_idx] = [angle, scale]
                 pass
@@ -192,6 +192,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         if len(errors):
             my_rbt_idx = min(errors, key=errors.get)
+
+
+
             self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
             to_send = Float64MultiArray()
             to_send.data = [self.skyview_waldo_angles[my_rbt_idx] + vals[my_rbt_idx][0], self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]]
