@@ -94,6 +94,8 @@ class ErrorCalc(DrivingSwarmNode):
             # Estimated Waldo position from the robot
             waldo_est_rel = self.waldo_pos[robot]
 
+
+
             # Compute Euclidean distance error
             error = np.linalg.norm(waldo_est_rel - waldo_true_rel)
 
