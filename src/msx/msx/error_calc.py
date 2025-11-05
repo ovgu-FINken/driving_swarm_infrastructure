@@ -14,6 +14,7 @@ class ErrorCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
+        # sets self.robots to a list of robot names in the swarm
         self.get_list_of_robot_names()
 
         # simulated real positions
@@ -24,10 +25,13 @@ class ErrorCalc(DrivingSwarmNode):
         # waldo_pos[robotA] = (x, y)
         self.waldo_pos = {} 
 
+        self.error_pub = {}
+
         self.create_timer(1.0, self.compute_waldo_errors)
 
         for robot in self.robots:
             self.create_subscription(Float64MultiArray, f"/{robot}/sunburstRobotCalc/waldoPosition", functools.partial(self.estimated_waldo_pos_cb, robot), 10)
+            self.error_pub[robot] = self.create_publisher(Float64MultiArray, f"/{robot}/sunburstError", 10)
 
         self.robot_pos_sub = self.create_subscription(
             Float64MultiArray, "/robotPos", self.robot_pos_cb, 10
@@ -76,6 +80,9 @@ class ErrorCalc(DrivingSwarmNode):
             self.get_logger().warn("Robot count mismatch between real positions and robot list.")
             return
 
+        self.get_logger().warn(f"self.robots = {self.robots}")
+        self.get_logger().warn(f"self.waldo_pos = {self.waldo_pos}")
+
         for i, robot in enumerate(self.robots):
             if robot not in self.waldo_pos:
                 self.get_logger().warn(f"No estimated Waldo position received yet for {robot}.")
@@ -94,6 +101,10 @@ class ErrorCalc(DrivingSwarmNode):
                 f"[{robot}] Estimated relative Waldo position: {waldo_est_rel}, "
                 f"True: {waldo_true_rel}, Error: {error:.3f}"
             )
+
+            msg = Float64MultiArray()
+            msg.data = [error]
+            self.error_pub[robot].publish(msg)
 
 def main():
     main_fn('ErrorCalc', ErrorCalc)

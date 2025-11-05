@@ -1,0 +1,7 @@
+tf: true
+cmd_vel: true
+global_topics:
+  command: String
+robot_topics:
+  status: String
+  sunburstError: Float64MultiArray 
