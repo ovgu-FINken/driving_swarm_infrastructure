@@ -47,24 +47,24 @@ class GTFormatting(DrivingSwarmNode):
         # ---- robot positions ---
         arr = np.array(robot_positions)
 
-        msg_out = Float64MultiArray()
-        msg_out.layout.dim.append(MultiArrayDimension(
+        robot_pos_msg = Float64MultiArray()
+        robot_pos_msg.layout.dim.append(MultiArrayDimension(
             label="robots",
             size=arr.shape[0],
             stride=arr.shape[0] * arr.shape[1]
         ))
-        msg_out.layout.dim.append(MultiArrayDimension(
+        robot_pos_msg.layout.dim.append(MultiArrayDimension(
             label="xy",
             size=arr.shape[1],
             stride=arr.shape[1]
         ))
 
-        msg_out.data = arr.flatten().tolist()
+        robot_pos_msg.data = arr.flatten().tolist()
         robot_headings = np.array(robot_headings)
         heading_msg = Float64MultiArray()
         heading_msg.data = robot_headings.flatten().tolist()
 
-        self.robot_pos_pub.publish(msg_out)
+        self.robot_pos_pub.publish(robot_pos_msg)
         self.robot_head_pub.publish(heading_msg)
 
         # --- waldo position ---

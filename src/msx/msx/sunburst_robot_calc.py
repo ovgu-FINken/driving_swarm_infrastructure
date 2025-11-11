@@ -26,7 +26,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.angle_threshold = np.pi / 6
 
         # TODO: Make sure data is matched between SkyView message and waldo data
-        self.skyview_pub = self.create_subscription(
+        self.skyview_sub = self.create_subscription(
             Float64MultiArray,
             '/sunburstSkyview/data',
             self.skyview_cb,
@@ -38,7 +38,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.waldo_cb,
             10)
 
-        self.lidar_pub = self.create_subscription(
+        self.lidar_sub = self.create_subscription(
             LaserScan,
             'scan',
             self.laser_cb,
@@ -46,11 +46,11 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         self.marker_pub = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
 
-        # time.sleep(10)
-        self.create_timer(1.0, self.calc_timer)
-
         # please use this to publish estimated waldo position
         self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
+
+        # time.sleep(10)
+        self.create_timer(1.0, self.calc_timer)
 
     def waldo_cb(self, msg: Float64MultiArray):
         # print(f"WALDO : {msg}")
