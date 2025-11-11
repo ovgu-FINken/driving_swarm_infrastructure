@@ -96,30 +96,29 @@ class ErrorCalc(DrivingSwarmNode):
             if robot not in self.waldo_pos:
                 continue
 
-            waldo_true_rel = self.real_waldo_pos - self.real_robot_pos[i]
-            waldo_est_rel = self.waldo_pos[robot]
+            real_waldo_vec_world = self.real_waldo_pos - self.real_robot_pos[i]
+            est_waldo_vec_rob = self.waldo_pos[robot]
 
             # Rotate Waldo vector into robot frame using robot heading
             R = rotation_matrix(self.robot_headings[i])
+            est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1], 1]))[:2]
 
-            waldo_est_rel_world = (R @ np.array([waldo_est_rel[0], waldo_est_rel[1], 1]))[:2]
-
+            # Compute Euclidean error
+            error = np.linalg.norm(est_waldo_vec_world - real_waldo_vec_world)
 
             self.get_logger().info(
                 f"[{robot}] heading={np.degrees(self.robot_headings[i]):.1f}°, "
-                f"local_est={waldo_est_rel}, "
-                f"rotated_est_world={waldo_est_rel_world}, "
-                f"true_vec={waldo_true_rel}"
+                f"local_est={est_waldo_vec_rob}, "
+                f"rotated_est_world={est_waldo_vec_world}, "
+                f"real_waldo_vec_world={real_waldo_vec_world}, "
+                f"error={error}"
             )
-
-            # Compute Euclidean error
-            error = np.linalg.norm(waldo_est_rel_world - waldo_true_rel)
 
             # Store for visualization
             self.last_errors[robot] = {
                 "pos": self.real_robot_pos[i],
-                "true_vec": waldo_true_rel,
-                "waldo_est_rel_world": waldo_est_rel_world,
+                "real_waldo_vec_world": real_waldo_vec_world,
+                "est_waldo_vec_world": est_waldo_vec_world,
                 "error": error
             }
 
@@ -155,8 +154,8 @@ class ErrorCalc(DrivingSwarmNode):
 
         for i, (robot, info) in enumerate(self.last_errors.items()):
             x, y = info["pos"]
-            true_vec = info["true_vec"]
-            waldo_est_rel_world = info["waldo_est_rel_world"]
+            real_waldo_vec_world = info["real_waldo_vec_world"]
+            est_waldo_vec_world = info["est_waldo_vec_world"]
 
             # --- True Waldo vector (green arrow) ---
             true_marker = Marker()
@@ -174,7 +173,7 @@ class ErrorCalc(DrivingSwarmNode):
 
             true_marker.points = [
                 Point(x=x, y=y, z=0.0),
-                Point(x=x + true_vec[0], y=y + true_vec[1], z=0.0)
+                Point(x=x + real_waldo_vec_world[0], y=y + real_waldo_vec_world[1], z=0.0)
             ]
             marker_array.markers.append(true_marker)
 
@@ -194,7 +193,7 @@ class ErrorCalc(DrivingSwarmNode):
 
             est_marker.points = [
                 Point(x=x, y=y, z=0.0),
-                Point(x=x + waldo_est_rel_world[0], y=y + waldo_est_rel_world[1], z=0.0)
+                Point(x=x + est_waldo_vec_world[0], y=y + est_waldo_vec_world[1], z=0.0)
             ]
             marker_array.markers.append(est_marker)
 
@@ -214,8 +213,8 @@ class ErrorCalc(DrivingSwarmNode):
             est_pos_marker.color.r = 0.0
             est_pos_marker.color.g = 0.0
             est_pos_marker.color.b = 1.0
-            est_pos_marker.pose.position.x = x + waldo_est_rel_world[0]
-            est_pos_marker.pose.position.y = y + waldo_est_rel_world[1]
+            est_pos_marker.pose.position.x = x + est_waldo_vec_world[0]
+            est_pos_marker.pose.position.y = y + est_waldo_vec_world[1]
             est_pos_marker.pose.position.z = 0.0
 
             marker_array.markers.append(est_pos_marker)
