@@ -52,36 +52,36 @@ class TopologySkyviewCalc(DrivingSwarmNode):
 
         all_results = {}
 
-        # for i, main_name in enumerate(robot_names):
-        #     main_pos = robot_positions[i]
-        #
-        #     other_indices = [j for j in range(num_robots) if j != i]
-        #
-        #     main_results = []
-        #
-        #     for k, idx in enumerate(other_indices):
-        #         if k == 0:
-        #             prev_idx = other_indices[0]
-        #         else:
-        #             prev_idx = other_indices[k - 1]
-        #
-        #         next_idx = other_indices[(k + 1) % len(other_indices)]
-        #
-        #         prev_vec = robot_positions[prev_idx] - main_pos
-        #         next_vec = robot_positions[next_idx] - main_pos
-        #
-        #         dist = np.linalg.norm(prev_vec)
-        #         angle_rad = np.arctan2(
-        #             np.cross(prev_vec, next_vec),
-        #             np.dot(prev_vec, next_vec)
-        #         )
-        #         angle_deg = np.degrees(angle_rad)
-        #
-        #         main_results.append([dist, angle_rad])
-        #
-        #         print(f"{main_name} -> {robot_names[idx]}: Distanz = {dist:.3f}, Winkel = {angle_deg:.2f}°")
-        #
-        #     all_results[main_name] = main_results
+        for i, main_name in enumerate(robot_names):
+            own_pos = robot_positions[i]
+
+            other_indices = [j for j in range(num_robots) if j != i]
+
+            main_results = []
+
+            for k, idx in enumerate(other_indices):
+                if k == 0:
+                    prev_idx = other_indices[0]
+                else:
+                    prev_idx = other_indices[k - 1]
+
+                next_idx = other_indices[(k + 1) % len(other_indices)]
+
+                prev_vec = robot_positions[prev_idx] - own_pos
+                next_vec = robot_positions[next_idx] - own_pos
+
+                dist = np.linalg.norm(prev_vec)
+                angle_rad = np.arctan2(
+                    np.cross(prev_vec, next_vec),
+                    np.dot(prev_vec, next_vec)
+                )
+                angle_deg = np.degrees(angle_rad)
+
+                main_results.append([dist, angle_rad])
+
+                print(f"{main_name} -> {robot_names[idx]}: Distanz = {dist:.3f}, Winkel = {angle_deg:.2f}°")
+
+            all_results[main_name] = main_results
 
 def main():
     main_fn('TopologySkyviewCalc', TopologySkyviewCalc)

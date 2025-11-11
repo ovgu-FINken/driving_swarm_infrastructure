@@ -12,24 +12,31 @@ class GTFormatting(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
-        self.subscription = self.create_subscription(
+        self.model_sub = self.create_subscription(
             ModelStates,
             '/model_states',
-            self.listener_callback,
+            self.model_cb,
             10
         )
 
-        self.pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
-        self.pub_waldo_pos = self.create_publisher(Point, "/waldoPos", 100)
+        self.robot_pos_pub = self.create_publisher(Float64MultiArray, "/robotPos", 100)
+        self.waldo_pos_pub = self.create_publisher(Point, "/waldoPos", 100)
+        self.robot_head_pub = self.create_publisher(Float64MultiArray, "/robotHeadings", 100)
 
-    def listener_callback(self, msg: ModelStates):
+    def quat_to_angle(self, quat):
+        x, y, z, w = quat.x, quat.y, quat.z, quat.w
+        return np.arctan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
+
+    def model_cb(self, msg: ModelStates):
         robot_positions = []
         waldo_position = None
+        robot_headings = []
 
         for idx, name in enumerate(msg.name):
             pose = msg.pose[idx]
             if "robot" in name:
                 robot_positions.append([pose.position.x, pose.position.y])
+                robot_headings.append(self.quat_to_angle(pose.orientation))
             elif name == "waldo":
                 waldo_position = pose.position
 
@@ -53,8 +60,12 @@ class GTFormatting(DrivingSwarmNode):
         ))
 
         msg_out.data = arr.flatten().tolist()
+        robot_headings = np.array(robot_headings)
+        heading_msg = Float64MultiArray()
+        heading_msg.data = robot_headings.flatten().tolist()
 
-        self.pub.publish(msg_out)
+        self.robot_pos_pub.publish(msg_out)
+        self.robot_head_pub.publish(heading_msg)
 
         # --- waldo position ---
         if waldo_position is not None:
@@ -62,7 +73,7 @@ class GTFormatting(DrivingSwarmNode):
             waldo_msg.x = waldo_position.x
             waldo_msg.y = waldo_position.y
             waldo_msg.z = 0.0
-            self.pub_waldo_pos.publish(waldo_msg)
+            self.waldo_pos_pub.publish(waldo_msg)
             #print(f"Published : {waldo_msg}")
 
         # in other node:

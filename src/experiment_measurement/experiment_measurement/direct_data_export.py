@@ -8,7 +8,6 @@ import yaml
 from pathlib import Path
 import os
 
-
 def get_topic_type_from_str(topic_type):
     if topic_type == "Int32":
         from std_msgs.msg import Int32
@@ -16,6 +15,9 @@ def get_topic_type_from_str(topic_type):
     if topic_type == "String":
         from std_msgs.msg import String
         return String
+    if topic_type == "Float64MultiArray":
+        from std_msgs.msg import Float64MultiArray
+        return Float64MultiArray
     else:
         raise ValueError(f"unknown topic type {topic_type}")
 
