@@ -16,6 +16,11 @@ def rotation_matrix(angle):
         [0, 0, 1]
     ])
 
+def rotation_matrix_2d(angle):
+    return np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle),  np.cos(angle)]])
+
 
 class ErrorCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -100,8 +105,10 @@ class ErrorCalc(DrivingSwarmNode):
             est_waldo_vec_rob = self.waldo_pos[robot]
 
             # Rotate Waldo vector into robot frame using robot heading
-            R = rotation_matrix(self.robot_headings[i])
-            est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1], 1]))[:2]
+            #R = rotation_matrix(self.robot_headings[i])
+            R = rotation_matrix_2d(-self.robot_headings[i])
+            #est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1], 1]))[:2]
+            est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1]]))
 
             # Compute Euclidean error
             error = np.linalg.norm(est_waldo_vec_world - real_waldo_vec_world)
@@ -119,6 +126,7 @@ class ErrorCalc(DrivingSwarmNode):
                 "pos": self.real_robot_pos[i],
                 "real_waldo_vec_world": real_waldo_vec_world,
                 "est_waldo_vec_world": est_waldo_vec_world,
+                "est_waldo_vec_rob": est_waldo_vec_rob,
                 "error": error
             }
 
@@ -156,6 +164,7 @@ class ErrorCalc(DrivingSwarmNode):
             x, y = info["pos"]
             real_waldo_vec_world = info["real_waldo_vec_world"]
             est_waldo_vec_world = info["est_waldo_vec_world"]
+            est_waldo_vec_rob = info["est_waldo_vec_rob"]
 
             # --- True Waldo vector (green arrow) ---
             true_marker = Marker()
@@ -179,7 +188,7 @@ class ErrorCalc(DrivingSwarmNode):
 
             # --- Estimated Waldo vector (red arrow) ---
             est_marker = Marker()
-            est_marker.header.frame_id = "map"
+            est_marker.header.frame_id = robot
             est_marker.header.stamp = t
             est_marker.ns = "estimated_waldo"
             est_marker.id = 100 + i
@@ -192,8 +201,8 @@ class ErrorCalc(DrivingSwarmNode):
             est_marker.color.r = 1.0
 
             est_marker.points = [
-                Point(x=x, y=y, z=0.0),
-                Point(x=x + est_waldo_vec_world[0], y=y + est_waldo_vec_world[1], z=0.0)
+                Point(x=0.0, y=0.0, z=0.0),
+                Point(x=est_waldo_vec_rob[0], y=est_waldo_vec_rob[1], z=0.0)
             ]
             marker_array.markers.append(est_marker)
 
@@ -202,7 +211,7 @@ class ErrorCalc(DrivingSwarmNode):
             est_pos_marker = Marker()
             est_pos_marker.header.frame_id = "map"
             est_pos_marker.header.stamp = t
-            est_pos_marker.ns = "estimated_waldo_position"
+            est_pos_marker.ns = f"{robot}-waldo-pose"
             est_pos_marker.id = 400 + i
             est_pos_marker.type = Marker.SPHERE
             est_pos_marker.action = Marker.ADD

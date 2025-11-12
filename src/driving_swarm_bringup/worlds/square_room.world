@@ -97,7 +97,7 @@
     <physics type="ode" name="template_like_ode">
       <max_step_size>0.002</max_step_size>
       <real_time_factor>5</real_time_factor>
-      <real_time_update_rate>125</real_time_update_rate>
+      <real_time_update_rate>500</real_time_update_rate>
       <ode>
         <solver>
           <type>quick</type>
