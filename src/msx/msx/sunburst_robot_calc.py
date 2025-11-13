@@ -6,6 +6,7 @@ from std_msgs.msg import Float64MultiArray
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import LaserScan
 from driving_swarm_utils.utils import detect_tb_from_ranges
+from geometry_msgs.msg import Point
 import numpy as np
 import time, math
 
@@ -45,6 +46,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
             rclpy.qos.qos_profile_sensor_data)
 
         self.marker_pub = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
+
+        self.debug_pub = self.create_publisher(MarkerArray, 'visualization_of_sunburst', 10)
 
         # please use this to publish estimated waldo position
         self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
@@ -193,7 +196,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         if len(errors):
             my_rbt_idx = min(errors, key=errors.get)
 
-            waldo_angle = self.skyview_waldo_angles[my_rbt_idx] + vals[my_rbt_idx][0]
+            waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
             waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
 
             waldo_x = waldo_distance * math.cos(waldo_angle)
@@ -203,7 +206,39 @@ class SunburstRobotCalc(DrivingSwarmNode):
             to_send = Float64MultiArray()
             to_send.data = [waldo_x, waldo_y]
             self.waldo_pub.publish(to_send)
+
+            marker_array = MarkerArray()
+
+            for idx, dat in enumerate(self.skyview_angles[my_rbt_idx]):
+                marker = Marker()
+                marker.header.frame_id = "base_scan"
+                marker.header.stamp = self.get_clock().now().to_msg()
+                marker.ns = f"sunburst{idx}"
+                marker.id = idx
+                marker.type = Marker.ARROW
+                marker.action = Marker.ADD
+                marker.scale.x = 0.02  # arrow shaft length scale
+                marker.scale.y = 0.002  # shaft thickness
+                marker.scale.z = 0.002
+                marker.color.a = 1.0
+                marker.color.b = 0.5
+                marker.color.r = 0.5
+
+                robot_angle = (dat - vals[my_rbt_idx][0]) % (2 * math.pi)
+                robot_distance = self.skyview_distances[my_rbt_idx][idx] * vals[my_rbt_idx][1]
+
+                robot_x = robot_distance * math.cos(robot_angle)
+                robot_y = robot_distance * math.sin(robot_angle)
+
+                marker.points = [
+                    Point(x=0.0, y=0.0, z=0.0),
+                    Point(x=float(robot_x), y=float(robot_y), z=0.0)
+                ]
+                marker_array.markers.append(marker)
+
+            self.debug_pub.publish(marker_array)
             pass
+
         else:
             pass
         pass
@@ -249,6 +284,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # for main_idx in range(len(self.lidar_data)):
 
         pass
+
 
     def calc_timer(self):
         # if len(self.lidar_data) > 0:
