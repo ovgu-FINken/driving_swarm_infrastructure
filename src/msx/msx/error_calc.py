@@ -34,7 +34,6 @@ class ErrorCalc(DrivingSwarmNode):
         self.robot_headings = []
 
         self.error_pub = {}
-        self.last_errors = {}  # Store last computed errors for visualization
 
         self.create_timer(1.0, self.compute_waldo_errors)
 
@@ -56,8 +55,6 @@ class ErrorCalc(DrivingSwarmNode):
         self.create_subscription(Point, "/waldoPos", self.waldo_pos_cb, 10)
         self.create_subscription(Float64MultiArray, "/robotHeadings", self.robot_head_cb, 10)
 
-        # Marker publisher
-        self.marker_pub = self.create_publisher(MarkerArray, "/error_calc/markers", 10)
 
     # --------------------------- Callbacks ---------------------------
 
@@ -121,138 +118,10 @@ class ErrorCalc(DrivingSwarmNode):
                 f"error={error}"
             )
 
-            # Store for visualization
-            self.last_errors[robot] = {
-                "pos": self.real_robot_pos[i],
-                "real_waldo_vec_world": real_waldo_vec_world,
-                "est_waldo_vec_world": est_waldo_vec_world,
-                "est_waldo_vec_rob": est_waldo_vec_rob,
-                "error": error
-            }
-
             # Publish numeric error
             msg = Float64MultiArray()
             msg.data = [error]
             self.error_pub[robot].publish(msg)
-
-        # Visualize everything
-        self.publish_markers()
-
-    # --------------------------- Visualization ---------------------------
-    # Visualizations summary:
-    # ---------------------------------------------------------------------
-    # 🟢 Green Arrow   → True vector from each robot to the real Waldo (ground truth)
-    # 🔴 Red Arrow     → Estimated Waldo vector rotated into world frame
-    # 🔵 Blue Arrow    → Robot heading from simulation (ground truth)
-    # 🔵 Blue Sphere   → Estimated Waldo position in the world frame
-    #
-    # These markers help verify whether the estimated Waldo position
-    # and rotation transformations (based on robot heading) are correct.
-    # The blue sphere should align closely with the real Waldo position
-    # if both estimation and rotation are accurate.
-    # ---------------------------------------------------------------------
-
-    def publish_markers(self):
-        """Visualize true vs. estimated Waldo direction for each robot."""
-        if not self.last_errors:
-            return
-
-        marker_array = MarkerArray()
-        t = self.get_clock().now().to_msg()
-
-        for i, (robot, info) in enumerate(self.last_errors.items()):
-            x, y = info["pos"]
-            real_waldo_vec_world = info["real_waldo_vec_world"]
-            est_waldo_vec_world = info["est_waldo_vec_world"]
-            est_waldo_vec_rob = info["est_waldo_vec_rob"]
-
-            # --- True Waldo vector (green arrow) ---
-            true_marker = Marker()
-            true_marker.header.frame_id = "map"
-            true_marker.header.stamp = t
-            true_marker.ns = "true_waldo"
-            true_marker.id = i
-            true_marker.type = Marker.ARROW
-            true_marker.action = Marker.ADD
-            true_marker.scale.x = 0.02  # arrow shaft length scale
-            true_marker.scale.y = 0.002  # shaft thickness
-            true_marker.scale.z = 0.002
-            true_marker.color.a = 1.0
-            true_marker.color.g = 1.0
-
-            true_marker.points = [
-                Point(x=x, y=y, z=0.0),
-                Point(x=x + real_waldo_vec_world[0], y=y + real_waldo_vec_world[1], z=0.0)
-            ]
-            marker_array.markers.append(true_marker)
-
-            # --- Estimated Waldo vector (red arrow) ---
-            est_marker = Marker()
-            est_marker.header.frame_id = robot
-            est_marker.header.stamp = t
-            est_marker.ns = "estimated_waldo"
-            est_marker.id = 100 + i
-            est_marker.type = Marker.ARROW
-            est_marker.action = Marker.ADD
-            est_marker.scale.x = 0.02
-            est_marker.scale.y = 0.002
-            est_marker.scale.z = 0.002
-            est_marker.color.a = 1.0
-            est_marker.color.r = 1.0
-
-            est_marker.points = [
-                Point(x=0.0, y=0.0, z=0.0),
-                Point(x=est_waldo_vec_rob[0], y=est_waldo_vec_rob[1], z=0.0)
-            ]
-            marker_array.markers.append(est_marker)
-
-
-            # --- Estimated Waldo position in world frame (blue sphere) ---
-            est_pos_marker = Marker()
-            est_pos_marker.header.frame_id = "map"
-            est_pos_marker.header.stamp = t
-            est_pos_marker.ns = f"{robot}-waldo-pose"
-            est_pos_marker.id = 400 + i
-            est_pos_marker.type = Marker.SPHERE
-            est_pos_marker.action = Marker.ADD
-            est_pos_marker.scale.x = 0.1
-            est_pos_marker.scale.y = 0.1
-            est_pos_marker.scale.z = 0.1
-            est_pos_marker.color.a = 1.0
-            est_pos_marker.color.r = 0.0
-            est_pos_marker.color.g = 0.0
-            est_pos_marker.color.b = 1.0
-            est_pos_marker.pose.position.x = x + est_waldo_vec_world[0]
-            est_pos_marker.pose.position.y = y + est_waldo_vec_world[1]
-            est_pos_marker.pose.position.z = 0.0
-
-            marker_array.markers.append(est_pos_marker)
-
-            # --- Robot heading vector (blue arrow) ---
-            heading_marker = Marker()
-            heading_marker.header.frame_id = "map"
-            heading_marker.header.stamp = t
-            heading_marker.ns = "robot_heading"
-            heading_marker.id = 200 + i
-            heading_marker.type = Marker.ARROW
-            heading_marker.action = Marker.ADD
-            heading_marker.scale.x = 0.05   # arrow length
-            heading_marker.scale.y = 0.003  # arrow thickness
-            heading_marker.scale.z = 0.003
-            heading_marker.color.a = 1.0
-            heading_marker.color.b = 1.0    # blue arrow
-
-            # Arrow from robot position in heading direction
-            heading_marker.points = [
-                Point(x=x, y=y, z=0.0),
-                Point(x=x + np.cos(self.robot_headings[i]) * 0.5,
-                      y=y + np.sin(self.robot_headings[i]) * 0.5,
-                      z=0.0)
-            ]
-            #marker_array.markers.append(heading_marker)
-
-        # Publish all markers
-        self.marker_pub.publish(marker_array)
 
 
 def main():

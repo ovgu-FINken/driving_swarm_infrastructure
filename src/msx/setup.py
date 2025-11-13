@@ -34,6 +34,7 @@ setup(
             'gt_formatting = msx.gt_formatting:main',
             'reactive_behaviour = msx.reactive_behaviour:main',
             'error_calc = msx.error_calc:main',
+            'visualization = msx.visualization:main',
         ],
     },
 )
