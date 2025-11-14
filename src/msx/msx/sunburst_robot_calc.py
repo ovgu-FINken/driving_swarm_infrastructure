@@ -4,9 +4,9 @@ from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from std_msgs.msg import Float64MultiArray
 from visualization_msgs.msg import Marker, MarkerArray
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, PointCloud
 from driving_swarm_utils.utils import detect_tb_from_ranges
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Point32
 import numpy as np
 import time, math
 
@@ -45,12 +45,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.laser_cb,
             rclpy.qos.qos_profile_sensor_data)
 
-        self.marker_pub = self.create_publisher(MarkerArray, 'visualization_marker_array', 10)
-
         self.debug_pub = self.create_publisher(MarkerArray, 'visualization_of_sunburst', 10)
 
         # please use this to publish estimated waldo position
         self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
+
+        self.pub_lidar_data = self.create_publisher(PointCloud, "lidarData", 10)
 
         # time.sleep(10)
         self.create_timer(1.0, self.calc_timer)
@@ -207,36 +207,36 @@ class SunburstRobotCalc(DrivingSwarmNode):
             to_send.data = [waldo_x, waldo_y]
             self.waldo_pub.publish(to_send)
 
-            marker_array = MarkerArray()
-
-            for idx, dat in enumerate(self.skyview_angles[my_rbt_idx]):
-                marker = Marker()
-                marker.header.frame_id = "base_scan"
-                marker.header.stamp = self.get_clock().now().to_msg()
-                marker.ns = f"sunburst{idx}"
-                marker.id = idx
-                marker.type = Marker.ARROW
-                marker.action = Marker.ADD
-                marker.scale.x = 0.02  # arrow shaft length scale
-                marker.scale.y = 0.002  # shaft thickness
-                marker.scale.z = 0.002
-                marker.color.a = 1.0
-                marker.color.b = 0.5
-                marker.color.r = 0.5
-
-                robot_angle = (dat - vals[my_rbt_idx][0]) % (2 * math.pi)
-                robot_distance = self.skyview_distances[my_rbt_idx][idx] * vals[my_rbt_idx][1]
-
-                robot_x = robot_distance * math.cos(robot_angle)
-                robot_y = robot_distance * math.sin(robot_angle)
-
-                marker.points = [
-                    Point(x=0.0, y=0.0, z=0.0),
-                    Point(x=float(robot_x), y=float(robot_y), z=0.0)
-                ]
-                marker_array.markers.append(marker)
-
-            self.debug_pub.publish(marker_array)
+            # marker_array = MarkerArray()
+            #
+            # for idx, dat in enumerate(self.skyview_angles[my_rbt_idx]):
+            #     marker = Marker()
+            #     marker.header.frame_id = "base_scan"
+            #     marker.header.stamp = self.get_clock().now().to_msg()
+            #     marker.ns = f"sunburst{idx}"
+            #     marker.id = idx
+            #     marker.type = Marker.ARROW
+            #     marker.action = Marker.ADD
+            #     marker.scale.x = 0.02  # arrow shaft length scale
+            #     marker.scale.y = 0.002  # shaft thickness
+            #     marker.scale.z = 0.002
+            #     marker.color.a = 1.0
+            #     marker.color.b = 0.5
+            #     marker.color.r = 0.5
+            #
+            #     robot_angle = (dat - vals[my_rbt_idx][0]) % (2 * math.pi)
+            #     robot_distance = self.skyview_distances[my_rbt_idx][idx] * vals[my_rbt_idx][1]
+            #
+            #     robot_x = robot_distance * math.cos(robot_angle)
+            #     robot_y = robot_distance * math.sin(robot_angle)
+            #
+            #     marker.points = [
+            #         Point(x=0.0, y=0.0, z=0.0),
+            #         Point(x=float(robot_x), y=float(robot_y), z=0.0)
+            #     ]
+            #     marker_array.markers.append(marker)
+            #
+            #self.debug_pub.publish(marker_array)
             pass
 
         else:
@@ -309,6 +309,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # The output of the positions is relative to the current position of the laser scanner
         # Using the x-axis of the robot (aka the first value from the msg.ranges)
 
+        #self.get_logger().info(f"Lidar data : {self.lidar_data}")
+
         # Params
         # Cluster linkage threshold -> How far the cluster has to be from another cluster (closeness of points to be considered in the same cluster) this happens first
         # Cluster range threshold -> Points larger than this value are omitted from clusters
@@ -317,34 +319,18 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # Change range threshold to 3.5
         # Look at what the RoLo guys did ...
 
-        marker_array = MarkerArray()
+        msg = PointCloud()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "lidar_frame"
 
-        for i, (x, y) in enumerate(self.lidar_data):
-            marker = Marker()
-            marker.header.frame_id = "base_scan"
-            marker.header.stamp = self.get_clock().now().to_msg()
-            marker.ns = "cluster_positions"
-            marker.id = i
-            marker.type = Marker.SPHERE
-            marker.action = Marker.ADD
+        for x, y in self.lidar_data:
+            p = Point32()
+            p.x = float(x)
+            p.y = float(y)
+            p.z = 0.0
+            msg.points.append(p)
 
-            marker.pose.position.x = x
-            marker.pose.position.y = y
-            marker.pose.orientation.w = 1.0
-
-            marker.scale.x = 0.2
-            marker.scale.y = 0.2
-            marker.scale.z = 0.2
-
-            marker.color.r = 1.0
-            marker.color.g = 0.0
-            marker.color.b = 0.0
-            marker.color.a = 1.0
-
-            marker.lifetime.sec = 1  # 0 = forever
-            marker_array.markers.append(marker)
-
-        self.marker_pub.publish(marker_array)
+        self.pub_lidar_data.publish(msg)
 
         pass
 
