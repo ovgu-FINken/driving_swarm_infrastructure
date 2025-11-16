@@ -53,9 +53,6 @@ class GTFormatting(DrivingSwarmNode):
             # Find waldo in the msg
             waldo_idx = next((i for i, item in enumerate(msg.name) if "waldo" in item), -1)
 
-            # TODO: should pass, remove
-            assert waldo_idx >= 0
-
             # Store waldo position
             waldo_position = msg.pose[waldo_idx].position
 
@@ -65,9 +62,6 @@ class GTFormatting(DrivingSwarmNode):
             msg.twist.pop(waldo_idx)
 
             # self.get_logger().info(f"Models**: {msg.name}")
-
-            # TODO: should pass, remove
-            assert len(msg.name) == len(self.robots)
 
             for idx, name in enumerate(msg.name):
                 pose = msg.pose[idx]
