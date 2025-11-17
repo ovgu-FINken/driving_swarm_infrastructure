@@ -52,6 +52,9 @@ class ReactiveController(DrivingSwarmNode):
         
         msg = Twist()
 
+        # TODO: Remove this line, which disables reactive behaviour
+        self.active = False
+
         # if the robot has empty space in front of it, move forward
         if self.active:
             # if self.forward_distance > 0.5:
