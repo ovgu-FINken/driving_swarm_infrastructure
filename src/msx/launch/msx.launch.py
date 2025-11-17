@@ -111,18 +111,18 @@ def controller_spawning(context, *args, **kwargs):
                 output='screen',
             ))
 
-    for robot in robots[:n_robots]:
-       controllers.append(Node(
-           package='msx',
-           executable='reactive_behaviour',
-           parameters=[{
-               'use_sim_time': use_sim_time,
-               'robot_names': robots[:n_robots],
-           }],
-           namespace=robot,
-           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-           output='screen',
-       ))
+    # for robot in robots[:n_robots]:
+    #    controllers.append(Node(
+    #        package='msx',
+    #        executable='reactive_behaviour',
+    #        parameters=[{
+    #            'use_sim_time': use_sim_time,
+    #            'robot_names': robots[:n_robots],
+    #        }],
+    #        namespace=robot,
+    #        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+    #        output='screen',
+    #    ))
     
     return controllers
 

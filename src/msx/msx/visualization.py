@@ -96,169 +96,138 @@ class Visualization(DrivingSwarmNode):
         self.skyview_distances = full_array[:, :, 0]  # first feature is distance
         self.skyview_angles = full_array[:, :, 1]  # second feature is angle
 
+
     # --------------------------- Visualization ---------------------------
     # Visualizations summary:
     # ---------------------------------------------------------------------
-    # 🟢 Green Arrow   → True vector from each robot to the real Waldo (ground truth)
-    # 🔴 Red Arrow     → Estimated Waldo vector rotated into world frame
-    # 🔵 Blue Arrow    → Robot heading from simulation (ground truth)
-    # 🔵 Blue Sphere   → Estimated Waldo position in the world frame
-    # 🔴 Red Sphere    → Estimated robots position through lidar data 
-    # These markers help verify whether the estimated Waldo position
-    # and rotation transformations (based on robot heading) are correct.
-    # The blue sphere should align closely with the real Waldo position
-    # if both estimation and rotation are accurate.
+    # 🟢 Green Arrow   → Ground truth vector from robot to Waldo
+    # 🔵 Blue Arrow    → Estimated Waldo vector transformed into world frame
+    # 🔵 Blue Sphere   → Estimated Waldo position in world frame
+    # 🟢 Green Sphere  → Ground truth robot position
+    # 🔴 Red Sphere    → Estimated other robots' positions from lidar data
+    # These markers are used to verify whether the Waldo estimation and
+    # frame transformations are correct.
     # ---------------------------------------------------------------------
 
     def publish_markers(self):
         marker_array = MarkerArray()
         t = self.get_clock().now().to_msg()
 
+        # Ensure required data is available
         if len(self.robots) != len(self.real_robot_pos):
-            self.get_logger().info(f"Not all robot positions available yet...")
+            self.get_logger().info("Not all robot positions available yet...")
             return
 
         if len(self.robots) != len(self.est_waldo_pos):
-            self.get_logger().info(f"Not all robots have estimates for waldo yet...")
+            self.get_logger().info("Not all robots have Waldo estimates yet...")
             return
 
-        if len(self.robots) != len(self.lidar_data):
-            self.get_logger().info(f"Not every robot has other robots position estimation through lidar data...")
-
-        for i, distances in enumerate(self.skyview_distances):
-            # TODO: Visualize skyview distances (sunburst vectors)
-            pass
-
         for i, robot in enumerate(self.robots):
-            x = self.real_robot_pos[i][0]
-            y = self.real_robot_pos[i][1]
-            real_waldo_vec_world =  self.real_waldo_pos - self.real_robot_pos[i]
-            est_waldo_vec_rob = self.est_waldo_pos[robot]
-            est_other_rob_lidar_pos = self.lidar_data[robot]
+            x, y = self.real_robot_pos[i]
 
+            # Ground truth vector from robot to Waldo
+            real_vec = self.real_waldo_pos - self.real_robot_pos[i]
 
-            # Rotate Waldo vector into robot frame using robot heading
+            # Estimated Waldo vector in robot frame
+            est_vec_robot = self.est_waldo_pos[robot]
+
+            # Rotate estimate into world frame
             R = rotation_matrix_2d(-self.robot_headings[i])
-            est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1]]))
+            est_vec_world = R @ np.array([est_vec_robot[0], est_vec_robot[1]])
 
-
-            # --- True Waldo vector (green arrow) ---
-            true_marker = Marker()
-            true_marker.header.frame_id = "map"
-            true_marker.header.stamp = t
-            true_marker.ns = "true_waldo"
-            true_marker.id = i
-            true_marker.type = Marker.ARROW
-            true_marker.action = Marker.ADD
-            true_marker.scale.x = 0.02  # arrow shaft length scale
-            true_marker.scale.y = 0.002  # shaft thickness
-            true_marker.scale.z = 0.002
-            true_marker.color.a = 1.0
-            true_marker.color.g = 1.0
-
-            true_marker.points = [
+            # --- Ground truth Waldo vector (green arrow) ---
+            true_mark = Marker()
+            true_mark.header.frame_id = "map"
+            true_mark.header.stamp = t
+            true_mark.ns = "true_waldo"
+            true_mark.id = i
+            true_mark.type = Marker.ARROW
+            true_mark.action = Marker.ADD
+            true_mark.scale.x = 0.02
+            true_mark.scale.y = 0.002
+            true_mark.scale.z = 0.002
+            true_mark.color.a = 1.0
+            true_mark.color.g = 1.0
+            true_mark.points = [
                 Point(x=x, y=y, z=0.0),
-                Point(x=x + real_waldo_vec_world[0], y=y + real_waldo_vec_world[1], z=0.0)
+                Point(x=x + real_vec[0], y=y + real_vec[1], z=0.0)
             ]
-            marker_array.markers.append(true_marker)
-            
-            # --- Estimated Waldo vector (red arrow) ---
-            est_marker = Marker()
-            est_marker.header.frame_id = "map"
-            est_marker.header.stamp = t
-            est_marker.ns = f"estimated_waldo_{robot}"
-            est_marker.id = 100 + i
-            est_marker.type = Marker.ARROW
-            est_marker.action = Marker.ADD
-            est_marker.scale.x = 0.02
-            est_marker.scale.y = 0.002
-            est_marker.scale.z = 0.002
-            est_marker.color.a = 1.0
-            est_marker.color.r = 1.0
+            marker_array.markers.append(true_mark)
 
-            est_marker.points = [
+            # --- Estimated Waldo vector (blue arrow) ---
+            est_mark = Marker()
+            est_mark.header.frame_id = "map"
+            est_mark.header.stamp = t
+            est_mark.ns = f"estimated_waldo_{robot}"
+            est_mark.id = 100 + i
+            est_mark.type = Marker.ARROW
+            est_mark.action = Marker.ADD
+            est_mark.scale.x = 0.02
+            est_mark.scale.y = 0.002
+            est_mark.scale.z = 0.002
+            est_mark.color.a = 1.0
+            est_mark.color.b = 1.0
+            est_mark.points = [
                 Point(x=x, y=y, z=0.0),
-                Point(x=x + est_waldo_vec_world[0], y=y + est_waldo_vec_world[1], z=0.0)
+                Point(x=x + est_vec_world[0], y=y + est_vec_world[1], z=0.0)
             ]
-            marker_array.markers.append(est_marker)
-            
-            
-            # --- Estimated Waldo position in world frame (blue sphere) ---
-            est_pos_marker = Marker()
-            est_pos_marker.header.frame_id = "map"
-            est_pos_marker.header.stamp = t
-            est_pos_marker.ns = f"{robot}-waldo-pose"
-            est_pos_marker.id = 400 + i
-            est_pos_marker.type = Marker.SPHERE
-            est_pos_marker.action = Marker.ADD
-            est_pos_marker.scale.x = 0.1
-            est_pos_marker.scale.y = 0.1
-            est_pos_marker.scale.z = 0.1
-            est_pos_marker.color.a = 1.0
-            est_pos_marker.color.r = 0.0
-            est_pos_marker.color.g = 0.0
-            est_pos_marker.color.b = 1.0
-            est_pos_marker.pose.position.x = x + est_waldo_vec_world[0]
-            est_pos_marker.pose.position.y = y + est_waldo_vec_world[1]
-            est_pos_marker.pose.position.z = 0.0
+            marker_array.markers.append(est_mark)
 
-            marker_array.markers.append(est_pos_marker)
+            # --- Estimated Waldo position (blue sphere) ---
+            est_pos = Marker()
+            est_pos.header.frame_id = "map"
+            est_pos.header.stamp = t
+            est_pos.ns = f"{robot}-waldo-pos"
+            est_pos.id = 400 + i
+            est_pos.type = Marker.SPHERE
+            est_pos.action = Marker.ADD
+            est_pos.scale.x = est_pos.scale.y = est_pos.scale.z = 0.1
+            est_pos.color.a = 1.0
+            est_pos.color.b = 1.0
+            est_pos.pose.position.x = x + est_vec_world[0]
+            est_pos.pose.position.y = y + est_vec_world[1]
+            est_pos.pose.position.z = 0.0
+            marker_array.markers.append(est_pos)
 
+            # --- Ground truth robot position (green sphere) ---
+            real_robot = Marker()
+            real_robot.header.frame_id = "map"
+            real_robot.header.stamp = t
+            real_robot.ns = f"{robot}-real-pos"
+            real_robot.id = 500 + i
+            real_robot.type = Marker.SPHERE
+            real_robot.action = Marker.ADD
+            real_robot.scale.x = real_robot.scale.y = real_robot.scale.z = 0.1
+            real_robot.color.a = 1.0
+            real_robot.color.g = 1.0
+            real_robot.pose.position.x = x
+            real_robot.pose.position.y = y
+            real_robot.pose.position.z = 0.0
+            marker_array.markers.append(real_robot)
 
-            for j, pos in enumerate(est_other_rob_lidar_pos):
-                pos_world = (R @ np.array([pos[0], pos[1]]))
-                #self.get_logger().info(f"POSITION : {pos} for rob : {j} -> {pos_world}")
-                est_other_rob_lidar_pos_marker = Marker()
-                est_other_rob_lidar_pos_marker.header.frame_id = f"map"
-                est_other_rob_lidar_pos_marker.header.stamp = t
-                est_other_rob_lidar_pos_marker.ns = f"lidar_clusters_{robot}"
-                est_other_rob_lidar_pos_marker.id = 500 + ( i * 10 ) + j  # so every marker has its own id
-                est_other_rob_lidar_pos_marker.type = Marker.SPHERE
-                est_other_rob_lidar_pos_marker.action = Marker.ADD
-                est_other_rob_lidar_pos_marker.pose.position.x = x + pos_world[0]
-                est_other_rob_lidar_pos_marker.pose.position.y = y + pos_world[1]
-                est_other_rob_lidar_pos_marker.pose.position.z = 0.0
-                est_other_rob_lidar_pos_marker.pose.orientation.x = 0.0
-                est_other_rob_lidar_pos_marker.pose.orientation.y = 0.0
-                est_other_rob_lidar_pos_marker.pose.orientation.z = 0.0
-                est_other_rob_lidar_pos_marker.pose.orientation.w = 1.0
-                est_other_rob_lidar_pos_marker.scale.x = 0.2
-                est_other_rob_lidar_pos_marker.scale.y = 0.2
-                est_other_rob_lidar_pos_marker.scale.z = 0.2
-                est_other_rob_lidar_pos_marker.color.r = 1.0
-                est_other_rob_lidar_pos_marker.color.g = 0.2
-                est_other_rob_lidar_pos_marker.color.b = 0.2
-                est_other_rob_lidar_pos_marker.color.a = 1.0
+            # --- Estimated other robots from lidar (red spheres) ---
+            for j, pos in enumerate(self.lidar_data[robot]):
+                pos_world = R @ np.array([pos[0], pos[1]])
 
-                marker_array.markers.append(est_other_rob_lidar_pos_marker)
-
-            #
-            # # --- Robot heading vector (blue arrow) ---
-            # heading_marker = Marker()
-            # heading_marker.header.frame_id = "map"
-            # heading_marker.header.stamp = t
-            # heading_marker.ns = "robot_heading"
-            # heading_marker.id = 200 + i
-            # heading_marker.type = Marker.ARROW
-            # heading_marker.action = Marker.ADD
-            # heading_marker.scale.x = 0.05   # arrow length
-            # heading_marker.scale.y = 0.003  # arrow thickness
-            # heading_marker.scale.z = 0.003
-            # heading_marker.color.a = 1.0
-            # heading_marker.color.b = 1.0    # blue arrow
-            #
-            # # Arrow from robot position in heading direction
-            # heading_marker.points = [
-            #     Point(x=x, y=y, z=0.0),
-            #     Point(x=x + np.cos(self.robot_headings[i]) * 0.5,
-            #           y=y + np.sin(self.robot_headings[i]) * 0.5,
-            #           z=0.0)
-            # ]
-            # #marker_array.markers.append(heading_marker)
+                lidar_mark = Marker()
+                lidar_mark.header.frame_id = "map"
+                lidar_mark.header.stamp = t
+                lidar_mark.ns = f"lidar_clusters_{robot}"
+                lidar_mark.id = 600 + i * 10 + j
+                lidar_mark.type = Marker.SPHERE
+                lidar_mark.action = Marker.ADD
+                lidar_mark.scale.x = lidar_mark.scale.y = lidar_mark.scale.z = 0.2
+                lidar_mark.color.a = 1.0
+                lidar_mark.color.r = 1.0
+                lidar_mark.color.g = 0.2
+                lidar_mark.color.b = 0.2
+                lidar_mark.pose.position.x = x + pos_world[0]
+                lidar_mark.pose.position.y = y + pos_world[1]
+                lidar_mark.pose.position.z = 0.0
+                marker_array.markers.append(lidar_mark)
 
         # Publish all markers
         self.marker_pub.publish(marker_array)
-
 
 def main():
     main_fn("Visualization", Visualization)
