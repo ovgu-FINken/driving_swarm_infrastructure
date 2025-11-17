@@ -96,7 +96,6 @@ class Visualization(DrivingSwarmNode):
         self.skyview_distances = full_array[:, :, 0]  # first feature is distance
         self.skyview_angles = full_array[:, :, 1]  # second feature is angle
 
-
     # --------------------------- Visualization ---------------------------
     # Visualizations summary:
     # ---------------------------------------------------------------------
