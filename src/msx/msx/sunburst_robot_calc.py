@@ -10,10 +10,19 @@ from geometry_msgs.msg import Point, Point32
 import numpy as np
 import time, math
 
+def rotation_matrix_2d(angle):
+    return np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle),  np.cos(angle)]])
 
 class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
+
+        # TODO: stop using this at some point
+        self.DEBUG_cur_robot_heading = None
+
+
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
 
         self.skyview_distances = []
@@ -22,9 +31,16 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.scale_error_weight = 1
         self.angle_error_weight = 1
 
+        self.get_list_of_robot_names()
+
+        # ns = self.get_namespace()  # e.g. "/robot0"
+        # self.robot_name = ns.strip('/')  # "robot0"
+        #
+        # self.get_logger().info(f"My robot name (from namespace) is: {self.robot_name}")
+
         # TODO: thresholds are way to high, so we do not skip too much for now
-        self.dist_threshold = 1.5
-        self.angle_threshold = np.pi / 6
+        self.dist_threshold = 1.05
+        self.angle_threshold = np.pi / 12
 
         # TODO: Make sure data is matched between SkyView message and waldo data
         self.skyview_sub = self.create_subscription(
@@ -51,6 +67,22 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
 
         self.pub_lidar_data = self.create_publisher(PointCloud, "lidarData", 10)
+
+        # This is very illegal! But let's use the GT data instead of the pesky lidar data
+        self.groundtruth_pos_sub = self.create_subscription(
+            Float64MultiArray,
+            "/robotPos",
+            self.groundtruth_pos_callback,
+            100
+        )
+
+        # Also illegal
+        self.groundtruth_heading_sub = self.create_subscription(
+            Float64MultiArray,
+            "/robotHeadings",
+            self.groundtruth_heading_callback,
+            100
+        )
 
         # time.sleep(10)
         self.create_timer(1.0, self.calc_timer)
@@ -207,36 +239,36 @@ class SunburstRobotCalc(DrivingSwarmNode):
             to_send.data = [waldo_x, waldo_y]
             self.waldo_pub.publish(to_send)
 
-            # marker_array = MarkerArray()
-            #
-            # for idx, dat in enumerate(self.skyview_angles[my_rbt_idx]):
-            #     marker = Marker()
-            #     marker.header.frame_id = "base_scan"
-            #     marker.header.stamp = self.get_clock().now().to_msg()
-            #     marker.ns = f"sunburst{idx}"
-            #     marker.id = idx
-            #     marker.type = Marker.ARROW
-            #     marker.action = Marker.ADD
-            #     marker.scale.x = 0.02  # arrow shaft length scale
-            #     marker.scale.y = 0.002  # shaft thickness
-            #     marker.scale.z = 0.002
-            #     marker.color.a = 1.0
-            #     marker.color.b = 0.5
-            #     marker.color.r = 0.5
-            #
-            #     robot_angle = (dat - vals[my_rbt_idx][0]) % (2 * math.pi)
-            #     robot_distance = self.skyview_distances[my_rbt_idx][idx] * vals[my_rbt_idx][1]
-            #
-            #     robot_x = robot_distance * math.cos(robot_angle)
-            #     robot_y = robot_distance * math.sin(robot_angle)
-            #
-            #     marker.points = [
-            #         Point(x=0.0, y=0.0, z=0.0),
-            #         Point(x=float(robot_x), y=float(robot_y), z=0.0)
-            #     ]
-            #     marker_array.markers.append(marker)
-            #
-            #self.debug_pub.publish(marker_array)
+            marker_array = MarkerArray()
+
+            for idx, dat in enumerate(self.skyview_angles[my_rbt_idx]):
+                marker = Marker()
+                marker.header.frame_id = "base_scan"
+                marker.header.stamp = self.get_clock().now().to_msg()
+                marker.ns = f"sunburst{idx}"
+                marker.id = idx
+                marker.type = Marker.ARROW
+                marker.action = Marker.ADD
+                marker.scale.x = 0.02  # arrow shaft length scale
+                marker.scale.y = 0.002  # shaft thickness
+                marker.scale.z = 0.002
+                marker.color.a = 1.0
+                marker.color.b = 0.5
+                marker.color.r = 0.5
+
+                robot_angle = (dat - vals[my_rbt_idx][0]) % (2 * math.pi)
+                robot_distance = self.skyview_distances[my_rbt_idx][idx] * vals[my_rbt_idx][1]
+
+                robot_x = robot_distance * math.cos(robot_angle)
+                robot_y = robot_distance * math.sin(robot_angle)
+
+                marker.points = [
+                    Point(x=0.0, y=0.0, z=0.0),
+                    Point(x=float(robot_x), y=float(robot_y), z=0.0)
+                ]
+                marker_array.markers.append(marker)
+
+            self.debug_pub.publish(marker_array)
             pass
 
         else:
@@ -305,7 +337,11 @@ class SunburstRobotCalc(DrivingSwarmNode):
     def laser_cb(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
+
+        # Turned off for now.
         self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
+
+
         # The output of the positions is relative to the current position of the laser scanner
         # Using the x-axis of the robot (aka the first value from the msg.ranges)
 
@@ -363,6 +399,42 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_angles = angles
         pass
 
+
+    def groundtruth_pos_callback(self, msg):
+        if self.DEBUG_cur_robot_heading is None:
+            return
+
+        # self.get_logger().info(f"groundtruth_pos_callback, msg: {msg}")
+        ns = self.get_namespace()
+
+        name = ns.strip("/")
+
+        flat = msg.data
+        pairs = [[flat[i], flat[i+1]] for i in range(0, len(flat), 2)]
+
+        cur_robot_idx = self.robots.index(name)
+        cur_robot_position = np.array(pairs[cur_robot_idx])
+
+        # self.lidar_data = []
+
+        for i in range(len(self.robots)):
+            if i != cur_robot_idx:
+                R = rotation_matrix_2d(-self.DEBUG_cur_robot_heading)
+                # self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
+
+        self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
+        return
+
+    def groundtruth_heading_callback(self, msg):
+        ns = self.get_namespace()
+
+        name = ns.strip("/")
+
+        flat = msg.data
+
+        cur_robot_idx = self.robots.index(name)
+        self.DEBUG_cur_robot_heading = flat[cur_robot_idx]
+        return
 
 def main():
     main_fn('SunburstRobotCalc', SunburstRobotCalc)
