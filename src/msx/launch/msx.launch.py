@@ -38,6 +38,8 @@ def generate_random_poses(n_robots, x_range=(-0.8, 0.8), y_range=(-0.8, 0.8), th
         else:
             poses.append([x, y, theta])
         pass
+    # TODO: Remove these static positions.
+    poses = [[-0.4, -0.5, 0], [0.23, -0.1123,0], [0.5, 0.1,0], [-0.7, 0.5,0]]
     return poses
 
 
