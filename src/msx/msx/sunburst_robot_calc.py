@@ -422,7 +422,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 R = rotation_matrix_2d(-self.DEBUG_cur_robot_heading)
                 # self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
 
-        self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
+        #self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
         return
 
     def groundtruth_heading_callback(self, msg):

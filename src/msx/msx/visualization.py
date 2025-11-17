@@ -117,11 +117,19 @@ class Visualization(DrivingSwarmNode):
             self.get_logger().info("Not all robot positions available yet...")
             return
 
-        if len(self.robots) != len(self.est_waldo_pos):
-            self.get_logger().info("Not all robots have Waldo estimates yet...")
-            return
+        # check if we can visualize everything without every robot having an estimate of waldos position
+        # try:
+        #     self.est_waldo_pos.pop("robotA", None)
+        # except Exception as e:
+        #     return
 
         for i, robot in enumerate(self.robots):
+            try:
+                self.est_waldo_pos[robot]
+            except (KeyError):
+                self.get_logger().info(f"{robot} has no Waldo estimates yet...")
+                continue
+
             x, y = self.real_robot_pos[i]
 
             # Ground truth vector from robot to Waldo
