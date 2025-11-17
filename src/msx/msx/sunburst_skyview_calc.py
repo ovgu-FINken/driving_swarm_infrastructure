@@ -75,7 +75,7 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
                 continue
 
             # --- 1. find nearest neighbor (gets label 0) ---
-            nearest = min(others, key=lambda x: x[1])  
+            nearest = min(others, key=lambda x: x[1])
             nearest_name, _, ref_angle = nearest
 
             # --- 2. shift all other angles so that nearest neighbor is at 0 ---
@@ -85,7 +85,6 @@ class SunburstSkyviewCalc(DrivingSwarmNode):
                 if rel_angle < 0:
                     rel_angle += 2 * np.pi  # normalize into [0, 2π)
                 shifted.append((other_name, dist, rel_angle))
-
 
             # --- 3. sort by angle (counter-clockwise) ---
             shifted.sort(key=lambda x: x[2])
