@@ -1,6 +1,7 @@
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 import functools
 import numpy as np
+import math
 
 import rclpy
 from geometry_msgs.msg import Point, Point32
@@ -135,12 +136,8 @@ class Visualization(DrivingSwarmNode):
             # Ground truth vector from robot to Waldo
             real_vec = self.real_waldo_pos - self.real_robot_pos[i]
 
-            # Estimated Waldo vector in robot frame
-            est_vec_robot = self.est_waldo_pos[robot]
+            R = rotation_matrix_2d(self.robot_headings[i])
 
-            # Rotate estimate into world frame
-            R = rotation_matrix_2d(-self.robot_headings[i])
-            est_vec_world = R @ np.array([est_vec_robot[0], est_vec_robot[1]])
 
             # --- Ground truth Waldo vector (green arrow) ---
             true_mark = Marker()
@@ -161,6 +158,11 @@ class Visualization(DrivingSwarmNode):
             ]
             marker_array.markers.append(true_mark)
 
+            # Estimated Waldo vector in robot frame
+            est_vec_robot = self.est_waldo_pos[robot]
+            # Rotate robot frame into world / cam frame
+            est_vec_world = R @ np.array([est_vec_robot[0], est_vec_robot[1]])
+            
             # --- Estimated Waldo vector (blue arrow) ---
             est_mark = Marker()
             est_mark.header.frame_id = "map"
@@ -232,6 +234,53 @@ class Visualization(DrivingSwarmNode):
                 lidar_mark.pose.position.y = y + pos_world[1]
                 lidar_mark.pose.position.z = 0.0
                 marker_array.markers.append(lidar_mark)
+
+
+            # angle from camera frame to shortest distance robot
+            others = []
+            for j, other_name in enumerate(self.robots):
+                if i == j:
+                    continue
+                vec = self.real_robot_pos[j] - self.real_robot_pos[i]
+                dist = np.linalg.norm(vec)
+                angle = np.arctan2(vec[1], vec[0])  # angle relative to cameras x-axis
+                others.append((other_name, dist, angle))
+
+            # --- 1. find nearest neighbor (gets label 0) ---
+            nearest = min(others, key=lambda x: x[1])
+            nearest_name, _, ref_angle = nearest
+
+            # Rotate skyview frame into world / cam frame
+            R2 = rotation_matrix_2d(ref_angle)
+
+            #self.get_logger().info(f"Robot {robot} nearest : {nearest}")
+            #self.get_logger().info(f"Robot {robot} angles : {self.skyview_angles[i]}")
+            #self.get_logger().info(f"Robot {robot} distances : {self.skyview_distances}")
+
+            for j, angle in enumerate(self.skyview_angles[i]):
+                sunburst_marker = Marker()
+                sunburst_marker.header.frame_id = "map"
+                sunburst_marker.header.stamp = t 
+                sunburst_marker.ns = f"{robot}_sunburst"
+                sunburst_marker.id = 700 + i * 10 + j
+                sunburst_marker.type = Marker.ARROW
+                sunburst_marker.action = Marker.ADD
+                sunburst_marker.scale.x = 0.02  # arrow shaft length scale
+                sunburst_marker.scale.y = 0.002  # shaft thickness
+                sunburst_marker.scale.z = 0.002
+                sunburst_marker.color.a = 1.0
+                sunburst_marker.color.r = 1.0
+
+                robot_x = self.skyview_distances[i][j] * math.cos(angle)
+                robot_y = self.skyview_distances[i][j] * math.sin(angle)
+
+                sunburst_world = R2 @ np.array([robot_x, robot_y])
+                
+                sunburst_marker.points = [
+                    Point(x = x, y = y, z = 0.0),
+                    Point(x = x + sunburst_world[0], y = y + sunburst_world[1], z = 0.0)
+                ]
+                marker_array.markers.append(sunburst_marker)
 
         # Publish all markers
         self.marker_pub.publish(marker_array)

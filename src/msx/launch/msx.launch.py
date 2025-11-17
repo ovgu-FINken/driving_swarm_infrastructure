@@ -5,6 +5,7 @@ import yaml
 
 import random
 import tempfile
+import math
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, OpaqueFunction, DeclareLaunchArgument
@@ -39,7 +40,8 @@ def generate_random_poses(n_robots, x_range=(-0.8, 0.8), y_range=(-0.8, 0.8), th
             poses.append([x, y, theta])
         pass
     # TODO: Remove these static positions.
-    poses = [[-0.4, -0.5, 0], [0.23, -0.1123,0], [0.5, 0.1,0], [-0.7, 0.5,0]]
+    #poses = [[-0.4, -0.2, 0], [0.13, -0.1123,math.pi/2], [0.7, 0.1,math.pi], [-0.3, 0.5,3*math.pi/2]]
+    #poses = [[-0.4, -0.2, 0], [0.13, -0.1123,0.0], [0.7, 0.1,0.0], [-0.3, 0.5,0.0]]
     return poses
 
 
@@ -113,18 +115,18 @@ def controller_spawning(context, *args, **kwargs):
                 output='screen',
             ))
 
-    # for robot in robots[:n_robots]:
-    #    controllers.append(Node(
-    #        package='msx',
-    #        executable='reactive_behaviour',
-    #        parameters=[{
-    #            'use_sim_time': use_sim_time,
-    #            'robot_names': robots[:n_robots],
-    #        }],
-    #        namespace=robot,
-    #        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-    #        output='screen',
-    #    ))
+    for robot in robots[:n_robots]:
+       controllers.append(Node(
+           package='msx',
+           executable='reactive_behaviour',
+           parameters=[{
+               'use_sim_time': use_sim_time,
+               'robot_names': robots[:n_robots],
+           }],
+           namespace=robot,
+           remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+           output='screen',
+       ))
     
     return controllers
 

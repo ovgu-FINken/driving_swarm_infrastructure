@@ -338,7 +338,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
 
-        # Turned off for now.
         self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
 
 
@@ -415,12 +414,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
         cur_robot_idx = self.robots.index(name)
         cur_robot_position = np.array(pairs[cur_robot_idx])
 
-        # self.lidar_data = []
+        #self.lidar_data = []
 
         for i in range(len(self.robots)):
             if i != cur_robot_idx:
                 R = rotation_matrix_2d(-self.DEBUG_cur_robot_heading)
-                # self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
+                #self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
 
         #self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
         return

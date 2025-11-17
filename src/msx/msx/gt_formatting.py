@@ -77,6 +77,7 @@ class GTFormatting(DrivingSwarmNode):
 
                 robot_positions[name_idx] = [pose.position.x, pose.position.y]
                 robot_headings[name_idx] = self.quat_to_angle(pose.orientation)
+                #self.get_logger().info(f"{name} quat to angle : {robot_headings[name_idx]}")
 
             if not robot_positions:
                 return
