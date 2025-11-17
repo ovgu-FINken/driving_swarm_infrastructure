@@ -22,7 +22,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # TODO: stop using this at some point
         self.DEBUG_cur_robot_heading = None
 
-
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
 
         self.skyview_distances = []
@@ -236,6 +235,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
             self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
             to_send = Float64MultiArray()
+
+            # In the robot's reference frame
             to_send.data = [waldo_x, waldo_y]
             self.waldo_pub.publish(to_send)
 
@@ -339,7 +340,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
 
         self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
-
 
         # The output of the positions is relative to the current position of the laser scanner
         # Using the x-axis of the robot (aka the first value from the msg.ranges)
