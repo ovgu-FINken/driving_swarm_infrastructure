@@ -15,11 +15,26 @@ def get_topic_type_from_str(topic_type):
     if topic_type == "String":
         from std_msgs.msg import String
         return String
-    if topic_type == "Float64MultiArray":
+    if topic_type.startswith("Float64MultiArray"):
         from std_msgs.msg import Float64MultiArray
         return Float64MultiArray
+    if topic_type == "Float64":
+        from std_msgs.msg import Float64
+        return Float64
+        
     else:
         raise ValueError(f"unknown topic type {topic_type}")
+
+def parse_array_type(topic_type):
+    assert is_array_type(topic_type)
+    parts = topic_type.split(':')
+    return int(parts[1])
+
+def is_array_type(topic_type):
+    if topic_type.startswith("Float64MultiArray"):
+        return True
+    return False
+    
 
 class DirectDataExport(DrivingSwarmNode):
     def __init__(self):
@@ -65,7 +80,11 @@ class DirectDataExport(DrivingSwarmNode):
             for topic_name, topic_type in self.data_export_config["global_topics"].items():
                 self.get_logger().info(f"subscribing to {topic_name}")
                 self.create_subscription(get_topic_type_from_str(topic_type), topic_name, partial(self.global_topic_cb, topic_name=topic_name), 10)
-            self.column_generators[topic_name] = partial(self.global_topic_column, topic_name=topic_name)
+            if not is_array_type(topic_type):
+                self.column_generators[topic_name] = partial(self.global_topic_column, topic_name=topic_name)
+            else:
+                for i in range(parse_array_type(topic_type)):
+                    self.column_generators[topic_name + f"_{i}"] = partial(self.global_topic_column, topic_name=topic_name, idx=i) 
             
 
         # setup local topic subscribers
@@ -76,7 +95,12 @@ class DirectDataExport(DrivingSwarmNode):
                 self.get_logger().info(f"subscribing to {topic_name}")
                 for robot in self.robots:
                     self.create_subscription(get_topic_type_from_str(topic_type), f"/{robot}/{topic_name}", partial(self.robot_topic_cb, robot=robot, topic_name=topic_name), 10)
-                self.column_generators[topic_name] = partial(self.robot_topic_column, topic_name=topic_name)
+                if not is_array_type(topic_type):
+                    self.column_generators[topic_name] = partial(self.robot_topic_column, topic_name=topic_name)
+                else:
+                    for i in range(parse_array_type(topic_type)):
+                        self.column_generators[topic_name + f"_{i}"] = partial(self.robot_topic_column, topic_name=topic_name, idx=i) 
+                        
 
         if self.data_export_config["tf"]:
             self.setup_tf()
@@ -92,20 +116,33 @@ class DirectDataExport(DrivingSwarmNode):
         
         self.create_timer(1.0, self.timer_cb)
 
-    def robot_topic_column(self, robot, topic_name):
+    def robot_topic_column(self, robot, topic_name, idx=None):
         if topic_name not in self.robot_topic_msgs:
             self.robot_topic_msgs[topic_name] = {}
         if robot not in self.robot_topic_msgs[topic_name]:
             self.robot_topic_msgs[topic_name][robot] = None
-        return self.robot_topic_msgs[topic_name][robot]
+        data = self.robot_topic_msgs[topic_name][robot]
+        # for scalar, we just return column name and data
+        if idx is None or data is None:
+            return data
+
+        if idx < len(data):
+            return data[idx]
+        
 
     def robot_topic_cb(self, msg, robot=None, topic_name=None):
         self.robot_topic_msgs[topic_name][robot] = msg.data
 
-    def global_topic_column(self, robot, topic_name):
+    def global_topic_column(self, robot, topic_name, idx=None):
         if topic_name not in self.global_topic_msgs:
             self.global_topic_msgs[topic_name] = None
-        return self.global_topic_msgs[topic_name]
+        if idx is None:
+            return self.global_topic_msgs[topic_name]
+        if not self.global_topic_msgs[topic_name]:
+            return None
+        if idx < len(self.global_topic_msgs[topic_name]):
+            return self.global_topic_msgs[topic_name][idx]
+        return None
 
     def global_topic_cb(self, msg, topic_name=None):
         self.global_topic_msgs[topic_name] = msg.data
@@ -167,6 +204,9 @@ class DirectDataExport(DrivingSwarmNode):
         df = pd.concat(self.data, ignore_index=True)
         if not Path(self.data_file).parent.exists():
             os.makedirs(Path(self.data_file).parent)
+        for array_topic in self.array_topics:
+            pass
+
         df.to_csv(self.data_file, index=False)
         self.get_logger().info(f"saving data to {self.data_file}")
         self.get_logger().info(f"the data:\n{df.head(20)}")
