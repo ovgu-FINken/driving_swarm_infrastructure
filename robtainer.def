@@ -4,7 +4,7 @@ From: osrf/ros:humble-desktop-jammy
 %labels
   Author lasse.slaar@ovgu.de
   Version v0.1
-  Description "BA Apptainer mit ROS 2 Humble"
+  Description "MSX Apptainer with ROS 2 Humble"
 
 %files
   ../driving_swarm_infrastructure /ros_ws
@@ -26,12 +26,13 @@ From: osrf/ros:humble-desktop-jammy
     neovim \
     python3 \
     python3-pip \
+    python3.10-venv \
     python3-distutils \
     python3-setuptools \
     lsb-release \
     curl \
     tmux \
-    htop
+    htop 
 
   # Gazebo Fortress
   echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
@@ -70,6 +71,8 @@ From: osrf/ros:humble-desktop-jammy
   pip install trimesh
   pip install pycollada
   pip install --user --force-reinstall numpy==1.23.5
+  pip install plotly
+  pip install dash
 
   # ROS Workspace vorbereiten
   cd /ros_ws

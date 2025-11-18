@@ -4,7 +4,7 @@ import numpy as np
 
 import rclpy
 from geometry_msgs.msg import Point
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension, Float64
 from visualization_msgs.msg import Marker, MarkerArray
 
 
@@ -46,8 +46,13 @@ class ErrorCalc(DrivingSwarmNode):
                 10
             )
             self.error_pub[robot] = self.create_publisher(
-                Float64MultiArray,
+                Float64,
                 f"/{robot}/sunburstError",
+                10
+            )
+            self.real_waldo_pos_pub[robot] = self.create_publisher(
+                Float64MultiArray,
+                f"/{robot}/real_waldo_pos",
                 10
             )
 
@@ -101,11 +106,16 @@ class ErrorCalc(DrivingSwarmNode):
             real_waldo_vec_world = self.real_waldo_pos - self.real_robot_pos[i]
             est_waldo_vec_rob = self.waldo_pos[robot]
 
-            # Rotate Waldo vector into robot frame using robot heading
-            #R = rotation_matrix(self.robot_headings[i])
-            R = rotation_matrix_2d(-self.robot_headings[i])
+            # Rotate Waldo vector from robot into world frame using robot heading
+            R = rotation_matrix_2d(self.robot_headings[i])
+
+            # Rotate Waldo vector from world into robot frame using robot heading
+            R2 = rotation_matrix_2d(-self.robot_headings[i])
+
             #est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1], 1]))[:2]
             est_waldo_vec_world = (R @ np.array([est_waldo_vec_rob[0], est_waldo_vec_rob[1]]))
+
+            real_waldo_vec_robot = (R2 @ np.array([real_waldo_vec_world[0], real_waldo_vec_world[1]]))
 
             # Compute Euclidean error
             error = np.linalg.norm(est_waldo_vec_world - real_waldo_vec_world)
@@ -118,9 +128,18 @@ class ErrorCalc(DrivingSwarmNode):
                 f"error={error}"
             )
 
+            real_waldo_pos_msg = Float64MultiArray()
+            # real_waldo_pos_msg.layout.dim.append(MultiArrayDimension(
+            #     label="xy",
+            #     size=real_waldo_vec_robot.shape[1],
+            #     stride=real_waldo_vec_robot.shape[1]
+            # ))
+            real_waldo_pos_msg.data = [real_waldo_vec_robot[0], real_waldo_vec_robot[1]]
+            self.real_waldo_pos_pub[robot].publish(real_waldo_pos_msg)
+
             # Publish numeric error
-            msg = Float64MultiArray()
-            msg.data = [error]
+            msg = Float64()
+            msg.data = error
             self.error_pub[robot].publish(msg)
 
 
