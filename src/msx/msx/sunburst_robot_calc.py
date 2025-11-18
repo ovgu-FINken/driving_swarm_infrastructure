@@ -238,7 +238,10 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
             to_send = Float64MultiArray()
 
-            self.identity_pub.publish(self.robots[my_rbt_idx])
+            msg = String()
+            msg.data = str(self.robots[my_rbt_idx])
+
+            self.identity_pub.publish(msg)
 
             # In the robot's reference frame
             to_send.data = [waldo_x, waldo_y]
