@@ -34,6 +34,7 @@ class ErrorCalc(DrivingSwarmNode):
         self.robot_headings = []
 
         self.error_pub = {}
+        self.real_waldo_pos_pub = {}
 
         self.create_timer(1.0, self.compute_waldo_errors)
 
@@ -135,6 +136,7 @@ class ErrorCalc(DrivingSwarmNode):
             #     stride=real_waldo_vec_robot.shape[1]
             # ))
             real_waldo_pos_msg.data = [real_waldo_vec_robot[0], real_waldo_vec_robot[1]]
+            # TODO: verify correct rotation
             self.real_waldo_pos_pub[robot].publish(real_waldo_pos_msg)
 
             # Publish numeric error
