@@ -204,8 +204,6 @@ class DirectDataExport(DrivingSwarmNode):
         df = pd.concat(self.data, ignore_index=True)
         if not Path(self.data_file).parent.exists():
             os.makedirs(Path(self.data_file).parent)
-        for array_topic in self.array_topics:
-            pass
 
         df.to_csv(self.data_file, index=False)
         self.get_logger().info(f"saving data to {self.data_file}")
