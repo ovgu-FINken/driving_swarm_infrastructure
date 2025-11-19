@@ -14,18 +14,18 @@ else:
 st.write("got the data here:")
 st.dataframe(df)
 
-df["real $x_w$"] = df.real_waldo_pos_0
-df["real $y_w$"] = df.real_waldo_pos_1
-df["estimate $x_w$"] = df["sunburstRobotCalc/waldoPosition_0"]
-df["estimate $y_w$"] = df["sunburstRobotCalc/waldoPosition_1"]
+df["$x_w$"] = df.real_waldo_pos_0
+df["$y_w$"] = df.real_waldo_pos_1
+df["$\\hat x_w$"] = df["sunburstRobotCalc/waldoPosition_0"]
+df["$\\hat y_w$"] = df["sunburstRobotCalc/waldoPosition_1"]
 
-df["dist"] = np.sqrt((df["real $x_w$"]-df["estimate $x_w$"])**2 + (df["real $y_w$"] - df["estimate $x_w$"])**2)
-df["real $r$"] = np.sqrt((df["real $x_w$"] + df["real $y_w$"])**2)
-df["estimate $r$"] = np.sqrt((df["estimate $x_w$"] + df["estimate $y_w$"])**2)
-df["error $r$"] = df["real $r$"] - df["estimate $r$"]
-df["real $\\theta$"] = np.arctan2(df["real $y_w$"], df["real $x_w$"])
-df["estimate $\\theta$"] = np.arctan2(df["estimate $y_w$"], df["estimate $x_w$"])
-df["error $\\theta$"] = df["real $\\theta$"] - df["estimate $\\theta$"]
+df["$|w - \\hat w|$"] = np.sqrt((df["$x_w$"]-df["$\\hat x_w$"])**2 + (df["$y_w$"] - df["$\\hat y_w$"])**2)
+df["$r$"] = np.sqrt((df["$x_w$"] + df["$y_w$"])**2)
+df["$\\hat r$"] = np.sqrt((df["$\\hat x_w$"] + df["$\\hat y_w$"])**2)
+df["$r - \\hat r$"] = df["$r$"] - df["$\\hat r$"]
+df["$\\theta$"] = np.arctan2(df["$y_w$"], df["$x_w$"])
+df["$\\hat \\theta$"] = np.arctan2(df["$\\hat y_w$"], df["$\\hat x_w$"])
+df["$\\theta - \\hat \\theta$"] = df["$\\theta$"] - df["$\\hat \\theta$"]
 
 # start plotting stuff
 myplot = (
@@ -61,7 +61,7 @@ st.pyplot(ggplot.draw(myplot))
 myplot = (
 
     ggplot(df, aes(
-        x="t", y="dist", color="robot", shape="robot"))
+        x="t", y="$|w - \\hat w|$", color="robot", shape="robot"))
     + geom_point()
     + theme_light(base_size=11)
     + theme(legend_position='top',
@@ -72,26 +72,12 @@ myplot = (
 )
 
 st.pyplot(ggplot.draw(myplot))
+myplot.save(f"figures/msx_line_error_dist.pdf", dpi=300, bbox_inches="tight")
 
 myplot = (
 
     ggplot(df, aes(
-        x="t", y="error $r$", color="robot", shape="robot"))
-    + geom_point()
-    + theme_light(base_size=11)
-    + theme(legend_position='top',
-            #axis_text_x=element_text(rotation=90,
-            #                         hjust=0.5),
-            figure_size=(6, 4.5),
-            )
-)
-
-st.pyplot(ggplot.draw(myplot))
-
-myplot = (
-
-    ggplot(df, aes(
-        x="t", y="error $\\theta$", color="robot", shape="robot"))
+        x="t", y="$r - \\hat r$", color="robot", shape="robot"))
     + geom_line()
     + geom_point()
     + theme_light(base_size=11)
@@ -103,6 +89,21 @@ myplot = (
 )
 
 st.pyplot(ggplot.draw(myplot))
+myplot.save(f"figures/msx_line_error_r.pdf", dpi=300, bbox_inches="tight")
 
+myplot = (
 
-#myplot.save(f"msx_histogram.pdf", dpi=300, bbox_inches="tight")
+    ggplot(df, aes(
+        x="t", y="$\\theta - \\hat \\theta$", color="robot", shape="robot"))
+    + geom_line()
+    + geom_point()
+    + theme_light(base_size=11)
+    + theme(legend_position='top',
+            #axis_text_x=element_text(rotation=90,
+            #                         hjust=0.5),
+            figure_size=(6, 4.5),
+            )
+)
+
+st.pyplot(ggplot.draw(myplot))
+myplot.save(f"figures/msx_line_error_theta.pdf", dpi=300, bbox_inches="tight")
