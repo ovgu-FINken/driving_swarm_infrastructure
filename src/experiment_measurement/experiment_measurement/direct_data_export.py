@@ -122,15 +122,17 @@ class DirectDataExport(DrivingSwarmNode):
         if robot not in self.robot_topic_msgs[topic_name]:
             self.robot_topic_msgs[topic_name][robot] = None
         data = self.robot_topic_msgs[topic_name][robot]
-        # for scalar, we just return column name and data
+        # for scalar, we just return data
         if idx is None or data is None:
             return data
-
         if idx < len(data):
             return data[idx]
+        return None
         
 
     def robot_topic_cb(self, msg, robot=None, topic_name=None):
+        if topic_name not in self.robot_topic_msgs:
+            self.robot_topic_msgs[topic_name] = {}
         self.robot_topic_msgs[topic_name][robot] = msg.data
 
     def global_topic_column(self, robot, topic_name, idx=None):
@@ -151,6 +153,8 @@ class DirectDataExport(DrivingSwarmNode):
         if self.data_export_config["tf"]:
             self.get_robot_poses()
         self.append_time_step()
+        #self.global_topic_msgs = {}
+        #self.robot_topic_msgs = {}
         self.t+=1
 
     def append_time_step(self):
