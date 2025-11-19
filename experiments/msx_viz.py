@@ -26,6 +26,10 @@ df["$r - \\hat r$"] = df["$r$"] - df["$\\hat r$"]
 df["$\\theta$"] = np.arctan2(df["$y_w$"], df["$x_w$"])
 df["$\\hat \\theta$"] = np.arctan2(df["$\\hat y_w$"], df["$\\hat x_w$"])
 df["$\\theta - \\hat \\theta$"] = df["$\\theta$"] - df["$\\hat \\theta$"]
+# Wrap auf (-pi, pi]
+df["$\\theta - \\hat \\theta$"] = (
+    (df["$\\theta - \\hat \\theta$"] + np.pi) % (2 * np.pi) - np.pi
+)
 
 st.write("got the data here:")
 st.dataframe(df)

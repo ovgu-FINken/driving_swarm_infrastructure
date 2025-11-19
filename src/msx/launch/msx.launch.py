@@ -115,6 +115,18 @@ def controller_spawning(context, *args, **kwargs):
                 output='screen',
             ))
 
+    # controllers.append(Node(
+    #             package='msx',
+    #             executable='skyview_finder',
+    #             parameters=[{
+    #                 'use_sim_time': use_sim_time,
+    #                 'robot_names': robots[:n_robots],
+    #             }],
+    #             #namespace=robot,
+    #             #remappings=[('topic', f'/{robot}/topic')],
+    #             output='screen',
+    #         ))
+
     for robot in robots[:n_robots]:
        controllers.append(Node(
            package='msx',
