@@ -147,7 +147,6 @@ def generate_launch_description():
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
     n_robots = len(robots)
-
     
     poses = generate_random_poses(n_robots)
 

@@ -107,9 +107,9 @@ def detect_tb_from_ranges(ranges,
         if cr > cluster_range_threshold:
             continue
         # TODO: Modify this to be more smart
-        if len(clusters[clust_idx]) > 0.06 * 360 / (2 * math.pi * (cr-0.05)) + 3:
+        if len(clusters[clust_idx]) > 0.0695 * 360 / (2 * math.pi * (cr-0.05)) + 3:
             continue
-        if len(clusters[clust_idx]) < 0.06 * 360 / (2 * math.pi * cr) - 3:
+        if len(clusters[clust_idx]) < 0.0695 * 360 / (2 * math.pi * cr) - 3:
             continue
         if len(clusters[clust_idx]) < 3:
             continue
