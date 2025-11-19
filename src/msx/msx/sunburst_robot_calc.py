@@ -136,15 +136,13 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                         # threshold check angles
                         # TODO: angles seem wrong!
-                        angle_diff_sky = (sky_angle[sky_idx] % (np.pi * 2) - sky_angle[sky_idy] % (np.pi * 2)) % (
-                                np.pi * 2)
-                        angle_diff_lidar = (lidar_angle[lidar_idx] % (np.pi * 2) - lidar_angle[lidar_idy] % (
-                                np.pi * 2)) % (np.pi * 2)
+                        angle_diff_sky = abs(sky_angle[sky_idx] % (np.pi * 2) - sky_angle[sky_idy] % (np.pi * 2))
+                        angle_diff_lidar = abs(lidar_angle[lidar_idx] % (np.pi * 2) - lidar_angle[lidar_idy] % (np.pi * 2))
                         # self.get_logger().info(
                         #     f"angle_threshold: sky_diff = {angle_diff_sky % (np.pi * 2):.2f}, lidar_diff = {angle_diff_lidar % (np.pi * 2):.2f}")
                         a1 = np.abs(angle_diff_sky - angle_diff_lidar)
                         # if we have 1deg or 359 deg, take 1 deg
-                        angle_diff = min(a1, -a1 % (2 * np.pi))
+                        angle_diff = a1
                         # self.get_logger().info(
                         #     f"angle_threshold: angle_diff = {angle_diff : .2f} < {self.angle_threshold : .2f}")
                         if angle_diff > self.angle_threshold:
