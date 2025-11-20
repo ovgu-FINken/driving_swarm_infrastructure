@@ -69,3 +69,4 @@ rosbag**
 **.sif
 *.csv
 *.csv.gz
+*.prof
