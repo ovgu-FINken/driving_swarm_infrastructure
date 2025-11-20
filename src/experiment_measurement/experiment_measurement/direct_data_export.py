@@ -153,8 +153,8 @@ class DirectDataExport(DrivingSwarmNode):
         if self.data_export_config["tf"]:
             self.get_robot_poses()
         self.append_time_step()
-        #self.global_topic_msgs = {}
-        #self.robot_topic_msgs = {}
+        self.global_topic_msgs = {}
+        self.robot_topic_msgs = {}
         self.t+=1
 
     def append_time_step(self):

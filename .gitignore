@@ -2,6 +2,7 @@ install/
 build/
 log/ 
 
+experiments/figures/
 
 # Compiled Object files
 *.slo
