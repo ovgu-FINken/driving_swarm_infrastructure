@@ -28,6 +28,7 @@ if data_file is not None:
     df["$\\theta - \\hat \\theta$"] = (
         (df["$\\theta - \\hat \\theta$"] + np.pi) % (2 * np.pi) - np.pi
     )
+    df["ND"] = df["num_detections"].astype("category")
 
     st.write("got the data here:")
     st.dataframe(df)
@@ -147,8 +148,8 @@ if data_file is not None:
     myplot = (
 
         ggplot(df, aes(
-            x="num_detections", y="$|w - \\hat w|$", color="correct id", shape="robot"))
-        + geom_point()
+            x="ND", y="$|w - \\hat w|$", color="correct id"))
+        + geom_boxplot()
         + theme_light(base_size=11)
         + theme(legend_position='top',
                 #axis_text_x=element_text(rotation=90,
