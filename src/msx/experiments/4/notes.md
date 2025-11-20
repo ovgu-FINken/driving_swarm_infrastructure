@@ -1,0 +1,4 @@
+- sees ghost robot in wall (detection count was over amount of robots)
+- error rather low when all identifications where made successfully
+- whenever the distance to other robots is shorter than maximum LiDAR range error seems low, identification seems to work
+- waldo was moved by robots

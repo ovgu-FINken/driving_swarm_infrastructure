@@ -76,7 +76,7 @@ if data_file is not None:
     )
 
     st.pyplot(ggplot.draw(myplot))
-    myplot.save(f"figures/msx_line_error_dist.pdf", dpi=300, bbox_inches="tight")
+    myplot.save(f"figures/msx_line_error_euclidean.pdf", dpi=300, bbox_inches="tight")
 
     myplot = (
 
@@ -93,7 +93,7 @@ if data_file is not None:
     )
 
     st.pyplot(ggplot.draw(myplot))
-    myplot.save(f"figures/msx_line_error_r.pdf", dpi=300, bbox_inches="tight")
+    myplot.save(f"figures/msx_line_error_distance.pdf", dpi=300, bbox_inches="tight")
 
     myplot = (
 
@@ -127,6 +127,7 @@ if data_file is not None:
     )
 
     st.pyplot(ggplot.draw(myplot))
+    myplot.save(f"figures/msx_line_error_euclidian_to_distance.pdf", dpi=300, bbox_inches="tight")
 
 
     myplot = (
@@ -143,6 +144,7 @@ if data_file is not None:
     )
 
     st.pyplot(ggplot.draw(myplot))
+    myplot.save(f"figures/msx_line_error_euclidean_to_theta.pdf", dpi=300, bbox_inches="tight")
 
 
     myplot = (
@@ -159,3 +161,4 @@ if data_file is not None:
     )
 
     st.pyplot(ggplot.draw(myplot))
+    myplot.save(f"figures/msx_boxplot_detection_count.pdf", dpi=300, bbox_inches="tight")

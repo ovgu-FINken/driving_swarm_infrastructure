@@ -1,0 +1,4 @@
+- periodic distance error due to 10 sec movement 10 sec stop behaviour
+- no wrong identification when all robots are detected
+- error is heigh whenever the robot identification fails
+- plateus in error value where robot is standig still
