@@ -83,8 +83,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
             100
         )
 
-        self.identity_pub = self.create_publisher(String, "/identify_as", 100)
-        self.number_pub = self.create_publisher(Int32, "num_detections", 1)
+        self.identity_pub = self.create_publisher(String, "identify_as", 10)
+        self.number_pub = self.create_publisher(Int32, "num_detections", 10)
 
         # time.sleep(10)
         self.create_timer(1.0, self.calc_timer)
@@ -201,7 +201,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         self.lidar_angles = []
         self.lidar_distances = []
-        self.number_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
         for loc in self.lidar_data:
             angle = math.atan2(loc[1], loc[0])
@@ -211,6 +210,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.lidar_angles.append(angle)
             self.lidar_distances.append(math.sqrt(loc[0] ** 2 + loc[1] ** 2))
             pass
+        
+        self.number_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
         # For the data from each of the N robots
         min_scales = []
