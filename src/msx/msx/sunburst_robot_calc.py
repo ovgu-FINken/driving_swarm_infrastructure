@@ -211,7 +211,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.lidar_distances.append(math.sqrt(loc[0] ** 2 + loc[1] ** 2))
             pass
         
-        self.number_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
         # For the data from each of the N robots
         min_scales = []
@@ -243,6 +242,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             msg.data = str(self.robots[my_rbt_idx])
 
             self.identity_pub.publish(msg)
+            self.number_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
             # In the robot's reference frame
             to_send.data = [waldo_x, waldo_y]
