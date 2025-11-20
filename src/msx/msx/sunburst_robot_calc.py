@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
-from std_msgs.msg import Float64MultiArray, String
+from std_msgs.msg import Float64MultiArray, String, Int32
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import LaserScan, PointCloud
 from driving_swarm_utils.utils import detect_tb_from_ranges
@@ -84,6 +84,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         )
 
         self.identity_pub = self.create_publisher(String, "/identify_as", 100)
+        self.number_pub = self.create_publisher(Int32, "num_detections", 1)
 
         # time.sleep(10)
         self.create_timer(1.0, self.calc_timer)
@@ -200,6 +201,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         self.lidar_angles = []
         self.lidar_distances = []
+        self.number_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
         for loc in self.lidar_data:
             angle = math.atan2(loc[1], loc[0])

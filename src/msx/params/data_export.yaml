@@ -5,6 +5,7 @@ global_topics:
 robot_topics:
   status: String
   identify_as: String
+  num_detections: Int32
   sunburstError: Float64 
   real_waldo_pos: "Float64MultiArray:2"
   sunburstRobotCalc/waldoPosition: "Float64MultiArray:2"
