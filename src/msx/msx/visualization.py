@@ -225,8 +225,8 @@ class Visualization(DrivingSwarmNode):
                 lidar_mark.id = 600 + i * 10 + j
                 lidar_mark.type = Marker.SPHERE
                 lidar_mark.action = Marker.ADD
-                lidar_mark.scale.x = lidar_mark.scale.y = lidar_mark.scale.z = 0.2
-                lidar_mark.color.a = 1.0
+                lidar_mark.scale.x = lidar_mark.scale.y = lidar_mark.scale.z = 0.1
+                lidar_mark.color.a = 0.5
                 lidar_mark.color.r = 1.0
                 lidar_mark.color.g = 0.2
                 lidar_mark.color.b = 0.2
@@ -280,7 +280,7 @@ class Visualization(DrivingSwarmNode):
                     Point(x = x, y = y, z = 0.0),
                     Point(x = x + sunburst_world[0], y = y + sunburst_world[1], z = 0.0)
                 ]
-                marker_array.markers.append(sunburst_marker)
+                #marker_array.markers.append(sunburst_marker)
 
         # Publish all markers
         self.marker_pub.publish(marker_array)

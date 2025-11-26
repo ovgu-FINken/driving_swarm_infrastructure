@@ -1,0 +1,4 @@
+- seems that the more identifications where successfull the better the error value gets
+- waldo was pushed by robots
+- many outliers in error values compared to lower amount of robots
+- lots of jumping in estimated waldo position

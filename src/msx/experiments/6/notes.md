@@ -1,0 +1,5 @@
+- etimates of waldo pos jump a lot more than before
+- waldo was moved by other robots
+- still ghost robots detected
+- estimated waldo pos jumps every calculation interval
+- maybe actute triangles are harder for our algorithm. seems to jump more than with more obtuse triangles
