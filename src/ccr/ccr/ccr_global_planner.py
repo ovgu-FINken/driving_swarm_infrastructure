@@ -42,7 +42,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.declare_parameter('belief_lifetime', 15.0)
         self.declare_parameter('belief_lifetime_variability', 2.0)
         self.declare_parameter('wait_cost', 1.01)
-        self.declare_parameter('quality_metric', "criticality")
+        self.declare_parameter('quality_metric', "flow")
         self._published_plan = []
         self.state = None
         self.plan = []
@@ -121,6 +121,9 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         
         self.create_timer(2.0, self.timer_cb)
         self.create_timer(0.3, self.fast_timer_cb)
+        self.get_logger().info(colored("init done", "green"))
+        self.setup_command_interface(autorun=False)
+        self.set_state_ready()
         
     def timer_cb(self):
         if self.state is None:
