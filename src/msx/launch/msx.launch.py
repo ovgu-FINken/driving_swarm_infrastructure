@@ -151,8 +151,6 @@ def generate_launch_description():
         'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'square_room.yaml'),
         # 'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'face.yaml'),
         'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
-        'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics_reactive.yaml'),
-        'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
 
     robots_file = args['robot_names_file']

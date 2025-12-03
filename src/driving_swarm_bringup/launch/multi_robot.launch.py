@@ -149,14 +149,6 @@ def generate_launch_description():
         }.items()
     )
 
-    rosbag_recording = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(exp_measurement_dir,
-                         'launch', 'rosbag_recording.launch.py')),
-        launch_arguments={
-        }.items()
-    )
-
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -173,8 +165,6 @@ def generate_launch_description():
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(simulator)
 
-    # Add the actions to start rosbag recording
-    ld.add_action(rosbag_recording)
 
     # The opaque function is neccesary to resolve the context
     # of the launch file and read the LaunchDescription param at runtime

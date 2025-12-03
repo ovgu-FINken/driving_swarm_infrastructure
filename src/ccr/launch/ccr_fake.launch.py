@@ -129,18 +129,9 @@ def generate_launch_description():
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
-         'rosbag_topics_file': os.path.join(get_package_share_directory('trajectory_follower'), 'params', 'rosbag_topics.yaml'),
-         'qos_override_file': os.path.join(get_package_share_directory('experiment_measurement'), 'params', 'qos_override.yaml')
     }
     ld.add_action(OpaqueFunction(function=controller_spawning, kwargs={
         'robots_file': args['robot_names_file'],
         'poses_file': args['poses_file']}))
-    rosbag_recording = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('experiment_measurement'),
-                         'launch', 'rosbag_recording.launch.py')),
-        launch_arguments=args.items()
-    )
-    ld.add_action(rosbag_recording)
 
     return ld

@@ -95,16 +95,6 @@ def generate_launch_description():
                 "params",
                 "robot_names_real.yaml",
             ),
-            "rosbag_topics_file": os.path.join(
-                get_package_share_directory("trajectory_follower"),
-                "params",
-                "rosbag_topics.yaml",
-            ),
-            "qos_override_file": os.path.join(
-                get_package_share_directory("experiment_measurement"),
-                "params",
-                "qos_override.yaml",
-            ),
         }.items(),
     )
 

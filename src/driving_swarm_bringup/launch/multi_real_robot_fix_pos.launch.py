@@ -131,12 +131,6 @@ def generate_launch_description():
         default_value=EnvironmentVariable('RESET_TIMEOUT', default_value="0.0")
     )
 
-    rosbag_recording = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(exp_measurement_dir, 'launch', 'rosbag_recording.launch.py')),
-        launch_arguments={
-        }.items()
-    )
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -149,8 +143,6 @@ def generate_launch_description():
     ld.add_action(declare_init_timeout_cmd)
     ld.add_action(declare_reset_timeout_cmd)
 
-    # Add the actions to start rosbag recording
-    ld.add_action(rosbag_recording)
 
     # The opaque function is neccesary to resolve the context of the launch file and read the LaunchDescription param at runtime
     ld.add_action(OpaqueFunction(function=initialize_robots))
