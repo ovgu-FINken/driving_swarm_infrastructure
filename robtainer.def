@@ -1,10 +1,10 @@
 Bootstrap: docker
-From: osrf/ros:humble-desktop-jammy
+From: osrf/ros:jazzy-desktop-full-noble
 
 %labels
-  Author lasse.slaar@ovgu.de
+  Author müller.dario@ovgu.de
   Version v0.1
-  Description "MSX Apptainer with ROS 2 Humble"
+  Description "BA Apptainer mit ROS 2 jazzy"
 
 %files
   ../driving_swarm_infrastructure /ros_ws
@@ -26,30 +26,27 @@ From: osrf/ros:humble-desktop-jammy
     neovim \
     python3 \
     python3-pip \
-    python3.10-venv \
-    python3-distutils \
     python3-setuptools \
     lsb-release \
     curl \
     tmux \
-    htop 
+    htop
 
-  # Gazebo Fortress
-  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
-  wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add -
-  apt-get update && apt-get install -y gazebo-fortress
+  apt update && apt install -y\
+    ros-jazzy-ros-gz \
+    ros-jazzy-ros-gz-sim
 
   # Eclipse Zenoh Repo (trusted=yes umgehen fehlende GPG)
-  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" >> /etc/apt/sources.list
-  apt-get update && apt-get install -y \
-    zenoh-bridge-ros2dds \
-    ros-humble-rmw-cyclonedds-cpp
+  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee -a /etc/apt/sources.list > /dev/null
+  apt update && apt-get install -y \
+    zenoh-bridge-dds\
+    ros-jazzy-rmw-cyclonedds-cpp
 
   # ROS-Erweiterungen
   apt-get install -y \
-    ros-humble-ackermann-msgs \
-    ros-humble-ros-gz \
-    ros-humble-rviz2
+    ros-jazzy-ackermann-msgs \
+    ros-jazzy-ros-gz \
+    ros-jazzy-rviz2
 
   # CMake 3.31 installieren
   CMAKE_VERSION=3.31.0
@@ -62,17 +59,18 @@ From: osrf/ros:humble-desktop-jammy
 
   # Custom RC
   cp /root/.bashrc /customrc
-  echo "source /opt/ros/humble/setup.bash" >> /customrc
+  echo "source /opt/ros/jazzy/setup.bash" >> /customrc
+
+
+  apt-get install -y python3-pip
+  export PIP_BREAK_SYSTEM_PACKAGES=1
 
   # Python-Packages
-  pip install numpy==1.23.5
-  pip install pandas==1.5.3
+  pip install numpy
+  pip install pandas
   pip install scikit-image
   pip install trimesh
   pip install pycollada
-  pip install --user --force-reinstall numpy==1.23.5
-  pip install plotly
-  pip install dash
 
   # ROS Workspace vorbereiten
   cd /ros_ws
