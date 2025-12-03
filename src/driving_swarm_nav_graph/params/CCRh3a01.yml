@@ -1,7 +1,0 @@
-planner: CCR
-planner_args:
-  limit: 200
-  weight: 'dist'
-  anti_social_punishment: 0.1
-  discard_conflicts_beyond: 3
-  horizon: 3

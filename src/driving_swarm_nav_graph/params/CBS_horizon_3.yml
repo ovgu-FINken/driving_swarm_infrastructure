@@ -1,7 +1,0 @@
-planner: CBS
-planner_args:
-  limit: 200
-  discard_conflicts_beyond: 3
-  horizon: 3
-  weight: 'dist'
-  max_iter: 1_000_000

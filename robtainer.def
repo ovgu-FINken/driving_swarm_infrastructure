@@ -79,4 +79,4 @@ From: osrf/ros:jazzy-desktop-full-noble
   rosdep install --from-paths src/ --ignore-src -y
 
 %runscript
-  exec /bin/bash --rcfile /customrc
+  exec /bin/bash --rcfile bashrc

@@ -1,5 +1,0 @@
-planner: CCR
-planner_args:
-  limit: 100
-  weight: 'dist'
-  pad_paths: True
