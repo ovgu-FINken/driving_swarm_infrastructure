@@ -12,22 +12,16 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution, Environm
 def generate_launch_description():
     # from https://github.com/ROBOTIS-GIT/turtlebot3_simulations/blob/jazzy/turtlebot3_gazebo/launch/turtlebot3_world.launch.py
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
-    bringup_dir = get_package_share_directory('nav2_bringup')
 
     # Simulation settings
     world = LaunchConfiguration('world')
-    simulator = LaunchConfiguration('simulator')
 
     # Declare the launch arguments
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value=os.path.join(bringup_dir, 'worlds', 'world_only.model'),
+        default_value=os.path.join('turtlebot3_gazebo', 'worlds', 'turtlebot3_world.world'),
         description='Full path to world file to load')
 
-    declare_simulator_cmd = DeclareLaunchArgument(
-        'simulator',
-        default_value=EnvironmentVariable('ROS_SIMULATOR', default_value='gazebo'),
-        description='The simulator to use (gazebo or gzserver, i.e. with or without GUI)')
 
     # from https://github.com/ROBOTIS-GIT/turtlebot3_simulations/blob/jazzy/turtlebot3_gazebo/launch/turtlebot3_world.launch.py
     gzserver_cmd = IncludeLaunchDescription(
@@ -49,7 +43,6 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # Declare the launch options
-    ld.add_action(declare_simulator_cmd)
     ld.add_action(declare_world_cmd)
 
     # Add the actions to start gazebo, robots and simulations
