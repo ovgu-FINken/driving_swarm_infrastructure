@@ -17,7 +17,7 @@ setup(
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.world')),
         (os.path.join('share', package_name, 'models'), glob('models/*.world')),
     ],
-    install_requires=['setuptools'],
+    install_requires=['ros_gz_sim_interfaces', 'setuptools'],
     zip_safe=True,
     maintainer='Sebastian Mai',
     maintainer_email='sebastian.mai@ovgu.de',
@@ -30,6 +30,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'nav2_gz_spawner = driving_swarm_simulation.nav2_gz_spawner:main',
         ],
     },
 )
