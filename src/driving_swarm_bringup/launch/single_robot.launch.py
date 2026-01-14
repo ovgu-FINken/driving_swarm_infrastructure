@@ -27,6 +27,7 @@ def generate_launch_description():
     tf_exchange_dir = get_package_share_directory('tf_exchange')
     nav2_dir = get_package_share_directory('nav2_bringup')
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
+    simulation_dir = get_package_share_directory('driving_swarm_simulation')
     slam = LaunchConfiguration('slam')
 
     
@@ -78,20 +79,14 @@ def generate_launch_description():
             )
     
     use_sim_time = TextSubstitution(text='True')
-    spawner = launch_ros.actions.Node(
-            package='driving_swarm_bringup',
-            executable='nav2_gazebo_spawner',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=[
-                '--robot_name', LaunchConfiguration('robot_name'),
-                '--robot_namespace', LaunchConfiguration('robot_name'),
-                '--turtlebot_type', launch.substitutions.EnvironmentVariable('TURTLEBOT3_MODEL'),
-                '-x', LaunchConfiguration('x_pose'),
-                '-y', LaunchConfiguration('y_pose'),
-                '-z', LaunchConfiguration('z_pose'),
-                '-yaw', LaunchConfiguration('yaw_pose'),
-                ])
+    # TODO simulation_dir
+    # ceck robot_namespace
+    spawner = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(simulation_dir, 'launch', 'spawn_gz_tb3.launch.py')
+                ),
+
+            )
 
     rviz = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
