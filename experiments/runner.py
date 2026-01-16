@@ -153,7 +153,6 @@ def main():
         if os.path.exists(run_dir):
             logging.info("run directory already exists")
             # check if db3 file exists in run directory:
-            # the db3 file is within a rosbag_... directory in the run directory
             csv_file = glob.glob(os.path.join(run_dir, "run_*.csv.gz"))
             if len(csv_file):
                 logging.info(f"run {csv_file} already exists")
@@ -180,7 +179,6 @@ def main():
             f"run_timeout:={config['run_timeout']:.1f}",
             f"init_timeout:={config['init_timeout']:.1f}",
             "use_rviz:=false",
-            "use_rosbag:=false",
             "simulator:=gzserver",
             f"data_file:=run_{run_cfg['algo'][0]}_{run_cfg['mode']}_{run_cfg['n']}_{run_cfg['run']}.csv.gz",
         ]

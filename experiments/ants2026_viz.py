@@ -72,10 +72,13 @@ def create_goal_data(dir, scenario):
 
 
 dirs = {
-    "/home/semai/data/markov/paper/experiment_2025-11-04/": "1m grid",
-    "/home/semai/data/markov/paper/easy1/": "0.5m grid",
-    "/home/semai/data/markov/paper/easy2/": "0.5m grid",
-    "/home/semai/data/markov/paper/1m_10/": "1m grid",
+    "/home/semai/data/markov/thesis/easy1/": "0.5m grid",
+    "/home/semai/data/markov/thesis/easy2/": "0.5m grid",
+    "/home/semai/data/markov/thesis/hard1/" : "1m grid",
+    "/home/semai/data/markov/thesis/hard2/": "1m grid",
+    "/home/semai/data/markov/thesis/1m_10/": "1m grid",
+    "/home/semai/data/markov/thesis/wild_params/": "1m grid",
+
 }
 df_runs = pd.concat([create_goal_data(dir, scenario) for dir, scenario in dirs.items()])
 df_runs["scenario"] = df_runs["scenario"].astype('category')
@@ -186,13 +189,13 @@ table = pd.DataFrame(rows)
 
 # Step 4: Pivot so “0.5m grid” and “1m grid” appear side-by-side
 wide = (
-    table.pivot(index="n", columns="scenario", values=[alg_a, alg_b, "p"])
+    table.pivot(index="n", columns="scenario", values=[alg_a, alg_b])
     .swaplevel(axis=1)
     .sort_index(axis=1)
 )
 wide.columns = [f"{sc} {alg}" for sc, alg in wide.columns]
 
 # Step 5: Output LaTeX
-latex = wide.to_latex(escape=False, na_rep="--", column_format="lcccccc")
+latex = wide.to_latex(escape=False, na_rep="--", column_format="|l|ccc|ccc|")
 
 print(latex)

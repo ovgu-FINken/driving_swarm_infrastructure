@@ -20,7 +20,11 @@ def read_directory(directory: str):
     with open(str(directory) + "/params.yaml", 'r') as f:
         params = yaml.load(f, Loader=yaml.SafeLoader)
     print(f"reading csv {csv_files[0]}")
-    df = pd.read_csv(csv_files[0])
+    try:
+        df = pd.read_csv(csv_files[0])
+    except pd.errors.EmptyDataError:
+        print(f"WARNING: Empty Data encountered in {csv_files[0]}")
+        return pd.DataFrame()
     for k, v in params.items():
         if isinstance(v, numbers.Number):
             df[k] = v
@@ -33,6 +37,10 @@ def read_directory(directory: str):
         else:
             df[k] = str(v)
     df["run_uuid"] = str(uuid.uuid4())
+    df["x"] = df["x"].astype("float32") 
+    df["y"] = df["y"].astype("float32") 
+    df["cmd_vel_rot"] = df["cmd_vel_rot"].astype("float32") 
+    df["cmd_vel_x"] = df["cmd_vel_x"].astype("float32")
     return df
 
 def read_all_subdirectories(directory: str):
@@ -42,7 +50,7 @@ def read_all_subdirectories(directory: str):
     for subdirectory in glob(str(directory) + "*/**", recursive=True):
         if not os.path.isdir(subdirectory):
             continue
-        print(f"reading dir: {subdirectory}")
+        #print(f"reading dir: {subdirectory}")
         df = read_directory(subdirectory)
         if df is not None:
             dfs.append(df)
