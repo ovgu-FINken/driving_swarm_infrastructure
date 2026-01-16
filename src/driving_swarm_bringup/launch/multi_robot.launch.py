@@ -99,6 +99,7 @@ def initialize_robots(context, *args, **kwargs):
 
 def generate_launch_description():
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
+    simulation_dir = get_package_share_directory('driving_swarm_simulation')
     exp_measurement_dir = get_package_share_directory('experiment_measurement')
 
     declare_n_robots_cmd = DeclareLaunchArgument(
@@ -144,7 +145,7 @@ def generate_launch_description():
     # Define commands for launching the navigation instances
     simulator = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_dir, 'launch', 'simulator.launch.py')),
+            os.path.join(simulation_dir, 'launch', 'simulator.launch.py')),
         launch_arguments={
         }.items()
     )
