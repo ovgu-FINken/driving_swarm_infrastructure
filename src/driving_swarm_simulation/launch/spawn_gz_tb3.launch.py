@@ -3,6 +3,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 import launch_ros.actions
 
+
+
 def generate_launch_description():
     return LaunchDescription([
         # Deklariere die Launch-Argumente
@@ -25,17 +27,17 @@ def generate_launch_description():
         ),
 
         # Spawne den Roboter
-        launch_ros.actions.Node(
-            package='driving_swarm_simulation',
-            executable='nav2_gz_spawner',
-            output='screen',
-            arguments=[
-                '--robot_name', LaunchConfiguration('robot_name'),
-                '--robot_namespace', LaunchConfiguration('robot_namespace'),
-                '--turtlebot_type', LaunchConfiguration('turtlebot_type'),
-                '-x', LaunchConfiguration('x_pose'),
-                '-y', LaunchConfiguration('y_pose'),
-                '-z', LaunchConfiguration('z_pose')
-            ]
-        ),
+        # launch_ros.actions.Node(
+        #     package='driving_swarm_simulation',
+        #     executable='nav2_gz_spawner',
+        #     output='screen',
+        #     arguments=[
+        #         '--robot_name', LaunchConfiguration('robot_name'),
+        #         '--robot_namespace', LaunchConfiguration('robot_namespace'),
+        #         '--turtlebot_type', LaunchConfiguration('turtlebot_type'),
+        #         '-x', LaunchConfiguration('x_pose'),
+        #         '-y', LaunchConfiguration('y_pose'),
+        #         '-z', LaunchConfiguration('z_pose')
+        #     ]
+        # ),
     ])
