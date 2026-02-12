@@ -4,7 +4,7 @@ import os
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo)
+                            IncludeLaunchDescription, LogInfo, AppendEnvironmentVariable)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
 
@@ -53,7 +53,8 @@ def write_tmp_sdf_file(robot_name, sdf_source, yaml_source, dest_folder='/tmp'):
     content = content.replace('<frame_name>base_scan</frame_name>', f'<frame_name>{unique_frame_root}/base_scan</frame_name>')
 
     # Write
-    with open(f'{dest_folder}/{robot_name}.sdf', 'w') as f:
+    sdf_file = f'{dest_folder}/{robot_name}.sdf'
+    with open(sdf_file, 'w') as f:
         f.write(content)
 
 
@@ -85,8 +86,16 @@ def write_tmp_sdf_file(robot_name, sdf_source, yaml_source, dest_folder='/tmp'):
     # content = content.replace('gz_topic_name: "camera/camera_info"', f'gz_topic_name: "{unique_topic_root}/camera/camera_info"')
 
     # Write
-    with open(f'{dest_folder}/{robot_name}.yaml', 'w') as f:
+    yaml_file = f'{dest_folder}/{robot_name}.yaml'
+    with open(yaml_file, 'w') as f:
         f.write(content)
+    return sdf_file, yaml_file 
+
+def spawn_tb3_cmds(name, pose, robot_sdf, robot_yaml):
+    # spawn robot in simulation
+    # start robot state publisher
+    cmds = []
+    return cmds
 
 def spawn_robots(context, *args, **kwargs):
     save_path = '/tmp/'
@@ -102,24 +111,11 @@ def spawn_robots(context, *args, **kwargs):
     spawn_robot_cmds = []
     sdf_file = os.path.join(pkg_turtlebot3_gazebo, 'models', 'turtlebot3_' + model_name, 'model.sdf')
     yaml_file = os.path.join(pkg_turtlebot3_gazebo, 'params', 'turtlebot3_' + model_name + '_bridge.yaml'),
-    name, pose in list(zip(robot_names, poses))[:int(n_robots)]:
-        write_tmp_sdf_file(name, sdf_file, yaml_file, save_path)
-        spawn_robots_cmds.append(
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(launch_dir, 'multi_spawn_turtlebot3.launch.py'),
-                ),
-                launch_arguments={
-                    'x_pose': str(poses[i][0]),
-                    'y_pose': str(poses[i][1]),
-                    'theta': str(poses[i][2]),
-                    'robot_name': name,
-                    'urdf_path': f'{save_path}/{name}.sdf',
-                    'bridge_params': f'{save_path}/{name}.yaml'
-                }.items()
-            )
-
-        )
+    if int(n_robots) < 1:
+        return spawn_robot_cmds
+    for name, pose in list(zip(robot_names, poses))[:int(n_robots)]:
+        robot_sdf, robot_yaml = write_tmp_sdf_file(name, sdf_file, yaml_file, save_path)
+        spawn_robot_cmds += spawn_tb3_cmds(name, pose, robot_sdf, robot_yaml)
     return spawn_robot_cmds
      
 
@@ -152,6 +148,12 @@ def generate_launch_description():
         launch_arguments={'gz_args': '-g -v2 ', 'on_exit_shutdown': 'true'}.items()
     )
 
+    set_env_vars_resources = AppendEnvironmentVariable(
+            'GZ_SIM_RESOURCE_PATH',
+            os.path.join(
+                get_package_share_directory('turtlebot3_gazebo'),
+                'models'))
+
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -162,5 +164,6 @@ def generate_launch_description():
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(gzclient_cmd)
     ld.add_action(gzserver_cmd)
+    ld.add_action(set_env_vars_resources)
 
     return ld

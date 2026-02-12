@@ -27,7 +27,6 @@ def generate_launch_description():
     tf_exchange_dir = get_package_share_directory('tf_exchange')
     nav2_dir = get_package_share_directory('nav2_bringup')
     bringup_dir = get_package_share_directory('driving_swarm_bringup')
-    simulation_dir = get_package_share_directory('driving_swarm_simulation')
     slam = LaunchConfiguration('slam')
 
     
@@ -79,14 +78,6 @@ def generate_launch_description():
             )
     
     use_sim_time = TextSubstitution(text='True')
-    # TODO simulation_dir
-    # ceck robot_namespace
-    spawner = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(simulation_dir, 'launch', 'spawn_gz_tb3.launch.py')
-                ),
-
-            )
 
     rviz = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -103,6 +94,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     autostart = 'True'
     params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
+    # TODO CHANGE URDF AND YAML
     urdf = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'urdf', 'turtlebot3_burger.urdf')
     with open(urdf, 'r') as f:
         robot_description = f.read()
@@ -114,19 +106,19 @@ def generate_launch_description():
         launch_ros.actions.PushRosNamespace(
             namespace=namespace),
             
-        launch_ros.actions.Node(package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            #namespace=namespace,
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time,
-                         'frame_prefix': PythonExpression(['"', frame_prefix, '/"']),
-                         'robot_description': robot_description
-                         }],
-            #arguments=[urdf],
-            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
-        ),
-
+#        launch_ros.actions.Node(package='robot_state_publisher',
+#            executable='robot_state_publisher',
+#            name='robot_state_publisher',
+#            #namespace=namespace,
+#            output='screen',
+#            parameters=[{'use_sim_time': use_sim_time,
+#                         'frame_prefix': PythonExpression(['"', frame_prefix, '/"']),
+#                         'robot_description': robot_description
+#                         }],
+#            #arguments=[urdf],
+#            remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
+#        ),
+#
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch', 'slam_launch.py')),
@@ -168,7 +160,6 @@ def generate_launch_description():
     ld.add_action(declare_slam_cmd)
     ld.add_action(declare_behaviour_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
-    ld.add_action(spawner)
     ld.add_action(rviz)
     ld.add_action(bringup_cmd_group)
     ld.add_action(tf_exchange)

@@ -152,7 +152,7 @@ def generate_launch_description():
             ),
             launch_arguments={
                 'use_sim_time': 'true', 
-                'frame_prefix': f'{robot_name}'
+                'frame_prefix': '',
             }.items()
         )   
 
@@ -163,20 +163,7 @@ def generate_launch_description():
                 dest_folder=save_path
             )
 
-        spawn_turtlebot = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(launch_dir, 'multi_spawn_turtlebot3.launch.py'),
-                ),
-                launch_arguments={
-                    'x_pose': str(POSES[i][0]),
-                    'y_pose': str(POSES[i][1]),
-                    'theta': str(POSES[i][2]),
-                    'robot_name': robot_name,
-                    'urdf_path': f'{save_path}/{robot_name}.sdf',
-                    'bridge_params': f'{save_path}/{robot_name}.yaml'
-                }.items()
-            )
-        
+        spawn_turtlebot =         
         static_tf = Node(
             package='tf2_ros',
             executable='static_transform_publisher',

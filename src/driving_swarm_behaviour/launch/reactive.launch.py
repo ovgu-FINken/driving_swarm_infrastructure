@@ -50,7 +50,7 @@ def controller_spawning(context, *args, **kwargs):
 def generate_launch_description():
     args = {
          'behaviour': 'false',
-         'world': 'icra2024.world',
+         'world': 'swarmlab2.world',
          'map': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'maps' ,'icra2024.yaml'),
          'poses_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'icra2024_poses.yaml'),
          'robot_names_file': os.path.join(get_package_share_directory('driving_swarm_bringup'), 'params', 'robot_names_sim.yaml'),
