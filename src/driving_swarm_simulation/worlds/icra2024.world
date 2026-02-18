@@ -1,8 +1,33 @@
-<?xml version='1.0'?>
-<sdf version='1.7'>
+<sdf version='1.9'>
   <world name='default'>
-   <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-   </plugin>
+    
+    <!-- ESSENTIAL PLUGINS FÜR GAZEBO HARMONIC -->
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-contact-system"
+      name="gz::sim::systems::Contact">
+    </plugin>
+
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
@@ -136,7 +161,7 @@
         <kinematic>0</kinematic>
       </link>
       <static>1</static>
-      <pose>-1.32919 -0.064663 0 0 -0 0</pose>
+      <pose>0.0 0.0 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
       <sim_time>115 499000000</sim_time>

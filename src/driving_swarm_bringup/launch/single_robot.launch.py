@@ -81,12 +81,7 @@ def generate_launch_description():
     use_sim_time = TextSubstitution(text='True')
     # TODO simulation_dir
     # ceck robot_namespace
-    spawner = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(simulation_dir, 'launch', 'spawn_gz_tb3.launch.py')
-                ),
-
-            )
+    namespace = LaunchConfiguration('robot_name')
 
     rviz = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -100,7 +95,6 @@ def generate_launch_description():
                 }.items()
             )
 
-    namespace = LaunchConfiguration('robot_name')
     autostart = 'True'
     params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
     urdf = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'urdf', 'turtlebot3_burger.urdf')
@@ -126,7 +120,14 @@ def generate_launch_description():
             #arguments=[urdf],
             remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
         ),
+        
+            
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(simulation_dir, 'launch', 'spawn_gz_tb3.launch.py')
+                ),
 
+            ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch', 'slam_launch.py')),
@@ -168,7 +169,6 @@ def generate_launch_description():
     ld.add_action(declare_slam_cmd)
     ld.add_action(declare_behaviour_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
-    ld.add_action(spawner)
     ld.add_action(rviz)
     ld.add_action(bringup_cmd_group)
     ld.add_action(tf_exchange)
