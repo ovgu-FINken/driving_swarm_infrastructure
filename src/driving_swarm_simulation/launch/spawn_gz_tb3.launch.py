@@ -9,6 +9,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 import os
 
+
+
 def generate_launch_description():
     launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
     
@@ -68,6 +70,7 @@ def generate_launch_description():
         ),
 
         # Spawne den Roboter
+
         launch_ros.actions.Node(
             package='driving_swarm_simulation',
             executable='nav2_gz_spawner',
@@ -99,3 +102,19 @@ def generate_launch_description():
         ),
         '''
     
+
+        # launch_ros.actions.Node(
+        #     package='driving_swarm_simulation',
+        #     executable='nav2_gz_spawner',
+        #     output='screen',
+        #     arguments=[
+        #         '--robot_name', LaunchConfiguration('robot_name'),
+        #         '--robot_namespace', LaunchConfiguration('robot_namespace'),
+        #         '--turtlebot_type', LaunchConfiguration('turtlebot_type'),
+        #         '-x', LaunchConfiguration('x_pose'),
+        #         '-y', LaunchConfiguration('y_pose'),
+        #         '-z', LaunchConfiguration('z_pose')
+        #     ]
+        # ),
+    #])
+
