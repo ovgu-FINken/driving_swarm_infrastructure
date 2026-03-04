@@ -22,6 +22,7 @@ class CCRGlobalPlanner(DrivingSwarmNode):
 
         # robot names needed to subscribe to other plans
         self.declare_parameter('robot_names', ['invalid_name'])
+        self.setup_command_interface(autorun=False)
         self.robot_names = self.get_parameter('robot_names').get_parameter_value().string_array_value
 
         self.declare_parameter('graph_file', 'graph.yaml')
@@ -122,7 +123,6 @@ class CCRGlobalPlanner(DrivingSwarmNode):
         self.create_timer(2.0, self.timer_cb)
         self.create_timer(0.3, self.fast_timer_cb)
         self.get_logger().info(colored("init done", "green"))
-        self.setup_command_interface(autorun=False)
         self.set_state_ready()
         
     def timer_cb(self):
