@@ -274,17 +274,18 @@ class SunburstRobotCalc(DrivingSwarmNode):
             min_error_waldo_pos.data = [waldo_x, waldo_y]
             self.waldo_pub.publish(min_error_waldo_pos)
 
-            # publish estimated waldo identity with min error
-            min_error_waldo_id = String()
-            min_error_waldo_id.data = str(self.robots[my_rbt_idx])
-            self.identity_pub.publish(min_error_waldo_id)
+            # publish estimated robot identity with min error
+            min_error_robot_id = String()
+            min_error_robot_id.data = str(self.robots[my_rbt_idx])
+            self.identity_pub.publish(min_error_robot_id)
 
             # publish lidar detection count
             self.lidar_detection_count_pub.publish(Int32(data=int(len(self.lidar_angles))))
 
     # filters out every comparison that is above a given threshold
     def sunburst_single_robot(self, sky_dist, sky_angle, lidar_dist, lidar_angle):
-            assignments = {}
+            assignments = set()
+            # TODO: remove double comparisons (x,y) <=> (y,x) for optimization
             for sky_id_a, sky_dist_a in enumerate(sky_dist):
                 for sky_id_b, sky_dist_b in enumerate(sky_dist):
 
@@ -321,11 +322,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
                                 continue
 
                             # add valid comparisons to assignment list
-                            if sky_id_a not in assignments and lidar_id_a not in assignments.values():
-                                assignments[sky_id_a] = lidar_id_a
-
-                            if sky_id_b not in assignments and lidar_id_b not in assignments.values():
-                                assignments[sky_id_b] = lidar_id_b
+                            assignments.add((sky_id_a, lidar_id_a))
+                            assignments.add((sky_id_b, lidar_id_b))
 
 
             # if no assignments => return infinity
@@ -333,11 +331,11 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 return np.inf, np.inf, np.inf, np.inf
             # self.get_logger().info(f"assignments: {assignments}")
 
-            sky_dist_subset = [sky_dist[i] for i in assignments.keys()]
-            sky_angle_subset = [sky_angle[i] for i in assignments.keys()]
-
-            lidar_dist_subset = [lidar_dist[i] for i in assignments.values()]
-            lidar_angle_subset = [lidar_angle[i] for i in assignments.values()]
+            sky_dist_subset = [sky_dist[sky_id_a] for sky_id_a, _ in assignments]
+            sky_angle_subset = [sky_angle[sky_id_a] for sky_id_a, _ in assignments]
+        
+            lidar_dist_subset = [lidar_dist[lidar_id_a] for _, lidar_id_a in assignments]
+            lidar_angle_subset = [lidar_angle[lidar_id_a] for _, lidar_id_a in assignments]
 
             angle_error, scale_error, angle, scale = self.do_registration(sky_dist_subset, sky_angle_subset, lidar_dist_subset, lidar_angle_subset)
 
