@@ -82,7 +82,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.identity_pub = self.create_publisher(String, "identify_as", 10)
 
         # time.sleep(10)
-        self.create_timer(1.0, self.calc_timer)
+        self.create_timer(0.1, self.calc_timer)
 
 
     # =============================================
@@ -258,6 +258,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 vals[rbt_idx] = [angle, scale]
 
         # choose min error as current estimate
+        # TODO: think about what we need to do, if anything, if errors is empty
         if len(errors):
             my_rbt_idx = min(errors, key=errors.get)
 
@@ -290,14 +291,14 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 for sky_id_b, sky_dist_b in enumerate(sky_dist):
 
                     # skip if we compare same robot
-                    if sky_id_a == sky_id_b:
+                    if sky_id_a == sky_id_b or sky_id_a < sky_id_b:
                         continue
 
                     for lidar_id_a, lidar_dist_a in enumerate(lidar_dist):
                         for lidar_id_b, lidar_dist_b in enumerate(lidar_dist):
 
                             # skip if we compare same robot
-                            if lidar_id_a == lidar_id_b:
+                            if lidar_id_a == lidar_id_b or lidar_id_a < lidar_id_b:
                                 continue
 
                             # filter out robot if distance discrepancy is too high
@@ -309,15 +310,18 @@ class SunburstRobotCalc(DrivingSwarmNode):
                                 continue
 
                             # filter out robot if angle discrepancy is too high
+                            # TODO: try figuring out whats about the angle errors
                             angle_diff_sky = abs(sky_angle[sky_id_a] % (np.pi * 2) - sky_angle[sky_id_b] % (np.pi * 2))
                             angle_diff_lidar = abs(lidar_angle[lidar_id_a] % (np.pi * 2) - lidar_angle[lidar_id_b] % (np.pi * 2))
-
+                        
                             angle_diff = np.abs(angle_diff_sky - angle_diff_lidar)
+                            angle_diff = min(angle_diff, 2 * np.pi - angle_diff)
 
                             #angle_diff_sky = self.angle_diff(sky_angle[sky_id_a], sky_angle[sky_id_b])
                             #angle_diff_lidar = self.angle_diff(lidar_angle[lidar_id_a], lidar_angle[lidar_id_b])
+
                             #angle_diff = abs(angle_diff_sky - angle_diff_lidar)
-                            
+
                             if angle_diff > self.angle_threshold:
                                 continue
 

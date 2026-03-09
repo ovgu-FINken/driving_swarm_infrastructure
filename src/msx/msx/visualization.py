@@ -30,7 +30,7 @@ class Visualization(DrivingSwarmNode):
         self.skyview_distances = []
         self.skyview_angles = []
 
-        self.create_timer(1.0, self.publish_markers)
+        self.create_timer(0.1, self.publish_markers)
 
         # Subscriptions for each robot
         for robot in self.robots:
