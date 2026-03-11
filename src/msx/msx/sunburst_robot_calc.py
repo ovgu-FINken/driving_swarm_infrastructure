@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
 from driving_swarm_utils.node import DrivingSwarmNode, main_fn
 from std_msgs.msg import Float64MultiArray, String, Int32
-from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import LaserScan, PointCloud
 from driving_swarm_utils.utils import detect_tb_from_ranges
-from geometry_msgs.msg import Point, Point32
+from geometry_msgs.msg import Point32
 import numpy as np
-import time, math
+import math
 
 
 class SunburstRobotCalc(DrivingSwarmNode):
@@ -21,16 +19,21 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # TODO: thresholds are way to high, so we do not skip too much for now
         self.dist_threshold = 1.05
         self.angle_threshold = np.pi / 12
+        # weights for errors weighted sum calculaiton
+        self.scale_error_weight = 1
+        self.angle_error_weight = 1
 
 
         # ===== Variables =====
         self.DEBUG_cur_robot_heading = None
 
+        # input data for identification estimate
         self.skyview_distances = []
         self.skyview_angles = []
         self.lidar_data = []
-        self.scale_error_weight = 1
-        self.angle_error_weight = 1
+        # current and last probabilities for identification
+        self.cur_probs = []
+        self.last_probs = []
 
         self.get_list_of_robot_names()
 
@@ -221,12 +224,11 @@ class SunburstRobotCalc(DrivingSwarmNode):
     # =============== Calculations ================
     # =============================================
     def calc_timer(self):
-        # To ensure the math won't have a division by zero error!
-        if self.skyview_angles is not None and self.skyview_distances is not None:
-            if len(self.lidar_data) > 1 and len(self.skyview_angles) > 1 and len(self.skyview_distances) > 1:
-                self.do_math()
+        # Wait for data and to ensure the math won't have a division by zero error
+        if self.skyview_angles is None and self.skyview_distances is None:
+            if len(self.lidar_data) < 2 and len(self.skyview_angles) < 2 and len(self.skyview_distances) < 2:
+                return
 
-    def do_math(self):
         # Okay at this point I have self.skyview_distances, self.skyview_angles, self.lidar_data
         # Assume N robots
         # self.skyview_angles[robot 0-(N-1)][0] = the angle between the x-axis of the indexed robot and the closest robot (this should be 0 as the closest robot determines the x-axis)
@@ -237,22 +239,22 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         # self.lidar_data[robot 0-(N-2)][...] = a list of np arrays each with the x and y positions (respectively) of a robot relative to the position of the robot
 
-        self.lidar_angles = []
-        self.lidar_distances = []
+        lidar_angles = []
+        lidar_distances = []
 
         for loc in self.lidar_data:
             angle = math.atan2(loc[1], loc[0])
             if angle < 0:
                 angle += 2 * math.pi
-            self.lidar_angles.append(angle)
-            self.lidar_distances.append(math.sqrt(loc[0] ** 2 + loc[1] ** 2))
+            lidar_angles.append(angle)
+            lidar_distances.append(math.sqrt(loc[0] ** 2 + loc[1] ** 2))
 
         # For the data from each of the N robots
         errors = {}
         vals = {}
         for rbt_idx, _ in enumerate(self.skyview_angles):
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
-                                                        self.lidar_distances, self.lidar_angles)
+                                                        lidar_distances, lidar_angles)
             if angle_error != np.inf and scale_error != np.inf:
                 errors[rbt_idx] = self.angle_error_weight * angle_error + self.scale_error_weight * scale_error
                 vals[rbt_idx] = [angle, scale]
@@ -281,8 +283,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.identity_pub.publish(min_error_robot_id)
 
             # publish lidar detection count
-            self.lidar_detection_count_pub.publish(Int32(data=int(len(self.lidar_angles))))
+            self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
 
+    
     # filters out every comparison that is above a given threshold
     def sunburst_single_robot(self, sky_dist, sky_angle, lidar_dist, lidar_angle):
             assignments = set()
