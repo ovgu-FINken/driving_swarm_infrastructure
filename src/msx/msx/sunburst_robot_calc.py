@@ -15,6 +15,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         # ===== Parameters =====
         self.DEBUG = True
+        self.USE_BAYES_FILTER = True
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         # TODO: thresholds are way to high, so we do not skip too much for now
         self.dist_threshold = 1.05
@@ -22,6 +23,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # weights for errors weighted sum calculaiton
         self.scale_error_weight = 1
         self.angle_error_weight = 1
+        self.alpha = 0.1
 
 
         # ===== Variables =====
@@ -32,8 +34,10 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_angles = []
         self.lidar_data = []
         # current and last probabilities for identification
-        self.cur_probs = []
-        self.last_probs = []
+        self.cur_probs = {}
+        self.last_probs = {}
+        self.bayes_errors = {}
+        self.bayes_vals = {}
 
         self.get_list_of_robot_names()
 
@@ -220,6 +224,17 @@ class SunburstRobotCalc(DrivingSwarmNode):
             sum += (scale * ls[idx] - Ls[idx]) ** 2
         return sum
 
+    def one_likelihood(self, one_error):
+        return np.exp(-self.alpha*one_error)
+
+    def calc_likelihood(self):
+        vals = np.array([])
+        for id, err in self.bayes_errors.items():
+            val = self.one_likelihood(err)*self.last_probs[id]
+            vals = np.append(vals, max(val, 0.01))
+            # vals = np.append(vals, val)
+        return vals/sum(vals)
+
     # =============================================
     # =============== Calculations ================
     # =============================================
@@ -252,38 +267,67 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # For the data from each of the N robots
         errors = {}
         vals = {}
+
+        # If this is the first time we calculate errors, initialize the bayes_errors to infinity
+        if len(self.bayes_errors) == 0:
+            self.bayes_errors = {k: np.inf for k in range(len(self.skyview_angles))}
+
         for rbt_idx, _ in enumerate(self.skyview_angles):
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
                                                         lidar_distances, lidar_angles)
             if angle_error != np.inf and scale_error != np.inf:
                 errors[rbt_idx] = self.angle_error_weight * angle_error + self.scale_error_weight * scale_error
                 vals[rbt_idx] = [angle, scale]
+            # elif self.USE_BAYES_FILTER:
+                # errors[rbt_idx] = np.inf
+                # vals[rbt_idx] = [angle, scale]
 
         # choose min error as current estimate
         # TODO: think about what we need to do, if anything, if errors is empty
         if len(errors):
-            my_rbt_idx = min(errors, key=errors.get)
+            if self.USE_BAYES_FILTER:
+                self.get_logger().info(f"Bayes filter error: {errors}")
 
-            waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
-            waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
+                # If this is the first time we calculate probabilities, initialize last_probs uniformly
+                if len(self.cur_probs) == 0:
+                    self.last_probs = {k: 1/len(self.skyview_angles) for k in range(len(self.skyview_angles))}
 
-            waldo_x = waldo_distance * math.cos(waldo_angle)
-            waldo_y = waldo_distance * math.sin(waldo_angle)
+                # Grab the new errors calculated and save them
+                for id, err in errors.items():
+                    self.bayes_errors[id] = err
 
-            self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
+                new_probs = self.calc_likelihood()
+                for id, prob in enumerate(new_probs):
+                    self.cur_probs[id] = prob
 
-            # publish waldos min error position in the robot's reference frame
-            min_error_waldo_pos = Float64MultiArray()
-            min_error_waldo_pos.data = [waldo_x, waldo_y]
-            self.waldo_pub.publish(min_error_waldo_pos)
 
-            # publish estimated robot identity with min error
-            min_error_robot_id = String()
-            min_error_robot_id.data = str(self.robots[my_rbt_idx])
-            self.identity_pub.publish(min_error_robot_id)
+                self.last_probs = self.cur_probs.copy()
+                my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
+                self.get_logger().info(f"Probs: {self.bayes_errors} -> {self.cur_probs} -> {my_rbt_idx}")
+            else:
+                my_rbt_idx = min(errors, key=errors.get)
 
-            # publish lidar detection count
-            self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
+            # if my_rbt_idx not in vals:
+            #     waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
+            #     waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
+            #
+            #     waldo_x = waldo_distance * math.cos(waldo_angle)
+            #     waldo_y = waldo_distance * math.sin(waldo_angle)
+            #
+            #     self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
+            #
+            #     # publish waldos min error position in the robot's reference frame
+            #     min_error_waldo_pos = Float64MultiArray()
+            #     min_error_waldo_pos.data = [waldo_x, waldo_y]
+            #     self.waldo_pub.publish(min_error_waldo_pos)
+            #
+            #     # publish estimated robot identity with min error
+            #     min_error_robot_id = String()
+            #     min_error_robot_id.data = str(self.robots[my_rbt_idx])
+            #     self.identity_pub.publish(min_error_robot_id)
+            #
+            #     # publish lidar detection count
+            #     self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
 
     
     # filters out every comparison that is above a given threshold
