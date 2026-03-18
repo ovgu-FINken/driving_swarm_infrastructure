@@ -5,9 +5,15 @@ from std_msgs.msg import Float64MultiArray, String, Int32
 from sensor_msgs.msg import LaserScan, PointCloud
 from driving_swarm_utils.utils import detect_tb_from_ranges
 from geometry_msgs.msg import Point32
+
+from enum import Enum
 import numpy as np
 import math
 
+class LikelihoodFunction(Enum):
+    LINEAR_CLAMPED = 1
+    NEGATIVE_LOG_CLAMPED = 2
+    GAUSS_CLAMPED = 3
 
 class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -16,6 +22,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # ===== Parameters =====
         self.DEBUG = True
         self.USE_BAYES_FILTER = True
+
+        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.NEGATIVE_LOG_CLAMPED
+
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         # TODO: thresholds are way to high, so we do not skip too much for now
         self.dist_threshold = 1.05
@@ -23,7 +32,16 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # weights for errors weighted sum calculaiton
         self.scale_error_weight = 1
         self.angle_error_weight = 1
-        self.alpha = 0.1
+
+        # bayes filter parameters
+        # linear clamped
+        self.a_1 = 1.0
+        # negative log clamped
+        self.a_2 = 3.0
+        # gauss clamped
+        self.a_3 = 1.0
+        self.m = 0.0
+        self.s = 0.25
 
 
         # ===== Variables =====
@@ -224,20 +242,36 @@ class SunburstRobotCalc(DrivingSwarmNode):
             sum += (scale * ls[idx] - Ls[idx]) ** 2
         return sum
 
-    def one_likelihood(self, one_error):
-        return np.exp(-self.alpha*one_error)
+    def negative_log(self, one_error):
+        return max(np.exp(-self.a_2 * one_error), 0.01)
+
+    def linear_clamped(self, one_error):
+        return max(-self.a_1 * one_error + 1, 0.01) + 0.01
+
+    def gauss_clamped(self, one_error):
+        return max(self.a_3 * math.exp(-((one_error - self.m) ** 2) / (2 * self.s ** 2)), 0.01)
 
     def calc_likelihood(self):
         vals = np.array([])
+        val = 0
+
         for id, err in self.bayes_errors.items():
-            val = self.one_likelihood(err)*self.last_probs[id]
-            vals = np.append(vals, max(val, 0.01))
+            if self.LIKELIHOOD_FUNCTION == LikelihoodFunction.NEGATIVE_LOG_CLAMPED:
+                val = self.negative_log(err) * self.last_probs[id]
+            elif self.LIKELIHOOD_FUNCTION == LikelihoodFunction.LINEAR_CLAMPED:
+                val = self.linear_clamped(err) * self.last_probs[id] 
+            elif self.LIKELIHOOD_FUNCTION == LikelihoodFunction.GAUSS_CLAMPED:
+                val = self.gauss_clamped(err) * self.last_probs[id]
+
+            vals = np.append(vals, val)
             # vals = np.append(vals, val)
+
         return vals/sum(vals)
 
     # =============================================
     # =============== Calculations ================
     # =============================================
+
     def calc_timer(self):
         # Wait for data and to ensure the math won't have a division by zero error
         if self.skyview_angles is None and self.skyview_distances is None:
