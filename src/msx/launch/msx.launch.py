@@ -168,7 +168,7 @@ def generate_launch_description():
 
     multi_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
+            get_package_share_directory('driving_swarm_bringup'), 'launch', 'simulator.launch.py')),
         launch_arguments=args.items()
     )
 

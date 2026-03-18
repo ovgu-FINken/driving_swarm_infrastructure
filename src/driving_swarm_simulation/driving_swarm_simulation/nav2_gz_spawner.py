@@ -1,4 +1,4 @@
-"""Script used to spawn a robot in a generic position."""
+'''"""Script used to spawn a robot in a generic position."""
 import argparse
 import os
 import xml.etree.ElementTree as ET
@@ -206,3 +206,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+'''

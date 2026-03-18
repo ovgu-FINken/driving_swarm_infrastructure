@@ -5,13 +5,12 @@ import yaml
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo)
+                            IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, EmitEvent)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable
+from launch.substitutions import LaunchConfiguration, TextSubstitution, EnvironmentVariable, PythonExpression
 from launch_ros.actions import Node, PushRosNamespace, SetRemap
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler, EmitEvent
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, TextSubstitution, PythonExpression
+
 
 def write_tmp_sdf_file(robot_name, sdf_source, yaml_source, dest_folder='/tmp'):
 
@@ -39,7 +38,6 @@ def write_tmp_sdf_file(robot_name, sdf_source, yaml_source, dest_folder='/tmp'):
     
     # TF Topic (Global -> Unique)
     content = content.replace('<tf_topic>/tf</tf_topic>', f'<tf_topic>{unique_topic_root}/tf</tf_topic>')
-
 
     # Odom Frame
     content = content.replace('<frame_id>odom</frame_id>', f'<frame_id>{unique_frame_root}/odom</frame_id>')
@@ -186,7 +184,6 @@ def initialize_robots(context, *args, **kwargs):
     spawn_turtlebot_cmd_list = []
     pkg_turtlebot3_gazebo = get_package_share_directory('turtlebot3_gazebo')
     
-    use_sim_time = TextSubstitution(text='True')
     model_name = os.environ.get('TURTLEBOT3_MODEL', 'burger')
     save_path = os.path.join(
         get_package_share_directory('turtlebot3_gazebo'),
@@ -204,47 +201,84 @@ def initialize_robots(context, *args, **kwargs):
     slam = LaunchConfiguration('slam', default='True')
     autostart = 'True'
     params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
-    
     # Get the urdf file
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    urdf_file_name = 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf'
+    urdf_path = os.path.join(
+        get_package_share_directory('turtlebot3_gazebo'),
+        'urdf',
+        urdf_file_name)
+    with open(urdf_path, 'r') as infp:
+            robot_desc = infp.read()
+
+
+    clock_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='clock_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    )
+    spawn_turtlebot_cmd_list.append(clock_bridge)
+
+
+    pkg_simulator = get_package_share_directory('driving_swarm_simulation')
+
+
     print(f"number of n {int(n_robots)}")
+
+
+
+
     for i in range(int(n_robots)):
         robot_name = robot_names[i]
-
-        robot_state_publisher = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_turtlebot3_gazebo, 'launch', 'robot_state_publisher.launch.py')
-            ),
-            launch_arguments={
-                'use_sim_time': 'true', 
-                'frame_prefix': f'{robot_name}'
-            }.items()
-        )   
 
         write_tmp_sdf_file(
                 robot_name=robot_name,
                 sdf_source=sdf_path,
-                yaml_source=os.path.join(pkg_turtlebot3_gazebo, 'params', 'turtlebot3_' + model_name + '_bridge.yaml'),
+                yaml_source=os.path.join(pkg_simulator, 'params', 'turtlebot3_' + model_name + '_bridge.yaml'),
                 dest_folder=save_path
             )
+
+        robot_state_publisher = Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{
+                'namespace': robot_name,
+                'use_sim_time': use_sim_time,
+                'robot_description': robot_desc,
+                'frame_prefix': robot_name + '/' 
+            }],  
+            remappings=[
+                ('/tf', f'/{robot_name}/tf'),
+                ('/tf_static', f'/{robot_name}/tf_static'),
+            ]
+        )   
+        
         
 
         start_gazebo_ros_spawner_cmd = Node(
-            package='ros_gz_sim',
-            executable='create',
-            arguments=[
-                '-name', robot_name,
-                '-file', f'{save_path}/{robot_name}.sdf',
-                '-x', str(poses[i][0]),
-                '-y', str(poses[i][1]),
-                '-z', '0.192',
-                '-Y', str(poses[i][2])
-            ],
-            output='screen',
-        )
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-name', robot_name,
+            '-file', f'{save_path}/{robot_name}.sdf',
+            '-x', str(poses[i][0]),
+            '-y', str(poses[i][1]),
+            '-z', '0.192',
+            '-Y', str(poses[i][2])
+        ],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    )
         
 
-        
+        print("save_path")
+        print(f'{save_path}/{robot_name}.yaml')
         start_gazebo_ros_bridge_cmd = Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
@@ -255,9 +289,10 @@ def initialize_robots(context, *args, **kwargs):
                 
             ],
             remappings=[
-                ('tf', '/tf'),             # Force TF to global
-                ('tf_static', '/tf_static') # Force Static TF to global
+                ('/tf', f'/{robot_name}/tf'),
+                ('/tf_static', f'/{robot_name}/tf_static'),
             ],
+            parameters=[{'use_sim_time': use_sim_time}],
             output='screen',
         )
         rviz = IncludeLaunchDescription(
@@ -267,7 +302,7 @@ def initialize_robots(context, *args, **kwargs):
                 launch_arguments={
                     'namespace': robot_name,
                     'use_namespace': 'true',
-                    'use_sim_time': 'true',
+                    'use_sim_time': use_sim_time,
                     'rviz_config': rviz_config_file
                 }.items()
             )
@@ -295,22 +330,21 @@ def initialize_robots(context, *args, **kwargs):
                 'world',                           # Parent Frame
                 f'{robot_name}/odom'               # Child Frame
             ],
-            parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': use_sim_time,}],
             output='screen'
         )
 
-        print("after static")
+        
         
 
         nodes_in_group = [
             PushRosNamespace(robot_name),
-            SetRemap(src='tf', dst='/tf'),
-            SetRemap(src='tf_static', dst='/tf_static'),
+            SetRemap(src='tf', dst=f'/{robot_name}/tf'),
+            SetRemap(src='tf_static', dst=f'/{robot_name}/tf_static'),
             robot_state_publisher,
             static_tf,
             start_gazebo_ros_spawner_cmd,
-            start_gazebo_ros_bridge_cmd,
-            rviz,
+            #start_gazebo_ros_bridge_cmd,
             IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(nav2_dir, 'launch', 'slam_launch.py')),
             condition=IfCondition(slam),
@@ -338,6 +372,8 @@ def initialize_robots(context, *args, **kwargs):
         group = GroupAction(nodes_in_group)
 
         spawn_turtlebot_cmd_list.append(group)
+        spawn_turtlebot_cmd_list.append(rviz)
+        spawn_turtlebot_cmd_list.append(start_gazebo_ros_bridge_cmd)
 
     
     return spawn_turtlebot_cmd_list

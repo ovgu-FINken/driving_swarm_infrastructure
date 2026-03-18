@@ -134,7 +134,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('horizon', default_value='8'))
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     multi_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'multi_robot.launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(get_package_share_directory('driving_swarm_bringup'), 'launch', 'simulator.launch.py')),
         launch_arguments=args.items())
     ld.add_action(multi_robot_launch)
     ld.add_action(OpaqueFunction(function=controller_spawning))
