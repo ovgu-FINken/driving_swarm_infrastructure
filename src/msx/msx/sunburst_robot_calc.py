@@ -23,7 +23,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.DEBUG = True
         self.USE_BAYES_FILTER = True
 
-        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.NEGATIVE_LOG_CLAMPED
+        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
 
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         # TODO: thresholds are way to high, so we do not skip too much for now
@@ -34,6 +34,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.angle_error_weight = 1
 
         # bayes filter parameters
+        self.likelihood_clamp = 0.01
         # linear clamped
         self.a_1 = 1.0
         # negative log clamped
@@ -105,6 +106,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.pub_lidar_data = self.create_publisher(PointCloud, "lidarData", 10)
         self.lidar_detection_count_pub = self.create_publisher(Int32, "num_detections", 10)
         self.identity_pub = self.create_publisher(String, "identify_as", 10)
+
+        self.posterior_pub = self.create_publisher(Float64MultiArray, "posterior", 10)
 
         # time.sleep(10)
         self.create_timer(0.1, self.calc_timer)
@@ -243,13 +246,13 @@ class SunburstRobotCalc(DrivingSwarmNode):
         return sum
 
     def negative_log(self, one_error):
-        return max(np.exp(-self.a_2 * one_error), 0.01)
+        return max(np.exp(-self.a_2 * one_error), self.likelihood_clamp)
 
     def linear_clamped(self, one_error):
-        return max(-self.a_1 * one_error + 1, 0.01) + 0.01
+        return max(-self.a_1 * one_error + 1, self.likelihood_clamp)
 
     def gauss_clamped(self, one_error):
-        return max(self.a_3 * math.exp(-((one_error - self.m) ** 2) / (2 * self.s ** 2)), 0.01)
+        return max(self.a_3 * math.exp(-((one_error - self.m) ** 2) / (2 * self.s ** 2)), self.likelihood_clamp)
 
     def calc_likelihood(self):
         vals = np.array([])
@@ -334,8 +337,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 for id, prob in enumerate(new_probs):
                     self.cur_probs[id] = prob
 
-
                 self.last_probs = self.cur_probs.copy()
+
+                posterior_probs = Float64MultiArray()
+                posterior_probs.data = [self.cur_probs[id] for id in range(len(self.cur_probs))]
+                self.posterior_pub.publish(posterior_probs)
+
                 my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
                 self.get_logger().info(f"Probs: {self.bayes_errors} -> {self.cur_probs} -> {my_rbt_idx}")
             else:

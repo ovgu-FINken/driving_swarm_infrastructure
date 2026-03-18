@@ -9,3 +9,4 @@ robot_topics:
   sunburstError: Float64 
   real_waldo_pos: "Float64MultiArray:2"
   sunburstRobotCalc/waldoPosition: "Float64MultiArray:2"
+  posterior: "Float64MultiArray:1"
