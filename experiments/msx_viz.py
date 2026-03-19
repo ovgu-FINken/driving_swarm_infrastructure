@@ -116,9 +116,10 @@ if data_file is not None:
     myplot = (
 
         ggplot(df, aes(
-            x="$d$", y="$|w - \\hat w|$", color="correct id", shape="robot"))
+            x="$d$", y="$|w - \\hat w|$", color="correct id"))
         + geom_point()
-        + theme_light(base_size=11)
+        + theme_light(base_size=7)
+        + facet_wrap("~robot")
         + theme(legend_position='top',
                 #axis_text_x=element_text(rotation=90,
                 #                         hjust=0.5),
@@ -133,9 +134,10 @@ if data_file is not None:
     myplot = (
 
         ggplot(df, aes(
-            x="$\\theta$", y="$|w - \\hat w|$", color="correct id", shape="robot"))
+            x="$\\theta$", y="$|w - \\hat w|$", color="correct id"))
         + geom_point()
-        + theme_light(base_size=11)
+        + theme_light(base_size=7)
+        + facet_wrap("~robot")
         + theme(legend_position='top',
                 #axis_text_x=element_text(rotation=90,
                 #                         hjust=0.5),
@@ -162,3 +164,84 @@ if data_file is not None:
 
     st.pyplot(ggplot.draw(myplot))
     myplot.save(f"figures/msx_boxplot_detection_count.pdf", dpi=300, bbox_inches="tight")
+
+    # reshape posterior columns to long format
+    posterior_cols = [f"posterior_{i}" for i in range(4)]
+
+    df_post = df.melt(
+        id_vars=["t", "robot"],
+        value_vars=posterior_cols,
+        var_name="hypothesis",
+        value_name="posterior"
+    )
+
+    # extract hypothesis id
+    df_post["hypothesis"] = df_post["hypothesis"].str.replace("posterior_", "").astype(int)
+    
+    #st.dataframe(df_post)
+
+    # plot posterior over time, faceted by robot
+    myplot = (
+        ggplot(df_post, aes(
+            x="t",
+            y="posterior",
+            color="factor(hypothesis)"
+        ))
+        + geom_line()
+        + facet_wrap("~robot")
+        + theme_light(base_size=8)
+        #+ scale_y_log10()
+        + theme(
+            legend_position='top',
+            figure_size=(6, 4.5),
+        )
+    )
+
+    st.pyplot(ggplot.draw(myplot))
+    myplot.save(
+        "figures/msx_posterior_over_time.pdf",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+
+    df_entropy = df_post.copy()
+    df_entropy["entropy"] = -df_entropy["posterior"] * np.log(df_entropy["posterior"] + 1e-12)
+
+    df_entropy = df_entropy.groupby(["t", "robot"])["entropy"].sum().reset_index()
+
+    myplot = (
+        ggplot(df_entropy, aes(x="t", y="entropy", color="robot"))
+        + geom_line()
+        + theme_light(base_size=8)
+        + theme(
+            legend_position='top',
+            figure_size=(6, 4.5),
+        )
+    )
+
+    st.pyplot(ggplot.draw(myplot))
+    myplot.save(
+        "figures/msx_entropy.pdf",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+
+    myplot = (
+        ggplot(df_post, aes(
+            x="t",
+            y="factor(hypothesis)",
+            fill="posterior"
+        ))
+        + geom_tile()
+        + facet_wrap("~robot")
+        + theme_light(base_size=8)
+    )
+
+    st.pyplot(ggplot.draw(myplot))
+    myplot.save(
+        "figures/msx_posterior_heatmap.pdf",
+        dpi=300,
+        bbox_inches="tight"
+    )

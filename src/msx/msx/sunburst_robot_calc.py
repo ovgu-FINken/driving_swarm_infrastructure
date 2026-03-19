@@ -33,7 +33,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.scale_error_weight = 1
         self.angle_error_weight = 1
 
-        # bayes filter parameters
+        # == bayes filter parameters ==
         self.likelihood_clamp = 0.01
         # linear clamped
         self.a_1 = 1.0
