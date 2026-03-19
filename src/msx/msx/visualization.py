@@ -256,31 +256,31 @@ class Visualization(DrivingSwarmNode):
             #self.get_logger().info(f"Robot {robot} nearest : {nearest}")
             #self.get_logger().info(f"Robot {robot} angles : {self.skyview_angles[i]}")
             #self.get_logger().info(f"Robot {robot} distances : {self.skyview_distances}")
-
-            for j, angle in enumerate(self.skyview_angles[i]):
-                sunburst_marker = Marker()
-                sunburst_marker.header.frame_id = "map"
-                sunburst_marker.header.stamp = t 
-                sunburst_marker.ns = f"{robot}_sunburst"
-                sunburst_marker.id = 700 + i * 10 + j
-                sunburst_marker.type = Marker.ARROW
-                sunburst_marker.action = Marker.ADD
-                sunburst_marker.scale.x = 0.02  # arrow shaft length scale
-                sunburst_marker.scale.y = 0.002  # shaft thickness
-                sunburst_marker.scale.z = 0.002
-                sunburst_marker.color.a = 1.0
-                sunburst_marker.color.r = 1.0
-
-                robot_x = self.skyview_distances[i][j] * math.cos(angle)
-                robot_y = self.skyview_distances[i][j] * math.sin(angle)
-
-                sunburst_world = R2 @ np.array([robot_x, robot_y])
-                
-                sunburst_marker.points = [
-                    Point(x = x, y = y, z = 0.0),
-                    Point(x = x + sunburst_world[0], y = y + sunburst_world[1], z = 0.0)
-                ]
-                #marker_array.markers.append(sunburst_marker)
+            # TODO: Figure out why this doesn't work when using Bayes filtering
+            # for j, angle in enumerate(self.skyview_angles[i]):
+            #     sunburst_marker = Marker()
+            #     sunburst_marker.header.frame_id = "map"
+            #     sunburst_marker.header.stamp = t
+            #     sunburst_marker.ns = f"{robot}_sunburst"
+            #     sunburst_marker.id = 700 + i * 10 + j
+            #     sunburst_marker.type = Marker.ARROW
+            #     sunburst_marker.action = Marker.ADD
+            #     sunburst_marker.scale.x = 0.02  # arrow shaft length scale
+            #     sunburst_marker.scale.y = 0.002  # shaft thickness
+            #     sunburst_marker.scale.z = 0.002
+            #     sunburst_marker.color.a = 1.0
+            #     sunburst_marker.color.r = 1.0
+            #
+            #     robot_x = self.skyview_distances[i][j] * math.cos(angle)
+            #     robot_y = self.skyview_distances[i][j] * math.sin(angle)
+            #
+            #     sunburst_world = R2 @ np.array([robot_x, robot_y])
+            #
+            #     sunburst_marker.points = [
+            #         Point(x = x, y = y, z = 0.0),
+            #         Point(x = x + sunburst_world[0], y = y + sunburst_world[1], z = 0.0)
+            #     ]
+            #     #marker_array.markers.append(sunburst_marker)
 
         # Publish all markers
         self.marker_pub.publish(marker_array)

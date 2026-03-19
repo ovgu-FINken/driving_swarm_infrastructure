@@ -308,6 +308,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # If this is the first time we calculate errors, initialize the bayes_errors to infinity
         if len(self.bayes_errors) == 0:
             self.bayes_errors = {k: np.inf for k in range(len(self.skyview_angles))}
+            self.bayes_vals = {k: [0,0] for k in range(len(self.skyview_angles))}
 
         for rbt_idx, _ in enumerate(self.skyview_angles):
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
@@ -332,6 +333,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 # Grab the new errors calculated and save them
                 for id, err in errors.items():
                     self.bayes_errors[id] = err
+                    self.bayes_vals[id] = [vals[id][0], vals[id][1]]
 
                 new_probs = self.calc_likelihood()
                 for id, prob in enumerate(new_probs):
@@ -345,30 +347,32 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                 my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
                 self.get_logger().info(f"Probs: {self.bayes_errors} -> {self.cur_probs} -> {my_rbt_idx}")
+
+                waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - self.bayes_vals[my_rbt_idx][0]
+                waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * self.bayes_vals[my_rbt_idx][1]
             else:
                 my_rbt_idx = min(errors, key=errors.get)
 
-            # if my_rbt_idx not in vals:
-            #     waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
-            #     waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
-            #
-            #     waldo_x = waldo_distance * math.cos(waldo_angle)
-            #     waldo_y = waldo_distance * math.sin(waldo_angle)
-            #
-            #     self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
-            #
-            #     # publish waldos min error position in the robot's reference frame
-            #     min_error_waldo_pos = Float64MultiArray()
-            #     min_error_waldo_pos.data = [waldo_x, waldo_y]
-            #     self.waldo_pub.publish(min_error_waldo_pos)
-            #
-            #     # publish estimated robot identity with min error
-            #     min_error_robot_id = String()
-            #     min_error_robot_id.data = str(self.robots[my_rbt_idx])
-            #     self.identity_pub.publish(min_error_robot_id)
-            #
-            #     # publish lidar detection count
-            #     self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
+                waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
+                waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
+
+            waldo_x = waldo_distance * math.cos(waldo_angle)
+            waldo_y = waldo_distance * math.sin(waldo_angle)
+
+            self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
+
+            # publish waldos min error position in the robot's reference frame
+            min_error_waldo_pos = Float64MultiArray()
+            min_error_waldo_pos.data = [waldo_x, waldo_y]
+            self.waldo_pub.publish(min_error_waldo_pos)
+
+            # publish estimated robot identity with min error
+            min_error_robot_id = String()
+            min_error_robot_id.data = str(self.robots[my_rbt_idx])
+            self.identity_pub.publish(min_error_robot_id)
+
+            # publish lidar detection count
+            self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
 
     
     # filters out every comparison that is above a given threshold
