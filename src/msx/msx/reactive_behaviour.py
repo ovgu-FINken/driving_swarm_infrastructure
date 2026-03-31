@@ -31,6 +31,7 @@ class ReactiveController(DrivingSwarmNode):
         self.active = True  # start by driving
         self.last_switch_time = time.time()
         self.period = 10.0  # 10 seconds active, 10 seconds inactive
+        self.cur_speed = np.random.uniform(0.03, 0.1)
 
         # the timer_cb will publish the cmd_vel messages
         self.create_timer(0.1, self.timer_cb)
@@ -45,9 +46,10 @@ class ReactiveController(DrivingSwarmNode):
         current_time = time.time()
         elapsed = current_time - self.last_switch_time
 
-        # toggle every 10 seconds
+        # change speed every 10 seconds
         if elapsed >= self.period:
-            self.active = not self.active
+            self.cur_speed = np.random.uniform(0.03, 0.1)
+            self.cur_speed = 0.05
             self.last_switch_time = current_time
         
         msg = Twist()
@@ -60,7 +62,7 @@ class ReactiveController(DrivingSwarmNode):
             # if self.forward_distance > 0.5:
             #     self.clear = True
             if self.forward_distance > 0.4:
-                msg.linear.x = 0.05
+                msg.linear.x = self.cur_speed
                 msg.angular.z = 0.0
             else:
                 # if the robot is too close to an obstacle, turn
@@ -71,11 +73,6 @@ class ReactiveController(DrivingSwarmNode):
                 #         self.clear = False
                 msg.linear.x = 0.0
                 msg.angular.z = self.sign * 0.5
-            self.sign_pub.publish(Int32(data=int(self.sign)))
-            self.publisher.publish(msg)
-        else:
-            msg.linear.x = 0.0
-            msg.angular.z = 0.0
             self.sign_pub.publish(Int32(data=int(self.sign)))
             self.publisher.publish(msg)
 
