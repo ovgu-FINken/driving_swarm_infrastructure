@@ -161,6 +161,18 @@ Visualization Manager:
         Value: <robot_namespace>/map
       Use Timestamp: false
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MSX Sunburst
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization/markers
+      Value: true
     - Alpha: 1
       Arrow Length: 0.019999999552965164
       Axes Length: 0.30000001192092896
@@ -217,7 +229,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 134.638427734375
+      Scale: 300
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
       X: -0.032615214586257935
@@ -239,5 +251,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1545
-  X: 186
-  Y: 117
+  X: 1600
+  Y: 0
