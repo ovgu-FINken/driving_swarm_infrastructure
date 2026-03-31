@@ -183,7 +183,7 @@
     <!-- GUI: built-in top-down camera -->
     <gui fullscreen="0">
       <camera name="user_camera">
-        <pose>0 0 10 0 1.5708 0</pose>
+        <pose>0 0 3 0 1.5708 0</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
