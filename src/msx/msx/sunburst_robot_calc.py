@@ -23,7 +23,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.DEBUG = True
         self.USE_BAYES_FILTER = True
 
-        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
+        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
+        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
+        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.GAUSS_CLAMPED
 
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         # TODO: thresholds are way to high, so we do not skip too much for now
@@ -403,6 +405,10 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                             # filter out robot if angle discrepancy is too high
                             # TODO: try figuring out whats about the angle errors
+
+                            if sky_angle[sky_id_a] * sky_angle[sky_id_b] < 0 or lidar_angle[lidar_id_a] * lidar_angle[lidar_id_b] < 0:
+                                self.get_logger().info("ERROR: negative angle\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+
                             angle_diff_sky = abs(sky_angle[sky_id_a] % (np.pi * 2) - sky_angle[sky_id_b] % (np.pi * 2))
                             angle_diff_lidar = abs(lidar_angle[lidar_id_a] % (np.pi * 2) - lidar_angle[lidar_id_b] % (np.pi * 2))
                         
