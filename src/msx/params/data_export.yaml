@@ -10,3 +10,4 @@ robot_topics:
   real_waldo_pos: "Float64MultiArray:2"
   sunburstRobotCalc/waldoPosition: "Float64MultiArray:2"
   posterior: "Float64MultiArray:10"
+  likelihoods: "Float64MultiArray:10"
