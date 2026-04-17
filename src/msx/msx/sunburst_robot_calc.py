@@ -19,23 +19,26 @@ class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
+        # Set the logger level
+        self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
+
         # ===== Parameters =====
         self.DEBUG = True
         self.USE_BAYES_FILTER = True
 
-        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
-        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
-        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.GAUSS_CLAMPED
-
-        self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
-        # TODO: thresholds are way to high, so we do not skip too much for now
+        # Threshold values
         self.dist_threshold = 1.05
         self.angle_threshold = np.pi / 12
-        # weights for errors weighted sum calculaiton
+
+        # Weights for errors weighted sum calculation
         self.scale_error_weight = 1
         self.angle_error_weight = 1
 
-        # == bayes filter parameters ==
+        # == Bayes filter likelihood functions/parameters ==
+        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.NEGATIVE_LOG_CLAMPED
+        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
+        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.GAUSS_CLAMPED
+
         self.likelihood_clamp = 0.01
         # linear clamped
         self.a_1 = 1.0
@@ -44,8 +47,10 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # gauss clamped
         self.a_3 = 1.0
         self.m = 0.0
-        self.s = 0.25
+        self.s = 0.05
 
+        # Penalty scale for error values that aren't updated this iteration -> reducing likelihood over time
+        self.old_error_penalty_scale = 1.05
 
         # ===== Variables =====
         self.DEBUG_cur_robot_heading = None
@@ -54,16 +59,17 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_distances = []
         self.skyview_angles = []
         self.lidar_data = []
+
         # current and last probabilities for identification
         self.cur_probs = {}
         self.last_probs = {}
         self.bayes_errors = {}
         self.bayes_vals = {}
 
+        # This method populates the list self.robots with the names of the robots.
         self.get_list_of_robot_names()
 
-        # ===== Subscriptions ===== 
-        # TODO: Make sure data is matched between SkyView message and waldo data
+        # ===== Subscriptions =====
         self.skyview_sub = self.create_subscription(
             Float64MultiArray,
             '/sunburstSkyview/data',
@@ -100,7 +106,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
             ns = self.get_namespace()
             self.own_name = ns.strip("/")
-            self.cur_robot_idx = self.robots.index(self.own_name)
+            self.DEBUG_cur_robot_idx = self.robots.index(self.own_name)
 
         # ===== Publishers =====
         self.waldo_pub = self.create_publisher(Float64MultiArray, "sunburstRobotCalc/waldoPosition", 10)
@@ -111,9 +117,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         self.posterior_pub = self.create_publisher(Float64MultiArray, "posterior", 10)
 
-        # time.sleep(10)
-        self.create_timer(0.1, self.calc_timer)
+        self.likelihoods_pub = self.create_publisher(Float64MultiArray, "likelihoods", 10)
 
+        self.create_timer(0.1, self.calc_timer)
 
     # =============================================
     # ================= Callbacks =================
@@ -125,25 +131,21 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_waldo_distances = data[:, 0]
         self.skyview_waldo_angles = data[:, 1]
 
-        # print(f"WALDO dist : {distances} WALDO angle : {angles}")
-
 
     def laser_cb(self, msg):
-        r = msg.ranges
-        r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
+        ranges = msg.ranges
+        ranges = [x if x > msg.range_min and x < msg.range_max else float('inf') for x in ranges]
 
         # Using the x-axis of the robot (aka the first value from the msg.ranges)
         # The output of the positions is relative to the current position of the laser scanner
         # TODO: at this point a laser scan position filter could be implemented
 
         # ===== Params =====
-        # Cluster linkage threshold -> How far the cluster has to be from another cluster (closeness of points to be considered in the same cluster) this happens first
-        # Cluster range threshold -> Points larger than this value are omitted from clusters
-        # Cluster size threshold -> any cluster with less than this number of points CAN be still consdiered a turtle bot
-        # ranges, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0,cluster_linkage_threshold=0.15,
+        #
+        # ranges, px=0.0, py=0.0, pt=0.0, angle_min=0.0, angle_increment=1.0, cluster_linkage_threshold=0.15,
         # cluster_range_threshold=1.5, cluster_size_threshold=30
         if self.DEBUG == False:
-            self.lidar_data = detect_tb_from_ranges(r, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
+            self.lidar_data = detect_tb_from_ranges(ranges, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
 
         #self.get_logger().info(f"Lidar data : {self.lidar_data}")
 
@@ -194,6 +196,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
 
     def groundtruth_pos_callback(self, msg):
+        # We don't have a value for the current robot headings or aren't debugging
         if self.DEBUG_cur_robot_heading is None or self.DEBUG == False:
             return
 
@@ -202,24 +205,26 @@ class SunburstRobotCalc(DrivingSwarmNode):
         flat = msg.data
         pairs = [[flat[i], flat[i+1]] for i in range(0, len(flat), 2)]
 
-        cur_robot_position = np.array(pairs[self.cur_robot_idx])
+        cur_robot_position = np.array(pairs[self.DEBUG_cur_robot_idx])
 
-        self.lidar_data = [];
+        # Rotating global groundtruth data to be in the robot's reference frame
+        self.lidar_data = []
         for i in range(len(self.robots)):
-            if i != self.cur_robot_idx:
+            if i != self.DEBUG_cur_robot_idx:
                 R = self.rotation_matrix_2d(-self.DEBUG_cur_robot_heading)
                 self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
 
         #self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
         return
 
+    # Get the robots heading
     def groundtruth_heading_callback(self, msg):
         if self.DEBUG == False:
             return
 
         flat = msg.data
 
-        self.DEBUG_cur_robot_heading = flat[self.cur_robot_idx]
+        self.DEBUG_cur_robot_heading = flat[self.DEBUG_cur_robot_idx]
         return
 
     # =============================================
@@ -258,20 +263,25 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
     def calc_likelihood(self):
         vals = np.array([])
+        likelihoods = np.array([])
         val = 0
 
         for id, err in self.bayes_errors.items():
             if self.LIKELIHOOD_FUNCTION == LikelihoodFunction.NEGATIVE_LOG_CLAMPED:
-                val = self.negative_log(err) * self.last_probs[id]
+                likelihood = self.negative_log(err)
+                val = likelihood * self.last_probs[id]
             elif self.LIKELIHOOD_FUNCTION == LikelihoodFunction.LINEAR_CLAMPED:
-                val = self.linear_clamped(err) * self.last_probs[id] 
+                likelihood = self.linear_clamped(err)
+                val = likelihood * self.last_probs[id]
             elif self.LIKELIHOOD_FUNCTION == LikelihoodFunction.GAUSS_CLAMPED:
-                val = self.gauss_clamped(err) * self.last_probs[id]
+                likelihood = self.gauss_clamped(err)
+                val = likelihood * self.last_probs[id]
 
             vals = np.append(vals, val)
+            likelihoods = np.append(likelihoods, likelihood)
             # vals = np.append(vals, val)
 
-        return vals/sum(vals)
+        return vals/sum(vals), likelihoods
 
     # =============================================
     # =============== Calculations ================
@@ -279,9 +289,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
     def calc_timer(self):
         # Wait for data and to ensure the math won't have a division by zero error
-        if self.skyview_angles is None and self.skyview_distances is None:
-            if len(self.lidar_data) < 2 and len(self.skyview_angles) < 2 and len(self.skyview_distances) < 2:
-                return
+        if len(self.skyview_angles) == 0 or len(self.skyview_distances) == 0:
+            return
+        # Check if we have at least three robots in roofcam sunburst
+        if len(self.skyview_angles) < 2 or len(self.skyview_distances) < 2:
+            self.get_logger().info("ERROR: skipping\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+            return
 
         # Okay at this point I have self.skyview_distances, self.skyview_angles, self.lidar_data
         # Assume N robots
@@ -312,6 +325,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.bayes_errors = {k: np.inf for k in range(len(self.skyview_angles))}
             self.bayes_vals = {k: [0,0] for k in range(len(self.skyview_angles))}
 
+        # For every sunburst sent from the drone (roof cam)
         for rbt_idx, _ in enumerate(self.skyview_angles):
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
                                                         lidar_distances, lidar_angles)
@@ -322,8 +336,9 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 # errors[rbt_idx] = np.inf
                 # vals[rbt_idx] = [angle, scale]
 
-        # choose min error as current estimate
-        # TODO: think about what we need to do, if anything, if errors is empty
+        waldo_angle = None
+
+        # If we had at least one identification pass the thresholds for any of the skyview sunbursts
         if len(errors):
             if self.USE_BAYES_FILTER:
                 self.get_logger().info(f"Bayes filter error: {errors}")
@@ -337,7 +352,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
                     self.bayes_errors[id] = err
                     self.bayes_vals[id] = [vals[id][0], vals[id][1]]
 
-                new_probs = self.calc_likelihood()
+                # Penalize the error values that haven't been updated this iteration
+                for id in range(len(self.cur_probs)):
+                    if id not in errors:
+                        self.bayes_errors[id] *= self.old_error_penalty_scale
+
+                new_probs, cur_likelihoods = self.calc_likelihood()
                 for id, prob in enumerate(new_probs):
                     self.cur_probs[id] = prob
 
@@ -346,6 +366,10 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 posterior_probs = Float64MultiArray()
                 posterior_probs.data = [self.cur_probs[id] for id in range(len(self.cur_probs))]
                 self.posterior_pub.publish(posterior_probs)
+
+                current_likelihoods = Float64MultiArray()
+                current_likelihoods.data = [cur_likelihoods[id] for id in range(len(self.cur_probs))]
+                self.likelihoods_pub.publish(current_likelihoods)
 
                 my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
                 self.get_logger().info(f"Probs: {self.bayes_errors} -> {self.cur_probs} -> {my_rbt_idx}")
@@ -358,6 +382,22 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - vals[my_rbt_idx][0]
                 waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * vals[my_rbt_idx][1]
 
+                posterior_probs = Float64MultiArray()
+                tmp = [0.0 for _ in range(5)]
+                tmp[my_rbt_idx] = 1.0
+                posterior_probs.data = tmp
+                self.posterior_pub.publish(posterior_probs)
+
+        # If using bayes filtering, we have had identifications before, and we don't get new identifications this iteration
+        # This is to update waldo positions based on the current position and orientation of the robots
+        elif self.USE_BAYES_FILTER and len(self.cur_probs) > 0:
+            my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
+
+            waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - self.bayes_vals[my_rbt_idx][0]
+            waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * self.bayes_vals[my_rbt_idx][1]
+
+        # Publish
+        if waldo_angle is not None:
             waldo_x = waldo_distance * math.cos(waldo_angle)
             waldo_y = waldo_distance * math.sin(waldo_angle)
 
@@ -377,22 +417,23 @@ class SunburstRobotCalc(DrivingSwarmNode):
             self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
 
     
-    # filters out every comparison that is above a given threshold
+    # Filters out every comparison that is above a given threshold
     def sunburst_single_robot(self, sky_dist, sky_angle, lidar_dist, lidar_angle):
             assignments = set()
-            # TODO: remove double comparisons (x,y) <=> (y,x) for optimization
+            # For every pair of sky_ids
             for sky_id_a, sky_dist_a in enumerate(sky_dist):
                 for sky_id_b, sky_dist_b in enumerate(sky_dist):
 
-                    # skip if we compare same robot
-                    if sky_id_a == sky_id_b or sky_id_a < sky_id_b:
+                    # Skip if we compare same skyview values and make sure each pairing is only checked once
+                    if sky_id_a <= sky_id_b:
                         continue
 
+                    # For every pair of lidar_ids
                     for lidar_id_a, lidar_dist_a in enumerate(lidar_dist):
                         for lidar_id_b, lidar_dist_b in enumerate(lidar_dist):
 
-                            # skip if we compare same robot
-                            if lidar_id_a == lidar_id_b or lidar_id_a < lidar_id_b:
+                            # Skip if we compare same lidar values and make sure each pairing is only checked once
+                            if lidar_id_a <= lidar_id_b:
                                 continue
 
                             # filter out robot if distance discrepancy is too high
@@ -405,7 +446,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                             # filter out robot if angle discrepancy is too high
                             # TODO: try figuring out whats about the angle errors
-
                             if sky_angle[sky_id_a] * sky_angle[sky_id_b] < 0 or lidar_angle[lidar_id_a] * lidar_angle[lidar_id_b] < 0:
                                 self.get_logger().info("ERROR: negative angle\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
@@ -446,7 +486,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
     # transformation gets estimated with least squares (point set registration like ICP)
     def do_registration(self, sky_dists, sky_angles, lidar_dists, lidar_angles):
         scale_sum = 0
-        scale_divisor = 1
+        scale_divisor = 0
 
         angle_sum = 0
         angle_divisor = 0
