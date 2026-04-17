@@ -86,7 +86,7 @@ def initialize_robots(context, *args, **kwargs):
                 launch_arguments={
                     'x_pose': TextSubstitution(text=str(pose[0])),
                     'y_pose': TextSubstitution(text=str(pose[1])),
-                    'z_pose': TextSubstitution(text="0.0"),
+                    'z_pose': TextSubstitution(text="0.01"),
                     'yaw_pose': TextSubstitution(text=str(pose[2])),
                     'robot_name': name,
                     'base_frame': TextSubstitution(text=base_frame),
