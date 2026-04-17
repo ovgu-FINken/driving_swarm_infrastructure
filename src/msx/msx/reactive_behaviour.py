@@ -79,7 +79,7 @@ class ReactiveController(DrivingSwarmNode):
     def laser_cb(self, msg):
         r = msg.ranges
         r = [x if x > msg.range_min and x < msg.range_max else 10.0 for x in r]
-        self.forward_distance = min(r[:45] + r[-45:])
+        self.forward_distance = min(r[:60] + r[-60:])
 
 def main():
     main_fn('reactive_controller', ReactiveController)
