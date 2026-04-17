@@ -86,7 +86,7 @@ def generate_launch_description():
             arguments=[
                 '--robot_name', LaunchConfiguration('robot_name'),
                 '--robot_namespace', LaunchConfiguration('robot_name'),
-                '--turtlebot_type', launch.substitutions.EnvironmentVariable('TURTLEBOT3_MODEL'),
+                '--sdf', os.path.join(bringup_dir, 'models', 'turtlebot3_burger', 'model.sdf'),
                 '-x', LaunchConfiguration('x_pose'),
                 '-y', LaunchConfiguration('y_pose'),
                 '-z', LaunchConfiguration('z_pose'),
@@ -108,7 +108,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('robot_name')
     autostart = 'True'
     params_file = os.path.join(bringup_dir, 'params', 'nav2_params_namespaced.yaml')
-    urdf = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'urdf', 'turtlebot3_burger.urdf')
+    urdf = os.path.join(bringup_dir, 'urdf', 'turtlebot3_burger.urdf')
     with open(urdf, 'r') as f:
         robot_description = f.read()
 
