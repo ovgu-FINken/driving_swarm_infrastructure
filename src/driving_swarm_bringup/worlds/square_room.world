@@ -95,13 +95,13 @@
 
     <!-- Physics -->
     <physics type="ode" name="template_like_ode">
-      <max_step_size>0.002</max_step_size>
+      <max_step_size>0.001</max_step_size>
       <real_time_factor>5</real_time_factor>
-      <real_time_update_rate>500</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
       <ode>
         <solver>
           <type>quick</type>
-          <iters>20</iters>
+          <iters>100</iters>
           <sor>1.3</sor>
         </solver>
         <constraints>
