@@ -228,6 +228,41 @@ myplot.save(
 )
 
 
+# reshape likelihood columns to long format
+likelihood_cols = [f"likelihoods_{i}" for i in range(df["robot"].nunique())]
+
+df_like = df.melt(
+    id_vars=["t", "robot"],
+    value_vars=likelihood_cols,
+    var_name="hypothesis",
+    value_name="likelihood"
+)
+df_like["hypothesis"] = df_like["hypothesis"].str.replace("likelihoods_", "").astype(int)
+
+myplot = (
+    ggplot(df_like, aes(
+        x="t",
+        y="likelihood",
+        color="factor(hypothesis)"
+    ))
+    + geom_line()
+    + facet_wrap("~robot")
+    + theme_light(base_size=8)
+    + theme(
+        legend_position='top',
+        figure_size=(6, 4.5),
+    )
+)
+
+st.pyplot(ggplot.draw(myplot))
+myplot.save(
+    "figures/msx_likelihoods_over_time.pdf",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+
+
 df_entropy = df_post.copy()
 df_entropy["entropy"] = -df_entropy["posterior"] * np.log(df_entropy["posterior"] + 1e-12)
 
