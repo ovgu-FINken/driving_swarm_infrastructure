@@ -22,35 +22,91 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # Set the logger level
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
 
-        # ===== Parameters =====
-        self.DEBUG = True
-        self.USE_BAYES_FILTER = True
+        # ===== Declare parameters with default values =====
+        self.declare_parameter("debug", False)
+        self.declare_parameter("use_bayes_filter", True)
 
         # Threshold values
-        self.dist_threshold = 1.05
-        self.angle_threshold = np.pi / 12
+        self.declare_parameter("dist_threshold", 1.05)
+        self.declare_parameter("angle_threshold", np.pi / 12)
 
-        # Weights for errors weighted sum calculation
-        self.scale_error_weight = 1
-        self.angle_error_weight = 1
+        # Weights for weighted error sum calculation
+        self.declare_parameter("scale_error_weight", 1.0)
+        self.declare_parameter("angle_error_weight", 1.0)
 
-        # == Bayes filter likelihood functions/parameters ==
-        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.NEGATIVE_LOG_CLAMPED
-        # self.LIKELIHOOD_FUNCTION = LikelihoodFunction.LINEAR_CLAMPED
-        self.LIKELIHOOD_FUNCTION = LikelihoodFunction.GAUSS_CLAMPED
+        # Bayes filter likelihood settings
+        self.declare_parameter("likelihood_function", "GAUSS_CLAMPED")
+        self.declare_parameter("likelihood_clamp", 0.01)
 
-        self.likelihood_clamp = 0.01
-        # linear clamped
-        self.a_1 = 1.0
-        # negative log clamped
-        self.a_2 = 3.0
-        # gauss clamped
-        self.a_3 = 1.0
-        self.m = 0.0
-        self.s = 0.05
+        # Linear clamped
+        self.declare_parameter("a_1", 1.0)
 
-        # Penalty scale for error values that aren't updated this iteration -> reducing likelihood over time
-        self.old_error_penalty_scale = 1.05
+        # Negative log clamped
+        self.declare_parameter("a_2", 3.0)
+
+        # Gaussian clamped
+        self.declare_parameter("a_3", 1.0)
+        self.declare_parameter("m", 0.0)
+        self.declare_parameter("s", 0.05)
+
+        # Penalty scale for stale error values
+        self.declare_parameter("old_error_penalty_scale", 1.05)
+
+        # ===== Load parameter values =====
+        self.DEBUG = self.get_parameter("debug").value
+        self.USE_BAYES_FILTER = self.get_parameter("use_bayes_filter").value
+
+        self.dist_threshold = self.get_parameter("dist_threshold").value
+        self.angle_threshold = self.get_parameter("angle_threshold").value
+
+        self.scale_error_weight = self.get_parameter("scale_error_weight").value
+        self.angle_error_weight = self.get_parameter("angle_error_weight").value
+
+        self.LIKELIHOOD_FUNCTION = LikelihoodFunction[
+        self.get_parameter("likelihood_function").value
+        ]
+
+        self.likelihood_clamp = self.get_parameter("likelihood_clamp").value
+
+        self.a_1 = self.get_parameter("a_1").value
+        self.a_2 = self.get_parameter("a_2").value
+        self.a_3 = self.get_parameter("a_3").value
+
+        self.m = self.get_parameter("m").value
+        self.s = self.get_parameter("s").value
+
+        self.old_error_penalty_scale = self.get_parameter(
+        "old_error_penalty_scale"
+        ).value
+
+        # print to validate parameters set successfully
+        self.get_logger().info(
+            "\n"
+            "========== Parameter Configuration ==========\n"
+            f"debug                    : {self.DEBUG}\n"
+            f"use_bayes_filter         : {self.USE_BAYES_FILTER}\n"
+            "\n"
+            "Thresholds:\n"
+            f"  dist_threshold         : {self.dist_threshold:.1f}\n"
+            f"  angle_threshold        : {self.angle_threshold:.6f}\n"
+            "\n"
+            "Weights:\n"
+            f"  scale_error_weight     : {self.scale_error_weight:.1f}\n"
+            f"  angle_error_weight     : {self.angle_error_weight:.1f}\n"
+            "\n"
+            "Likelihood:\n"
+            f"  function               : {self.LIKELIHOOD_FUNCTION.name}\n"
+            f"  likelihood_clamp       : {self.likelihood_clamp:.3f}\n"
+            f"  a_1                    : {self.a_1:.2f}\n"
+            f"  a_2                    : {self.a_2:.2f}\n"
+            f"  a_3                    : {self.a_3:.2f}\n"
+            f"  m                      : {self.m:.2f}\n"
+            f"  s                      : {self.s:.2f}\n"
+            "\n"
+            "Penalty:\n"
+            f"  old_error_penalty_scale: {self.old_error_penalty_scale:.6f}\n"
+            "============================================"
+        )
 
         # ===== Variables =====
         self.DEBUG_cur_robot_heading = None

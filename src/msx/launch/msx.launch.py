@@ -51,6 +51,7 @@ def controller_spawning(context, *args, **kwargs):
     n_robots = int(LaunchConfiguration('n_robots').perform(context))
     robots_file = LaunchConfiguration('robot_names_file').perform(context)
     use_sim_time = TextSubstitution(text='true')
+
     with open(robots_file, 'r') as stream:
         robots = yaml.safe_load(stream)
         
@@ -74,8 +75,31 @@ def controller_spawning(context, *args, **kwargs):
             parameters=[{
                 'use_sim_time': use_sim_time,
                 'robot_names': robots[:n_robots],
+
+                'debug': LaunchConfiguration('debug'),
+                'use_bayes_filter': LaunchConfiguration('use_bayes_filter'),
+
+                'dist_threshold': LaunchConfiguration('dist_threshold'),
+                'angle_threshold': LaunchConfiguration('angle_threshold'),
+
+                'scale_error_weight': LaunchConfiguration('scale_error_weight'),
+                'angle_error_weight': LaunchConfiguration('angle_error_weight'),
+
+                'likelihood_function': LaunchConfiguration('likelihood_function'),
+                'likelihood_clamp': LaunchConfiguration('likelihood_clamp'),
+
+                'a_1': LaunchConfiguration('a_1'),
+                'a_2': LaunchConfiguration('a_2'),
+                'a_3': LaunchConfiguration('a_3'),
+
+                'm': LaunchConfiguration('m'),
+                's': LaunchConfiguration('s'),
+
+                'old_error_penalty_scale': LaunchConfiguration('old_error_penalty_scale'),
             }],
-            remappings=[('topic', f'/{robot}/topic')],
+            remappings=[
+                ('topic', f'/{robot}/topic')
+            ],
             output='screen',
         ))
 
@@ -196,9 +220,55 @@ def generate_launch_description():
     )
     
     ld = LaunchDescription()
+
+    # If true, uses ground truth data from the simulator for TurtleBot detections
+    # instead of perception-based detection pipelines (e.g., sensor-based estimation)
+    ld.add_action(DeclareLaunchArgument('debug', default_value='false'))
+
+    # Enables/disables Bayes filter-based state estimation
+    ld.add_action(DeclareLaunchArgument('use_bayes_filter', default_value='true'))
+
+    # Minimum distance threshold used for filtering/association of observations
+    ld.add_action(DeclareLaunchArgument('dist_threshold', default_value='1.05'))
+
+    # Maximum angular threshold used for matching / association
+    ld.add_action(DeclareLaunchArgument('angle_threshold', default_value=str(float(np.pi / 12))))
+
+    # Weight for scale error contribution in weighted error computation
+    ld.add_action(DeclareLaunchArgument('scale_error_weight', default_value='1.0'))
+
+    # Weight for angular error contribution in weighted error computation
+    ld.add_action(DeclareLaunchArgument('angle_error_weight', default_value='1.0'))
+
+    # Likelihood model used for Bayes filter (e.g. GAUSS_CLAMPED, LINEAR_CLAMPED, NEGATIVE_LOG_CLAMPED)
+    ld.add_action(DeclareLaunchArgument('likelihood_function', default_value='GAUSS_CLAMPED'))
+
+    # Minimum likelihood value (prevents collapse to zero probability)
+    ld.add_action(DeclareLaunchArgument('likelihood_clamp', default_value='0.01'))
+
+    # Parameter for linear likelihood model
+    ld.add_action(DeclareLaunchArgument('a_1', default_value='1.0'))
+
+    # Parameter controlling steepness for negative log likelihood model
+    ld.add_action(DeclareLaunchArgument('a_2', default_value='3.0'))
+
+    # Standard deviation / scaling factor for Gaussian likelihood model
+    ld.add_action(DeclareLaunchArgument('a_3', default_value='1.0'))
+
+    # Mean parameter for Gaussian likelihood model
+    ld.add_action(DeclareLaunchArgument('m', default_value='0.0'))
+
+    # Standard deviation parameter for Gaussian likelihood model
+    ld.add_action(DeclareLaunchArgument('s', default_value='0.05'))
+
+    # Penalty applied when an error term is not updated in the current iteration
+    # (reduces its likelihood over time to decay stale observations)
+    ld.add_action(DeclareLaunchArgument('old_error_penalty_scale', default_value='1.05'))
+
     ld.add_action(multi_robot_launch)
     ld.add_action(spawn_waldo)
     ld.add_action(delayed_roofcam)
     ld.add_action(DeclareLaunchArgument('data_file', default_value=EnvironmentVariable('DATA_FILE', default_value='data.csv.gz')))
     ld.add_action(OpaqueFunction(function=controller_spawning))
+
     return ld
