@@ -502,6 +502,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                         if distance_diff > self.dist_threshold:
                             continue
 
+                        # filter out robot if angle discrepancy is too high
                         diff = (sky_angle[sky_id_a] - sky_angle[sky_id_b]) % (np.pi * 2)
                         angle_diff_sky = min(diff, np.pi * 2 - diff)
                         diff = (lidar_angle[lidar_id_a] - lidar_angle[lidar_id_b]) % (np.pi * 2)
