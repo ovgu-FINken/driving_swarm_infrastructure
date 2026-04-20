@@ -500,21 +500,12 @@ class SunburstRobotCalc(DrivingSwarmNode):
                             if distance_diff > self.dist_threshold:
                                 continue
 
-                            # filter out robot if angle discrepancy is too high
-                            # TODO: try figuring out whats about the angle errors
-                            if sky_angle[sky_id_a] * sky_angle[sky_id_b] < 0 or lidar_angle[lidar_id_a] * lidar_angle[lidar_id_b] < 0:
-                                self.get_logger().info("ERROR: negative angle\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-
-                            angle_diff_sky = abs(sky_angle[sky_id_a] % (np.pi * 2) - sky_angle[sky_id_b] % (np.pi * 2))
-                            angle_diff_lidar = abs(lidar_angle[lidar_id_a] % (np.pi * 2) - lidar_angle[lidar_id_b] % (np.pi * 2))
+                            diff = (sky_angle[sky_id_a] - sky_angle[sky_id_b] ) % (np.pi * 2)
+                            angle_diff_sky = min(diff, np.pi * 2 - diff)
+                            diff = (lidar_angle[lidar_id_a] - lidar_angle[lidar_id_b]) % (np.pi * 2)
+                            angle_diff_lidar = min(diff, np.pi * 2 - diff)
                         
                             angle_diff = np.abs(angle_diff_sky - angle_diff_lidar)
-                            angle_diff = min(angle_diff, 2 * np.pi - angle_diff)
-
-                            #angle_diff_sky = self.angle_diff(sky_angle[sky_id_a], sky_angle[sky_id_b])
-                            #angle_diff_lidar = self.angle_diff(lidar_angle[lidar_id_a], lidar_angle[lidar_id_b])
-
-                            #angle_diff = abs(angle_diff_sky - angle_diff_lidar)
 
                             if angle_diff > self.angle_threshold:
                                 continue
