@@ -10,10 +10,12 @@ from enum import Enum
 import numpy as np
 import math
 
+
 class LikelihoodFunction(Enum):
     LINEAR_CLAMPED = 1
     NEGATIVE_LOG_CLAMPED = 2
     GAUSS_CLAMPED = 3
+
 
 class SunburstRobotCalc(DrivingSwarmNode):
     def __init__(self, name: str) -> None:
@@ -63,7 +65,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.angle_error_weight = self.get_parameter("angle_error_weight").value
 
         self.LIKELIHOOD_FUNCTION = LikelihoodFunction[
-        self.get_parameter("likelihood_function").value
+            self.get_parameter("likelihood_function").value
         ]
 
         self.likelihood_clamp = self.get_parameter("likelihood_clamp").value
@@ -76,7 +78,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.s = self.get_parameter("s").value
 
         self.old_error_penalty_scale = self.get_parameter(
-        "old_error_penalty_scale"
+            "old_error_penalty_scale"
         ).value
 
         # print to validate parameters set successfully
@@ -187,7 +189,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_waldo_distances = data[:, 0]
         self.skyview_waldo_angles = data[:, 1]
 
-
     def laser_cb(self, msg):
         ranges = msg.ranges
         ranges = [x if x > msg.range_min and x < msg.range_max else float('inf') for x in ranges]
@@ -203,7 +204,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         if self.DEBUG == False:
             self.lidar_data = detect_tb_from_ranges(ranges, 0.0, 0.0, 0.0, msg.angle_min, msg.angle_increment)
 
-        #self.get_logger().info(f"Lidar data : {self.lidar_data}")
+        # self.get_logger().info(f"Lidar data : {self.lidar_data}")
 
         msg = PointCloud()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -250,7 +251,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
         self.skyview_angles = angles
         pass
 
-
     def groundtruth_pos_callback(self, msg):
         # We don't have a value for the current robot headings or aren't debugging
         if self.DEBUG_cur_robot_heading is None or self.DEBUG == False:
@@ -259,7 +259,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # self.get_logger().info(f"groundtruth_pos_callback, msg: {msg}")
 
         flat = msg.data
-        pairs = [[flat[i], flat[i+1]] for i in range(0, len(flat), 2)]
+        pairs = [[flat[i], flat[i + 1]] for i in range(0, len(flat), 2)]
 
         cur_robot_position = np.array(pairs[self.DEBUG_cur_robot_idx])
 
@@ -270,7 +270,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 R = self.rotation_matrix_2d(-self.DEBUG_cur_robot_heading)
                 self.lidar_data.append(R @ (pairs[i] - cur_robot_position))
 
-        #self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
+        # self.get_logger().info(f"I am {cur_robot_idx} and am at {cur_robot_position} facing {self.DEBUG_cur_robot_heading}; all robots are at {pairs}; in my frame they are at: {self.lidar_data}")
         return
 
     # Get the robots heading
@@ -290,7 +290,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
     def rotation_matrix_2d(self, angle):
         return np.array([
             [np.cos(angle), -np.sin(angle)],
-            [np.sin(angle),  np.cos(angle)]])
+            [np.sin(angle), np.cos(angle)]])
 
     def angle_diff(self, a, b):
         diff = abs(a - b) % (2 * math.pi)
@@ -337,7 +337,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
             likelihoods = np.append(likelihoods, likelihood)
             # vals = np.append(vals, val)
 
-        return vals/sum(vals), likelihoods
+        return vals / sum(vals), likelihoods
 
     # =============================================
     # =============== Calculations ================
@@ -379,18 +379,19 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # If this is the first time we calculate errors, initialize the bayes_errors to infinity
         if len(self.bayes_errors) == 0:
             self.bayes_errors = {k: np.inf for k in range(len(self.skyview_angles))}
-            self.bayes_vals = {k: [0,0] for k in range(len(self.skyview_angles))}
+            self.bayes_vals = {k: [0, 0] for k in range(len(self.skyview_angles))}
 
         # For every sunburst sent from the drone (roof cam)
         for rbt_idx, _ in enumerate(self.skyview_angles):
-            angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx], self.skyview_angles[rbt_idx],
-                                                        lidar_distances, lidar_angles)
+            angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx],
+                                                                                self.skyview_angles[rbt_idx],
+                                                                                lidar_distances, lidar_angles)
             if angle_error != np.inf and scale_error != np.inf:
                 errors[rbt_idx] = self.angle_error_weight * angle_error + self.scale_error_weight * scale_error
                 vals[rbt_idx] = [angle, scale]
             # elif self.USE_BAYES_FILTER:
-                # errors[rbt_idx] = np.inf
-                # vals[rbt_idx] = [angle, scale]
+            # errors[rbt_idx] = np.inf
+            # vals[rbt_idx] = [angle, scale]
 
         waldo_angle = None
 
@@ -401,7 +402,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                 # If this is the first time we calculate probabilities, initialize last_probs uniformly
                 if len(self.cur_probs) == 0:
-                    self.last_probs = {k: 1/len(self.skyview_angles) for k in range(len(self.skyview_angles))}
+                    self.last_probs = {k: 1 / len(self.skyview_angles) for k in range(len(self.skyview_angles))}
 
                 # Grab the new errors calculated and save them
                 for id, err in errors.items():
@@ -457,7 +458,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
             waldo_x = waldo_distance * math.cos(waldo_angle)
             waldo_y = waldo_distance * math.sin(waldo_angle)
 
-            self.get_logger().info(f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
+            self.get_logger().info(
+                f"idx, angle, dist: {my_rbt_idx}, {self.skyview_waldo_angles[my_rbt_idx]}, {self.skyview_waldo_distances[my_rbt_idx]}")
 
             # publish waldos min error position in the robot's reference frame
             min_error_waldo_pos = Float64MultiArray()
@@ -472,63 +474,63 @@ class SunburstRobotCalc(DrivingSwarmNode):
             # publish lidar detection count
             self.lidar_detection_count_pub.publish(Int32(data=int(len(lidar_angles))))
 
-    
     # Filters out every comparison that is above a given threshold
     def sunburst_single_robot(self, sky_dist, sky_angle, lidar_dist, lidar_angle):
-            assignments = set()
-            # For every pair of sky_ids
-            for sky_id_a, sky_dist_a in enumerate(sky_dist):
-                for sky_id_b, sky_dist_b in enumerate(sky_dist):
+        assignments = set()
+        # For every pair of sky_ids
+        for sky_id_a, sky_dist_a in enumerate(sky_dist):
+            for sky_id_b, sky_dist_b in enumerate(sky_dist):
 
-                    # Skip if we compare same skyview values and make sure each pairing is only checked once
-                    if sky_id_a <= sky_id_b:
-                        continue
+                # Skip if we compare same skyview values and make sure each pairing is only checked once
+                if sky_id_a <= sky_id_b:
+                    continue
 
-                    # For every pair of lidar_ids
-                    for lidar_id_a, lidar_dist_a in enumerate(lidar_dist):
-                        for lidar_id_b, lidar_dist_b in enumerate(lidar_dist):
+                # For every pair of lidar_ids
+                for lidar_id_a, lidar_dist_a in enumerate(lidar_dist):
+                    for lidar_id_b, lidar_dist_b in enumerate(lidar_dist):
 
-                            # Skip if we compare same lidar values and make sure each pairing is only checked once
-                            if lidar_id_a <= lidar_id_b:
-                                continue
+                        # Skip if we compare same lidar values and make sure each pairing is only checked once
+                        if lidar_id_a <= lidar_id_b:
+                            continue
 
-                            # filter out robot if distance discrepancy is too high
-                            distance_diff_sky = sky_dist_a / sky_dist_b
-                            distance_diff_lidar = lidar_dist_a / lidar_dist_b
-                            distance_diff = max(distance_diff_sky, distance_diff_lidar) / min(distance_diff_sky, distance_diff_lidar)
+                        # filter out robot if distance discrepancy is too high
+                        distance_diff_sky = sky_dist_a / sky_dist_b
+                        distance_diff_lidar = lidar_dist_a / lidar_dist_b
+                        distance_diff = max(distance_diff_sky, distance_diff_lidar) / min(distance_diff_sky,
+                                                                                          distance_diff_lidar)
 
-                            if distance_diff > self.dist_threshold:
-                                continue
+                        if distance_diff > self.dist_threshold:
+                            continue
 
-                            diff = (sky_angle[sky_id_a] - sky_angle[sky_id_b] ) % (np.pi * 2)
-                            angle_diff_sky = min(diff, np.pi * 2 - diff)
-                            diff = (lidar_angle[lidar_id_a] - lidar_angle[lidar_id_b]) % (np.pi * 2)
-                            angle_diff_lidar = min(diff, np.pi * 2 - diff)
-                        
-                            angle_diff = np.abs(angle_diff_sky - angle_diff_lidar)
+                        diff = (sky_angle[sky_id_a] - sky_angle[sky_id_b]) % (np.pi * 2)
+                        angle_diff_sky = min(diff, np.pi * 2 - diff)
+                        diff = (lidar_angle[lidar_id_a] - lidar_angle[lidar_id_b]) % (np.pi * 2)
+                        angle_diff_lidar = min(diff, np.pi * 2 - diff)
 
-                            if angle_diff > self.angle_threshold:
-                                continue
+                        angle_diff = np.abs(angle_diff_sky - angle_diff_lidar)
 
-                            # add valid comparisons to assignment list
-                            assignments.add((sky_id_a, lidar_id_a))
-                            assignments.add((sky_id_b, lidar_id_b))
+                        if angle_diff > self.angle_threshold:
+                            continue
 
+                        # add valid comparisons to assignment list
+                        assignments.add((sky_id_a, lidar_id_a))
+                        assignments.add((sky_id_b, lidar_id_b))
 
-            # if no assignments => return infinity
-            if not len(assignments):
-                return np.inf, np.inf, np.inf, np.inf
-            # self.get_logger().info(f"assignments: {assignments}")
+        # if no assignments => return infinity
+        if not len(assignments):
+            return np.inf, np.inf, np.inf, np.inf
+        # self.get_logger().info(f"assignments: {assignments}")
 
-            sky_dist_subset = [sky_dist[sky_id_a] for sky_id_a, _ in assignments]
-            sky_angle_subset = [sky_angle[sky_id_a] for sky_id_a, _ in assignments]
-        
-            lidar_dist_subset = [lidar_dist[lidar_id_a] for _, lidar_id_a in assignments]
-            lidar_angle_subset = [lidar_angle[lidar_id_a] for _, lidar_id_a in assignments]
+        sky_dist_subset = [sky_dist[sky_id_a] for sky_id_a, _ in assignments]
+        sky_angle_subset = [sky_angle[sky_id_a] for sky_id_a, _ in assignments]
 
-            angle_error, scale_error, angle, scale = self.do_registration(sky_dist_subset, sky_angle_subset, lidar_dist_subset, lidar_angle_subset)
+        lidar_dist_subset = [lidar_dist[lidar_id_a] for _, lidar_id_a in assignments]
+        lidar_angle_subset = [lidar_angle[lidar_id_a] for _, lidar_id_a in assignments]
 
-            return angle_error, scale_error, angle, scale
+        angle_error, scale_error, angle, scale = self.do_registration(sky_dist_subset, sky_angle_subset,
+                                                                      lidar_dist_subset, lidar_angle_subset)
+
+        return angle_error, scale_error, angle, scale
 
     # transformation gets estimated with least squares (point set registration like ICP)
     def do_registration(self, sky_dists, sky_angles, lidar_dists, lidar_angles):
@@ -538,7 +540,8 @@ class SunburstRobotCalc(DrivingSwarmNode):
         angle_sum = 0
         angle_divisor = 0
 
-        for sky_dist, sky_angle, lidar_dist, lidar_angle in zip(sky_dists, sky_angles, lidar_dists, lidar_angles):  # For each assignment
+        for sky_dist, sky_angle, lidar_dist, lidar_angle in zip(sky_dists, sky_angles, lidar_dists,
+                                                                lidar_angles):  # For each assignment
             angle_sum -= 2 * lidar_angle
             angle_sum += 2 * sky_angle
             angle_divisor += 2
