@@ -235,7 +235,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('angle_threshold', default_value=str(float(np.pi / 12))))
 
     # Weight for scale error contribution in weighted error computation
-    ld.add_action(DeclareLaunchArgument('scale_error_weight', default_value='1.0'))
+    ld.add_action(DeclareLaunchArgument('scale_error_weight', default_value='4.0'))
 
     # Weight for angular error contribution in weighted error computation
     ld.add_action(DeclareLaunchArgument('angle_error_weight', default_value='1.0'))
