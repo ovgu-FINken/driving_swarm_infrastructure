@@ -383,6 +383,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
         # For every sunburst sent from the drone (roof cam)
         for rbt_idx, _ in enumerate(self.skyview_angles):
+            # This returns np.inf for both errors if there are less than 2 skyview detections, less than 2 lidar detections, or no assignments were made.
             angle_error, scale_error, angle, scale = self.sunburst_single_robot(self.skyview_distances[rbt_idx],
                                                                                 self.skyview_angles[rbt_idx],
                                                                                 lidar_distances, lidar_angles)
@@ -433,6 +434,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
 
                 waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - self.bayes_vals[my_rbt_idx][0]
                 waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * self.bayes_vals[my_rbt_idx][1]
+            # Not using a Bayesian filter
             else:
                 my_rbt_idx = min(errors, key=errors.get)
 
@@ -444,14 +446,6 @@ class SunburstRobotCalc(DrivingSwarmNode):
                 tmp[my_rbt_idx] = 1.0
                 posterior_probs.data = tmp
                 self.posterior_pub.publish(posterior_probs)
-
-        # If using bayes filtering, we have had identifications before, and we don't get new identifications this iteration
-        # This is to update waldo positions based on the current position and orientation of the robots
-        elif self.USE_BAYES_FILTER and len(self.cur_probs) > 0:
-            my_rbt_idx = max(self.cur_probs, key=self.cur_probs.get)
-
-            waldo_angle = self.skyview_waldo_angles[my_rbt_idx] - self.bayes_vals[my_rbt_idx][0]
-            waldo_distance = self.skyview_waldo_distances[my_rbt_idx] * self.bayes_vals[my_rbt_idx][1]
 
         # Publish
         if waldo_angle is not None:
