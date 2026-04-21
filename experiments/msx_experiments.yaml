@@ -1,6 +1,6 @@
-runs: 3
+runs: 1
 min_robots: 4
-max_robots: 6
+max_robots: 4
 runtime_seconds: 60
 
 parameters:
@@ -11,18 +11,18 @@ parameters:
   dist_threshold: [1.05]
   angle_threshold: [0.261799]
 
-  scale_error_weight: [1.0]
+  scale_error_weight: [4.0]
   angle_error_weight: [1.0]
 
   likelihood_function:
     - LINEAR_CLAMPED
-    - NEGATIVE_LOG_CLAMPED
+#    - NEGATIVE_LOG_CLAMPED
 #    - GAUSS_CLAMPED
 
   likelihood_clamp: [0.01]
 
   # linear_clamped
-  a_1: [1.0, 1.1]
+  a_1: [1.0]
 
   # negative_log_clamped
   a_2: [3.0]

@@ -45,11 +45,31 @@ def load_yaml(path):
 # =========================================================
 
 def build_combinations(param_dict):
-    keys = list(param_dict.keys())
-    values = [param_dict[k] for k in keys]
 
-    for combo in itertools.product(*values):
-        yield dict(zip(keys, combo))
+    likelihoods = param_dict["likelihood_function"]
+
+    always = [
+        "debug",
+        "use_bayes_filter",
+        "dist_threshold",
+        "angle_threshold",
+        "scale_error_weight",
+        "angle_error_weight",
+        "likelihood_clamp",
+        "old_error_penalty_scale",
+    ]
+
+    for lf in likelihoods:
+
+        lf_norm = normalize(lf)
+
+        required = LIKELIHOOD_SCHEMA[lf_norm]
+
+        keys = always + ["likelihood_function"] + required
+        values = [param_dict[k] for k in always] + [[lf]] + [param_dict[k] for k in required]
+
+        for combo in itertools.product(*values):
+            yield dict(zip(keys, combo))
 
 
 def build_ros_args(param_dict):
@@ -106,7 +126,7 @@ def validate_combo(combo):
 
 
 # =========================================================
-# ACTIVE PARAMETERS
+# PARAMETERS
 # =========================================================
 
 def get_active_parameters(combo):
@@ -119,6 +139,24 @@ def get_active_parameters(combo):
 
     return params
 
+def get_relevant_parameters(combo):
+    lf = normalize(combo["likelihood_function"])
+
+    always = [
+        "debug",
+        "use_bayes_filter",
+        "dist_threshold",
+        "angle_threshold",
+        "scale_error_weight",
+        "angle_error_weight",
+        "likelihood_function",
+        "likelihood_clamp",
+        "old_error_penalty_scale",
+    ]
+
+    relevant = always + LIKELIHOOD_SCHEMA[lf]
+
+    return {k: combo[k] for k in relevant if k in combo}
 
 # =========================================================
 # DIRECTORY STRUCTURE
@@ -212,7 +250,7 @@ def kill_gazebo_if_stuck(timeout=10):
 # RUN
 # =========================================================
 
-def run_command(cmd, timeout, test_mode, run_dir, run_id):
+def run_command(cmd, timeout, test_mode, headless_mode, run_dir, run_id):
 
     print("\n==============================")
     print(cmd)
@@ -222,7 +260,14 @@ def run_command(cmd, timeout, test_mode, run_dir, run_id):
         print("[TEST MODE]")
         return
 
-    proc = subprocess.Popen(cmd, preexec_fn=os.setsid)
+    env = os.environ.copy()
+    
+    if headless_mode:
+        env["ROS_SIMULATOR"] = "gzserver"
+    else:
+        env["ROS_SIMULATOR"] = "gazebo"
+
+    proc = subprocess.Popen(cmd, preexec_fn=os.setsid, env=env)
 
     try:
         time.sleep(timeout)
@@ -252,9 +297,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--test", action="store_true")
+    parser.add_argument("-hl", "--headless", action="store_true")
     args = parser.parse_args()
-
-    start_time = time.time()
 
     cfg = load_yaml(CONFIG_YAML)
 
@@ -278,15 +322,21 @@ def main():
     total_experiments = runs * num_robot_configs * num_combos
     est_seconds = total_experiments * (run_timeout + KILL_BUFFER)
 
-    print("\n======================================")
-    print("EXPERIMENT PLAN")
-    print("======================================")
-    print(f"Runs: {runs}")
-    print(f"Robot configs: {num_robot_configs}")
-    print(f"Combinations: {num_combos}")
-    print(f"Total experiments: {total_experiments}")
-    print(f"Estimated time: {est_seconds/60:.1f} min ({est_seconds/3600:.2f} h)")
-    print("======================================\n")
+    plan_text = (
+        "======================================\n"
+        "EXPERIMENT PLAN\n"
+        "======================================\n"
+        f"Runs: {runs}\n"
+        f"Robot configs: {num_robot_configs}\n"
+        f"Combinations: {num_combos}\n"
+        f"Total experiments: {total_experiments}\n"
+        f"Estimated time: {est_seconds/60:.1f} min ({est_seconds/3600:.2f} h)\n"
+        "======================================\n"
+)
+    print("\n" + plan_text + "\n")
+
+    with open(os.path.join(BASE_DIR, "experiment_plan.txt"), "w") as f:
+        f.write(plan_text + "\n")
 
     # =====================================================
     # EXECUTION LOOP
@@ -302,11 +352,15 @@ def main():
             # save full config snapshot
             param_file = os.path.join(run_dir, "params.txt")
 
+
             if not os.path.exists(param_file):
                 with open(param_file, "w") as f:
                     f.write(f"n_robots: {n_robots}\n")
                     f.write(f"runtime_seconds: {run_timeout}\n\n")
-                    for k, v in combo.items():
+
+                    params = get_relevant_parameters(combo)
+
+                    for k, v in params.items():
                         f.write(f"{k}: {v}\n")
 
             #print(f"COMBO : {build_ros_args(combo)}")
@@ -323,7 +377,7 @@ def main():
                     *build_ros_args(combo),
                 ]
 
-                run_command(cmd, run_timeout, args.test, run_dir, run_id)
+                run_command(cmd, run_timeout, args.test, args.headless, run_dir, run_id)
 
 
 if __name__ == "__main__":

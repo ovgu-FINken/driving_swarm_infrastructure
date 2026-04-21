@@ -24,7 +24,7 @@ class SunburstRobotCalc(DrivingSwarmNode):
         # Set the logger level
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
 
-        # ===== Declare parameters with default values =====
+        # ===== Declare parameters with default values (!Be aware of launch file overrides!) =====
         self.declare_parameter("debug", False)
         self.declare_parameter("use_bayes_filter", True)
 
