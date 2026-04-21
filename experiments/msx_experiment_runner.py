@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 import yaml
 import signal
+import pandas as pd
 
 # =========================================================
 # CONFIG
@@ -124,6 +125,53 @@ def validate_combo(combo):
 
     return lf
 
+def verify_moved(csv_path="../data.csv.gz", robot="robotA", x_column="x", threshold=0.01):
+    """
+    Checks whether the x-position of a single robot changed enough
+    to be considered movement.
+
+    The CSV is expected to contain a robot identifier column
+    (e.g. values like robotA, robotB, ...).
+
+    Args:
+        csv_path (str): Path to the .csv.gz file
+        robot (str): Robot name to filter for (e.g. "robotA")
+        x_column (str): Name of the x-position column
+        threshold (float): Minimum required change (max - min)
+
+    Returns:
+        True  -> movement detected
+        False -> no relevant movement / error / insufficient data
+    """
+    if not os.path.exists(csv_path):
+        return False
+
+    try:
+        df = pd.read_csv(csv_path, compression="gzip")
+
+        if "robot" not in df.columns:
+            return False
+
+        if x_column not in df.columns:
+            return False
+
+        robot_df = df[df["robot"] == robot]
+
+        if robot_df.empty:
+            return False
+
+        values = robot_df[x_column].dropna()
+
+        if len(values) < 2:
+            return False
+
+        movement = values.max() - values.min()
+
+        return movement > threshold
+
+    except Exception as e:
+        print(f"verify_moved() error: {e}")
+        return False
 
 # =========================================================
 # PARAMETERS
@@ -261,7 +309,7 @@ def run_command(cmd, timeout, test_mode, headless_mode, run_dir, run_id):
         return
 
     env = os.environ.copy()
-    
+
     if headless_mode:
         env["ROS_SIMULATOR"] = "gzserver"
     else:
@@ -365,8 +413,9 @@ def main():
 
             #print(f"COMBO : {build_ros_args(combo)}")
 
-            for run_id in range(1, runs + 1):
+            run_id = 1
 
+            while run_id <= runs:
                 cmd = [
                     "ros2",
                     "launch",
@@ -379,6 +428,20 @@ def main():
 
                 run_command(cmd, run_timeout, args.test, args.headless, run_dir, run_id)
 
+                # sleep to wait for data to be written (shouldn't be neccessary but anyways...)
+                time.sleep(1)
+
+                last_file = os.path.join(run_dir, f"run_{run_id}.csv.gz")
+
+                moved = verify_moved(last_file)
+
+                if moved:
+                    print(f"Run {run_id}: movement detected -> accepted")
+                    run_id += 1
+                else:
+                    print(f"Run {run_id}: no movement detected -> repeating same run")
+
+    print("\n" + plan_text + "\n")
 
 if __name__ == "__main__":
     main()

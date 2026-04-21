@@ -16,8 +16,8 @@ parameters:
 
   likelihood_function:
     - LINEAR_CLAMPED
-#    - NEGATIVE_LOG_CLAMPED
-#    - GAUSS_CLAMPED
+    - NEGATIVE_LOG_CLAMPED
+    - GAUSS_CLAMPED
 
   likelihood_clamp: [0.01]
 
