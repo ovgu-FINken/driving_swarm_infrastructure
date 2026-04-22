@@ -144,25 +144,30 @@ def verify_moved(csv_path="../data.csv.gz", robot="robotA", x_column="x", thresh
         False -> no relevant movement / error / insufficient data
     """
     if not os.path.exists(csv_path):
+        print("Running Error: path does not exist")
         return False
 
     try:
         df = pd.read_csv(csv_path, compression="gzip")
 
         if "robot" not in df.columns:
+            print("Running Error: no robots")
             return False
 
         if x_column not in df.columns:
+            print("Running Error: no x column")
             return False
 
         robot_df = df[df["robot"] == robot]
 
         if robot_df.empty:
+            print("Running Error: empty df")
             return False
 
         values = robot_df[x_column].dropna()
 
         if len(values) < 2:
+            print("Running Error: <2 values")
             return False
 
         movement = values.max() - values.min()
