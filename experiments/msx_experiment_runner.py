@@ -90,7 +90,14 @@ def sanitize(v):
 
 
 def param_dir(key, value):
-    return f"{key}__{sanitize(value)}"
+    v = normalize(value) if isinstance(value, str) else value
+    return f"{key}__{sanitize(v)}"
+
+
+def get_multi_value_params(param_grid):
+    """Returns param names with >1 value in YAML order."""
+    return [k for k, v in param_grid.items()
+            if isinstance(v, list) and len(v) > 1]
 
 
 # =========================================================
@@ -215,20 +222,21 @@ def get_relevant_parameters(combo):
 # DIRECTORY STRUCTURE
 # =========================================================
 
-def build_parameter_directory(base_dir, n_robots, combo):
+def build_parameter_directory(base_dir, n_robots, combo, multi_value_params):
 
-    lf = validate_combo(combo)
+    validate_combo(combo)
 
-    params = get_active_parameters(combo)
+    # n_robots is always a directory level
+    path = [base_dir, f"n_robots__{n_robots}"]
 
-    path = [
-        base_dir,
-        f"n_robots__{n_robots}",
-        lf,
-    ]
-
-    for key, value in params[1:]:
-        path.append(param_dir(key, value))
+    for key in multi_value_params:
+        if key not in combo:
+            continue
+        if key == "likelihood_function":
+            # use just the normalized value (e.g. linear_clamped), no key prefix
+            path.append(normalize(combo[key]))
+        else:
+            path.append(param_dir(key, combo[key]))
 
     full_path = os.path.join(*path)
 
@@ -361,6 +369,8 @@ def main():
     param_grid = cfg["parameters"]
     run_timeout = cfg.get("runtime_seconds", 60)
 
+    multi_value_params = get_multi_value_params(param_grid)
+
     combos = list(build_combinations(param_grid))
 
     # validate ALL combinations early (important)
@@ -399,7 +409,7 @@ def main():
 
         for combo in combos:
 
-            run_dir = build_parameter_directory(BASE_DIR, n_robots, combo)
+            run_dir = build_parameter_directory(BASE_DIR, n_robots, combo, multi_value_params)
             os.makedirs(run_dir, exist_ok=True)
 
             # save full config snapshot
