@@ -1,23 +1,23 @@
-runs: 1
-min_robots: 4
-max_robots: 4
-runtime_seconds: 60
+runs: 11
+min_robots: 5
+max_robots: 5
+runtime_seconds: 180
 
 parameters:
 
   debug: [false]
   use_bayes_filter: [true]
 
-  dist_threshold: [1.05]
-  angle_threshold: [0.261799]
+  dist_threshold: [1.025, 1.05]
+  angle_threshold: [0.08727, 0.1309, 0.261799]
 
   scale_error_weight: [4.0]
   angle_error_weight: [1.0]
 
   likelihood_function:
-    - LINEAR_CLAMPED
+#    - LINEAR_CLAMPED
     - NEGATIVE_LOG_CLAMPED
-    - GAUSS_CLAMPED
+#    - GAUSS_CLAMPED
 
   likelihood_clamp: [0.01]
 
@@ -32,4 +32,4 @@ parameters:
   m: [0.0]
   s: [0.05]
 
-  old_error_penalty_scale: [1.05]
+  old_error_penalty_scale: [1.02, 1.05]
