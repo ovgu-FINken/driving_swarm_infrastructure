@@ -284,12 +284,17 @@ myplot = (
         color="black",
         size=1.5
     )
-    + scale_fill_gradient(low="white", high="steelblue")
-    + labs(x="Frame", y="Robot ID / Assignment")
-    + theme_light(base_size=8)
+    + scale_fill_gradient(low="#F4B183", high="#5B9BD5", name="Posterior")
+    + labs(x="Time Step", y="Robot ID / Assignment")
+    + theme_light(base_size=10)
     + theme(
-        figure_size=(8, fig_height),
-        axis_text_y=element_text(size=6),
+        figure_size=(8, fig_height * 0.75),
+        axis_text_x=element_text(size=10, fontweight="bold"),
+        axis_text_y=element_text(size=10, fontweight="bold"),
+        axis_title_x=element_text(size=10, fontweight="bold"),
+        axis_title_y=element_text(size=10, fontweight="bold"),
+        legend_title=element_text(size=12, fontweight="bold"),
+        legend_text=element_text(size=12, fontweight="bold"),
     )
 )
 

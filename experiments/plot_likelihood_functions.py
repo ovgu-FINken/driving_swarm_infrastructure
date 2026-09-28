@@ -6,6 +6,11 @@ import os
 import re
 
 
+# --- what to run on / where to save (override input with argv[1]) ---
+INPUT_FOLDER = "./dars26/Likelihood Functions"   # experiment set to read run_*.csv.gz from
+OUTPUT_FILE = "boxplot_likelihood_functions.png"  # figure written here
+
+
 _GAUSS_SKIP_KEYS = {"a3", "m"}
 _LIKELIHOOD_NAMES = {
     "linear_clamped": "Linear",
@@ -15,6 +20,7 @@ _LIKELIHOOD_NAMES = {
 
 
 def _parse_folder_name(folder):
+    """Turn a nested experiment folder path into a short label like 'R=5, Gaussian, s=0.3'."""
     parts = re.split(r"[\\/]", folder.rstrip("/\\"))
     start = next((i for i, p in enumerate(parts) if p.startswith("n_robots__")), 0)
     parts = parts[start:]
@@ -43,6 +49,7 @@ def _parse_folder_name(folder):
 
 
 def correct_id_ratios(folder):
+    """Per run, the fraction of rows where the robot was identified correctly."""
     name = _parse_folder_name(folder)
     ratios = []
     for path in sorted(glob.glob(os.path.join(folder, "run_*.csv.gz"))):
@@ -60,6 +67,7 @@ def correct_id_ratios(folder):
 
 
 def euclidean_errors(folder):
+    """Per run, the distance between the true and estimated target positions (meters)."""
     name = _parse_folder_name(folder)
     errors = []
     for path in sorted(glob.glob(os.path.join(folder, "run_*.csv.gz"))):
@@ -76,11 +84,13 @@ def euclidean_errors(folder):
 
 
 def _last_constant(name):
+    """Pull the last numeric constant out of a label, used for sorting."""
     vals = re.findall(r"=(-?\d+\.\d+)", name)
     return float(vals[-1]) if vals else 0.0
 
 
 def all_correct_id_ratios(n_robots_folder):
+    """Collect correct-ID ratios for every experiment folder, sorted by function then constant."""
     results = []
     for folder in sorted(glob.glob(os.path.join(n_robots_folder, "**"), recursive=True)):
         if glob.glob(os.path.join(folder, "run_*.csv.gz")):
@@ -91,6 +101,7 @@ def all_correct_id_ratios(n_robots_folder):
 
 
 def _all_experiments(n_robots_folder, metric_fn):
+    """Run metric_fn on every experiment folder under one robot count, sorted for display."""
     results = []
     for folder in sorted(glob.glob(os.path.join(n_robots_folder, "**"), recursive=True)):
         if glob.glob(os.path.join(folder, "run_*.csv.gz")):
@@ -101,6 +112,7 @@ def _all_experiments(n_robots_folder, metric_fn):
 
 
 def _all_robots(experiment_folder, metric_fn):
+    """Group metric_fn results by robot count: {n_robots: [(label, values), ...]}."""
     results = {}
     for folder in sorted(glob.glob(os.path.join(experiment_folder, "n_robots__*"))):
         n_robots = int(re.search(r"n_robots__(\d+)", folder).group(1))
@@ -109,14 +121,17 @@ def _all_robots(experiment_folder, metric_fn):
 
 
 def all_robots_correct_id_ratios(experiment_folder):
+    """Correct-ID ratios grouped by robot count."""
     return _all_robots(experiment_folder, correct_id_ratios)
 
 
 def all_robots_euclidean_errors(experiment_folder):
+    """Euclidean errors grouped by robot count."""
     return _all_robots(experiment_folder, euclidean_errors)
 
 
 def _make_boxplot(ax, all_data, ylabel, first_group, color_sets, fn_names, group_size, subgroup_size):
+    """Draw the grouped boxplot: boxes grouped by robot count, sub-grouped/colored by likelihood function."""
     from matplotlib.patches import Patch
 
     labels = []
@@ -173,8 +188,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     plt.rcParams.update({"font.size": 10, "font.weight": "bold"})
 
-    default = "./dars26/Likelihood Functions"
-    experiment_folder = sys.argv[1] if len(sys.argv) > 1 else default
+    experiment_folder = sys.argv[1] if len(sys.argv) > 1 else INPUT_FOLDER
 
     fn_names = ["Linear", "Negative Exponential", "Gaussian"]
     group_size = 9
@@ -188,9 +202,9 @@ if __name__ == "__main__":
 
     fig1, ax1 = plt.subplots(figsize=(14, 4.5))
     _make_boxplot(ax1, all_robots_correct_id_ratios(experiment_folder),
-                  "Correct ID Assignment Rate", first_group,
+                  "Correct Assignment Rate", first_group,
                   color_sets, fn_names, group_size, subgroup_size)
     ax1.set_ylim(0, 1)
     plt.tight_layout()
-    plt.savefig("boxplot_likelihood_functions.png", dpi=150, bbox_inches="tight")
-    print("Saved boxplot_likelihood_functions.png")
+    plt.savefig(OUTPUT_FILE, dpi=150, bbox_inches="tight")
+    print(f"Saved {OUTPUT_FILE}")
